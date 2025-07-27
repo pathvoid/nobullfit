@@ -37,3 +37,5 @@ npm-debug.log
 
 *-lock.json
 *.lock
+
+/.elixir_ls/
