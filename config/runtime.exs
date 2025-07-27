@@ -38,6 +38,7 @@ if config_env() == :prod do
   # Production endpoint configuration
   config :nobullfit, NobullfitWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
+    check_origin: ["//nobull.fit", "//www.nobull.fit", "//localhost"],
     http: [
       ip: {0, 0, 0, 0},
       port: port
