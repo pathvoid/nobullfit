@@ -1,6 +1,6 @@
 defmodule NobullfitWeb.HomeLive do
   use NobullfitWeb, :live_view
-  import NobullfitWeb.Components.Navigation, only: [navigation: 1]
+  import NobullfitWeb.Components.Navigation, only: [navigation: 1, footer: 1]
 
   @impl true
   def mount(_params, _session, socket) do
@@ -10,10 +10,10 @@ defmodule NobullfitWeb.HomeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-base-100">
+    <div class="min-h-screen bg-base-100 flex flex-col">
       <.navigation />
 
-      <main class="container mx-auto px-4 py-8 md:py-24">
+      <main class="container mx-auto px-4 py-8 md:py-24 flex-1">
         <div class="max-w-2xl mx-auto text-center space-y-12">
           <div class="space-y-8">
             <h1 class="text-6xl md:text-7xl font-bold">
@@ -33,6 +33,8 @@ defmodule NobullfitWeb.HomeLive do
           </div>
         </div>
       </main>
+
+      <.footer />
     </div>
     """
   end

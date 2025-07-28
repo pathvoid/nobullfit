@@ -70,4 +70,51 @@ defmodule NobullfitWeb.Components.Navigation do
       </div>
       """
   end
+
+  @doc """
+  Renders a footer component with links and copyright information.
+  """
+  def footer(assigns) do
+    ~H"""
+    <footer class="bg-base-200/50 border-t border-base-300 mt-auto">
+      <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Brand Section -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold">NoBullFit</h3>
+            <p class="text-sm text-base-content/70">
+              Free food tracking and progress monitoring with privacy first.
+            </p>
+          </div>
+
+
+
+          <!-- Contact & Legal -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold">Legal</h3>
+            <ul class="space-y-2">
+              <li>
+                <a href="/privacy" class="text-sm text-base-content/70 hover:text-base-content transition-colors">
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a href="/terms" class="text-sm text-base-content/70 hover:text-base-content transition-colors">
+                  Terms of Service
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="mt-8 pt-8 text-center">
+          <p class="text-sm text-base-content/60">
+            © <%= DateTime.utc_now().year %> NoBullFit. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+    """
+  end
 end

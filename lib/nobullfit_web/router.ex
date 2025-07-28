@@ -19,6 +19,8 @@ defmodule NobullfitWeb.Router do
 
     live "/", HomeLive
     live "/about", AboutLive
+    live "/privacy", PrivacyLive
+    live "/terms", TermsLive
   end
 
   if Application.compile_env(:nobullfit, :dev_routes) do
