@@ -10,7 +10,7 @@ defmodule NobullfitWeb.UserLive.Registration do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
-      <.navigation current_scope={@current_scope} current_path={@current_path} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
 
       <main class="container mx-auto px-4 py-8 md:py-24 flex-1">
         <div class="mx-auto max-w-sm">
@@ -55,10 +55,11 @@ defmodule NobullfitWeb.UserLive.Registration do
     {:ok, redirect(socket, to: NobullfitWeb.UserAuth.signed_in_path(socket))}
   end
 
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     changeset = Accounts.change_user_email(%User{})
+    maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
-    {:ok, assign_form(socket, changeset), temporary_assigns: [form: nil]}
+    {:ok, assign_form(socket, changeset, maintenance_status), temporary_assigns: [form: nil]}
   end
 
   def handle_event("save", %{"user" => user_params}, socket) do
@@ -88,8 +89,8 @@ defmodule NobullfitWeb.UserLive.Registration do
     {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
   end
 
-  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+  defp assign_form(socket, %Ecto.Changeset{} = changeset, maintenance_status \\ nil) do
     form = to_form(changeset, as: "user")
-    assign(socket, form: form, current_path: "/users/register")
+    assign(socket, form: form, current_path: "/users/register", maintenance_status: maintenance_status || %{enabled: false})
   end
 end

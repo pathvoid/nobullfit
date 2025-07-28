@@ -1,6 +1,7 @@
 defmodule NobullfitWeb.Components.Navigation do
   use Phoenix.Component
   import NobullfitWeb.Layouts, only: [theme_toggle: 1]
+  import NobullfitWeb.Components.MaintenanceBanner, only: [maintenance_banner: 1]
 
   use NobullfitWeb, :verified_routes
 
@@ -123,6 +124,8 @@ defmodule NobullfitWeb.Components.Navigation do
             </div>
           </div>
         </nav>
+
+        <.maintenance_banner maintenance_status={@maintenance_status} />
       </div>
       """
   end

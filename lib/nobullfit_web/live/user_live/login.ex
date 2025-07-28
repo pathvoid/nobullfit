@@ -9,7 +9,7 @@ defmodule NobullfitWeb.UserLive.Login do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
-      <.navigation current_scope={@current_scope} current_path={@current_path} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
 
       <main class="container mx-auto px-4 py-8 md:py-24 flex-1">
         <div class="mx-auto max-w-sm space-y-4">
@@ -101,14 +101,15 @@ defmodule NobullfitWeb.UserLive.Login do
     """
   end
 
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     email =
       Phoenix.Flash.get(socket.assigns.flash, :email) ||
         get_in(socket.assigns, [:current_scope, Access.key(:user), Access.key(:email)])
 
     form = to_form(%{"email" => email}, as: "user")
+    maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
-    {:ok, assign(socket, form: form, trigger_submit: false, current_path: "/users/log-in")}
+    {:ok, assign(socket, form: form, trigger_submit: false, current_path: "/users/log-in", maintenance_status: maintenance_status)}
   end
 
   def handle_event("submit_password", _params, socket) do

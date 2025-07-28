@@ -9,7 +9,7 @@ defmodule NobullfitWeb.UserLive.Confirmation do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
-      <.navigation current_scope={@current_scope} current_path={@current_path} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
 
       <main class="container mx-auto px-4 py-8 md:py-24 flex-1">
         <div class="mx-auto max-w-sm">
@@ -82,11 +82,12 @@ defmodule NobullfitWeb.UserLive.Confirmation do
     """
   end
 
-  def mount(%{"token" => token}, _session, socket) do
+  def mount(%{"token" => token}, session, socket) do
     if user = Accounts.get_user_by_magic_link_token(token) do
       form = to_form(%{"token" => token}, as: "user")
+      maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
-      {:ok, assign(socket, user: user, form: form, trigger_submit: false, current_path: "/users/log-in/#{token}"),
+      {:ok, assign(socket, user: user, form: form, trigger_submit: false, current_path: "/users/log-in/#{token}", maintenance_status: maintenance_status),
        temporary_assigns: [form: nil]}
     else
       {:ok,

@@ -2,6 +2,7 @@ defmodule NobullfitWeb.Router do
   use NobullfitWeb, :router
 
   import NobullfitWeb.UserAuth
+  import NobullfitWeb.Plugs.MaintenancePlug
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -11,6 +12,8 @@ defmodule NobullfitWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_scope_for_user
+    plug :fetch_maintenance_status
+    plug :check_maintenance_restrictions
   end
 
   pipeline :api do
@@ -24,6 +27,7 @@ defmodule NobullfitWeb.Router do
     live "/about", AboutLive
     live "/privacy", PrivacyLive
     live "/terms", TermsLive
+    get "/maintenance", MaintenanceController, :show
   end
 
   if Application.compile_env(:nobullfit, :dev_routes) do

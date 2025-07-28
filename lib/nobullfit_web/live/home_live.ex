@@ -5,15 +5,16 @@ defmodule NobullfitWeb.HomeLive do
   on_mount {NobullfitWeb.UserAuth, :mount_current_scope}
 
   @impl true
-  def mount(_params, _session, socket) do
-    {:ok, assign(socket, page_title: "Home", current_path: "/")}
+  def mount(_params, session, socket) do
+    maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
+    {:ok, assign(socket, page_title: "Home", current_path: "/", maintenance_status: maintenance_status)}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
-      <.navigation current_scope={@current_scope} current_path={@current_path} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
 
       <main class="container mx-auto px-4 py-8 md:py-24 flex-1">
         <div class="max-w-2xl mx-auto text-center space-y-12">
@@ -21,11 +22,6 @@ defmodule NobullfitWeb.HomeLive do
             <h1 class="text-6xl md:text-7xl font-bold">
               <span class="text-primary">NoBullFit</span>
             </h1>
-            <div class="space-y-4">
-              <div class="badge badge-warning badge-lg">
-                Under Development
-              </div>
-            </div>
           </div>
 
           <div class="space-y-6">

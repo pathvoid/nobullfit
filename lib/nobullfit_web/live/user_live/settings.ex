@@ -11,7 +11,7 @@ defmodule NobullfitWeb.UserLive.Settings do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
-      <.navigation current_scope={@current_scope} current_path={@current_path} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
 
       <main class="container mx-auto px-4 py-8 md:py-24 flex-1">
         <div class="text-center">
@@ -88,10 +88,11 @@ defmodule NobullfitWeb.UserLive.Settings do
     {:ok, push_navigate(socket, to: ~p"/users/settings")}
   end
 
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     user = socket.assigns.current_scope.user
     email_changeset = Accounts.change_user_email(user, %{}, validate_unique: false)
     password_changeset = Accounts.change_user_password(user, %{}, hash_password: false)
+    maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
     socket =
       socket
@@ -100,6 +101,7 @@ defmodule NobullfitWeb.UserLive.Settings do
       |> assign(:password_form, to_form(password_changeset))
       |> assign(:trigger_submit, false)
       |> assign(:current_path, "/users/settings")
+      |> assign(:maintenance_status, maintenance_status)
 
     {:ok, socket}
   end
