@@ -8,7 +8,7 @@ defmodule NobullfitWeb.Components.Navigation do
         <div class="drawer lg:hidden">
           <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />
           <div class="drawer-content">
-            <nav class="navbar bg-base-200/50 backdrop-blur-sm border-b border-base-300">
+            <nav class="navbar bg-base-200/50 backdrop-blur-sm border-b border-base-200">
               <div class="navbar-start">
                 <label for="mobile-drawer" class="btn btn-ghost btn-sm">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,7 +52,7 @@ defmodule NobullfitWeb.Components.Navigation do
           </div>
         </div>
 
-        <nav class="navbar bg-base-200/50 backdrop-blur-sm border-b border-base-300 hidden lg:flex">
+        <nav class="navbar bg-base-200/50 backdrop-blur-sm border-b border-base-200 hidden lg:flex">
           <div class="navbar-start">
           </div>
 
@@ -76,7 +76,7 @@ defmodule NobullfitWeb.Components.Navigation do
   """
   def footer(assigns) do
     ~H"""
-    <footer class="bg-base-200/50 border-t border-base-300 mt-auto">
+    <footer class="bg-base-200/50 border-t border-base-200 mt-auto">
       <div class="container mx-auto px-4 py-8">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <!-- Brand Section -->
