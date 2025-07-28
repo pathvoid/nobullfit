@@ -1,5 +1,8 @@
 import Config
 
+# Only in tests, remove the complexity from the password hashing algorithm
+config :pbkdf2_elixir, :rounds, 1
+
 # Test database configuration
 config :nobullfit, Nobullfit.Repo,
   username: "postgres",

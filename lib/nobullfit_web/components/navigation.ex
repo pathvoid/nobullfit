@@ -2,6 +2,8 @@ defmodule NobullfitWeb.Components.Navigation do
   use Phoenix.Component
   import NobullfitWeb.Layouts, only: [theme_toggle: 1]
 
+  use NobullfitWeb, :verified_routes
+
   def navigation(assigns) do
       ~H"""
       <div>
@@ -18,15 +20,34 @@ defmodule NobullfitWeb.Components.Navigation do
               </div>
 
               <div class="navbar-center hidden lg:flex">
-                <ul class="menu menu-horizontal gap-2">
-                  <li><a href="/" class="btn btn-ghost btn-sm">Home</a></li>
-                  <li><a href="/about" class="btn btn-ghost btn-sm">About</a></li>
-                </ul>
+                <%= unless String.starts_with?(@current_path || "", "/d") or String.starts_with?(@current_path || "", "/users") do %>
+                  <ul class="menu menu-horizontal gap-2">
+                    <li><a href="/" class="btn btn-ghost btn-sm">Home</a></li>
+                    <li><a href="/about" class="btn btn-ghost btn-sm">About</a></li>
+                  </ul>
+                <% end %>
               </div>
 
               <div class="navbar-end">
                 <div class="hidden lg:block">
                   <.theme_toggle />
+                </div>
+                <div class="hidden lg:block ml-4">
+                  <%= if @current_scope && @current_scope.user do %>
+                    <div class="flex gap-2">
+                      <%= if String.starts_with?(@current_path || "", "/d") do %>
+                        <.link href={~p"/users/settings"} class="btn btn-ghost btn-sm">Settings</.link>
+                      <% else %>
+                        <a href="/d" class="btn btn-ghost btn-sm">Dashboard</a>
+                      <% end %>
+                      <.link href={~p"/users/log-out"} method="delete" class="btn btn-ghost btn-sm">Log out</.link>
+                    </div>
+                  <% else %>
+                    <div class="flex gap-2">
+                      <a href="/users/log-in" class="btn btn-ghost btn-sm">Log in</a>
+                      <a href="/users/register" class="btn btn-ghost btn-sm">Register</a>
+                    </div>
+                  <% end %>
                 </div>
               </div>
             </nav>
@@ -38,8 +59,21 @@ defmodule NobullfitWeb.Components.Navigation do
               <li class="menu-title">
                 <span>Navigation</span>
               </li>
-              <li><a href="/" class="text-lg">Home</a></li>
-              <li><a href="/about" class="text-lg">About</a></li>
+              <%= unless String.starts_with?(@current_path || "", "/d") or String.starts_with?(@current_path || "", "/users") do %>
+                <li><a href="/" class="text-lg">Home</a></li>
+                <li><a href="/about" class="text-lg">About</a></li>
+              <% end %>
+              <%= if @current_scope && @current_scope.user do %>
+                <%= if String.starts_with?(@current_path || "", "/d") do %>
+                  <li><.link href={~p"/users/settings"} class="text-lg">Settings</.link></li>
+                <% else %>
+                  <li><a href="/d" class="text-lg">Dashboard</a></li>
+                <% end %>
+                <li><.link href={~p"/users/log-out"} method="delete" class="text-lg">Log out</.link></li>
+              <% else %>
+                <li><a href="/users/log-in" class="text-lg">Log in</a></li>
+                <li><a href="/users/register" class="text-lg">Register</a></li>
+              <% end %>
               <li class="menu-title mt-8">
                 <span>Theme</span>
               </li>
@@ -54,17 +88,39 @@ defmodule NobullfitWeb.Components.Navigation do
 
         <nav class="navbar bg-base-200/50 backdrop-blur-sm border-b border-base-200 hidden lg:flex">
           <div class="navbar-start">
+            <%= if String.starts_with?(@current_path || "", "/d") or String.starts_with?(@current_path || "", "/users") do %>
+              <a href="/d" class="text-xl font-bold text-primary ml-2">NoBullFit</a>
+            <% end %>
           </div>
 
           <div class="navbar-center">
-            <ul class="menu menu-horizontal gap-2">
-              <li><a href="/" class="btn btn-ghost btn-sm">Home</a></li>
-              <li><a href="/about" class="btn btn-ghost btn-sm">About</a></li>
-            </ul>
+            <%= unless String.starts_with?(@current_path || "", "/d") or String.starts_with?(@current_path || "", "/users") do %>
+              <ul class="menu menu-horizontal gap-2">
+                <li><a href="/" class="btn btn-ghost btn-sm">Home</a></li>
+                <li><a href="/about" class="btn btn-ghost btn-sm">About</a></li>
+              </ul>
+            <% end %>
           </div>
 
           <div class="navbar-end">
             <.theme_toggle />
+            <div class="ml-4">
+              <%= if @current_scope && @current_scope.user do %>
+                <div class="flex gap-2">
+                  <%= if String.starts_with?(@current_path || "", "/d") do %>
+                    <.link href={~p"/users/settings"} class="btn btn-ghost btn-sm">Settings</.link>
+                  <% else %>
+                    <a href="/d" class="btn btn-ghost btn-sm">Dashboard</a>
+                  <% end %>
+                  <.link href={~p"/users/log-out"} method="delete" class="btn btn-ghost btn-sm">Log out</.link>
+                </div>
+              <% else %>
+                <div class="flex gap-2">
+                  <a href="/users/log-in" class="btn btn-ghost btn-sm">Log in</a>
+                  <a href="/users/register" class="btn btn-ghost btn-sm">Register</a>
+                </div>
+              <% end %>
+            </div>
           </div>
         </nav>
       </div>

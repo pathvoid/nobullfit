@@ -1,5 +1,18 @@
 import Config
 
+config :nobullfit, :scopes,
+  user: [
+    default: true,
+    module: Nobullfit.Accounts.Scope,
+    assign_key: :current_scope,
+    access_path: [:user, :id],
+    schema_key: :user_id,
+    schema_type: :id,
+    schema_table: :users,
+    test_data_fixture: Nobullfit.AccountsFixtures,
+    test_setup_helper: :register_and_log_in_user
+  ]
+
 # Application configuration
 config :nobullfit,
   ecto_repos: [Nobullfit.Repo],
