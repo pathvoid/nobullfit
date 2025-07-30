@@ -29,9 +29,6 @@ config :nobullfit, NobullfitWeb.Endpoint,
   pubsub_server: Nobullfit.PubSub,
   live_view: [signing_salt: "jw+NDidg"]
 
-# Mailer configuration - uses local adapter for development
-config :nobullfit, Nobullfit.Mailer, adapter: Swoosh.Adapters.Local
-
 # JavaScript bundling configuration
 config :esbuild,
   version: "0.17.11",

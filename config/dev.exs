@@ -52,3 +52,6 @@ config :phoenix_live_view,
 
 # Disable Swoosh API client for development
 config :swoosh, :api_client, false
+
+# Development mailer configuration - uses local adapter
+config :nobullfit, Nobullfit.Mailer, adapter: Swoosh.Adapters.Local
