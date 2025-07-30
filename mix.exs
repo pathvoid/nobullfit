@@ -60,7 +60,8 @@ defmodule Nobullfit.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
-      {:gen_smtp, "~> 1.0"}
+      {:gen_smtp, "~> 1.0"},
+      {:hackney, "~> 1.9"}
     ]
   end
 
