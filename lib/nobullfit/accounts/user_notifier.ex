@@ -9,7 +9,7 @@ defmodule Nobullfit.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Nobullfit", "contact@example.com"})
+      |> from({"Nobullfit", "support@nobull.fit"})
       |> subject(subject)
       |> text_body(body)
 
