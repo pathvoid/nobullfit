@@ -24,6 +24,8 @@ defmodule NobullfitWeb.AboutLive do
             </p>
           </div>
 
+          <img src="/assets/images/campfire.png" alt="NoBullFit" class="w-60 h-auto mx-auto" />
+
           <div class="space-y-4">
             <h2 class="text-2xl font-semibold">Mission</h2>
             <p class="text-base-content/70 leading-relaxed">

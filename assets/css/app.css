@@ -100,3 +100,39 @@
 [data-phx-session] { display: contents }
 
 /* This file is for your main application CSS */
+
+/* Parachuting avocado animation */
+@keyframes parachute-float {
+  0% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  12.5% {
+    transform: translateY(-4px) translateX(2px) rotate(0.5deg);
+  }
+  25% {
+    transform: translateY(-8px) translateX(4px) rotate(1deg);
+  }
+  37.5% {
+    transform: translateY(-6px) translateX(2px) rotate(0.25deg);
+  }
+  50% {
+    transform: translateY(-4px) translateX(0px) rotate(-0.5deg);
+  }
+  62.5% {
+    transform: translateY(-8px) translateX(-2px) rotate(-0.25deg);
+  }
+  75% {
+    transform: translateY(-12px) translateX(-4px) rotate(0.5deg);
+  }
+  87.5% {
+    transform: translateY(-8px) translateX(-2px) rotate(0.25deg);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+}
+
+.parachuting-avocado {
+  animation: parachute-float 4s ease-in-out infinite;
+  will-change: transform;
+}

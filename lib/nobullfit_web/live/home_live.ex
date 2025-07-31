@@ -29,6 +29,8 @@ defmodule NobullfitWeb.HomeLive do
               This project is currently under development and not publicly accessible yet.
             </p>
           </div>
+
+          <img src="/assets/images/avocado.png" alt="NoBullFit" class="w-30 h-auto mx-auto parachuting-avocado" />
         </div>
       </main>
 
