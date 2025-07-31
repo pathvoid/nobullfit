@@ -83,17 +83,23 @@ defmodule NobullfitWeb.UserLive.Confirmation do
   end
 
   def mount(%{"token" => token}, session, socket) do
-    if user = Accounts.get_user_by_magic_link_token(token) do
-      form = to_form(%{"token" => token}, as: "user")
-      maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
+    maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
-      {:ok, assign(socket, user: user, form: form, trigger_submit: false, current_path: "/users/log-in/#{token}", maintenance_status: maintenance_status),
-       temporary_assigns: [form: nil]}
+    # Check if maintenance mode is enabled and login is blocked
+    if maintenance_status.enabled && maintenance_status.prevent_login do
+      {:ok, redirect(socket, to: ~p"/maintenance")}
     else
-      {:ok,
-       socket
-       |> put_flash(:error, "Magic link is invalid or it has expired.")
-       |> push_navigate(to: ~p"/users/log-in")}
+      if user = Accounts.get_user_by_magic_link_token(token) do
+        form = to_form(%{"token" => token}, as: "user")
+
+        {:ok, assign(socket, user: user, form: form, trigger_submit: false, current_path: "/users/log-in/#{token}", maintenance_status: maintenance_status),
+         temporary_assigns: [form: nil]}
+      else
+        {:ok,
+         socket
+         |> put_flash(:error, "Magic link is invalid or it has expired.")
+         |> push_navigate(to: ~p"/users/log-in")}
+      end
     end
   end
 

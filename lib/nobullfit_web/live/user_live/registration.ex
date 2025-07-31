@@ -59,7 +59,12 @@ defmodule NobullfitWeb.UserLive.Registration do
     changeset = Accounts.change_user_email(%User{})
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
-    {:ok, assign_form(socket, changeset, maintenance_status), temporary_assigns: [form: nil]}
+    # Check if maintenance mode is enabled and registration is blocked
+    if maintenance_status.enabled && maintenance_status.prevent_registration do
+      {:ok, redirect(socket, to: ~p"/maintenance")}
+    else
+      {:ok, assign_form(socket, changeset, maintenance_status), temporary_assigns: [form: nil]}
+    end
   end
 
   def handle_event("save", %{"user" => user_params}, socket) do

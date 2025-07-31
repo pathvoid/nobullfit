@@ -109,7 +109,12 @@ defmodule NobullfitWeb.UserLive.Login do
     form = to_form(%{"email" => email}, as: "user")
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
-    {:ok, assign(socket, form: form, trigger_submit: false, current_path: "/users/log-in", maintenance_status: maintenance_status)}
+    # Check if maintenance mode is enabled and login is blocked
+    if maintenance_status.enabled && maintenance_status.prevent_login do
+      {:ok, redirect(socket, to: ~p"/maintenance")}
+    else
+      {:ok, assign(socket, form: form, trigger_submit: false, current_path: "/users/log-in", maintenance_status: maintenance_status)}
+    end
   end
 
   def handle_event("submit_password", _params, socket) do
