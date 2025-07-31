@@ -50,6 +50,19 @@ defmodule NobullfitWeb.Components.Navigation do
                     </div>
                   <% end %>
                 </div>
+                <!-- Mobile auth links -->
+                <div class="lg:hidden flex gap-2">
+                  <%= if @current_scope && @current_scope.user do %>
+                    <%= if String.starts_with?(@current_path || "", "/d") do %>
+                      <.link href={~p"/users/settings"} class="btn btn-ghost btn-sm">Settings</.link>
+                    <% else %>
+                      <a href="/d" class="btn btn-ghost btn-sm">Dashboard</a>
+                    <% end %>
+                  <% else %>
+                    <a href="/users/log-in" class="btn btn-ghost btn-sm">Log in</a>
+                    <a href="/users/register" class="btn btn-ghost btn-sm">Register</a>
+                  <% end %>
+                </div>
               </div>
             </nav>
           </div>
@@ -65,15 +78,7 @@ defmodule NobullfitWeb.Components.Navigation do
                 <li><a href="/about" class="text-lg">About</a></li>
               <% end %>
               <%= if @current_scope && @current_scope.user do %>
-                <%= if String.starts_with?(@current_path || "", "/d") do %>
-                  <li><.link href={~p"/users/settings"} class="text-lg">Settings</.link></li>
-                <% else %>
-                  <li><a href="/d" class="text-lg">Dashboard</a></li>
-                <% end %>
                 <li><.link href={~p"/users/log-out"} method="delete" class="text-lg">Log out</.link></li>
-              <% else %>
-                <li><a href="/users/log-in" class="text-lg">Log in</a></li>
-                <li><a href="/users/register" class="text-lg">Register</a></li>
               <% end %>
               <li class="menu-title mt-8">
                 <span>Theme</span>
