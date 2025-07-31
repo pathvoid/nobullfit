@@ -49,6 +49,8 @@ defmodule NobullfitWeb.Router do
     live_session :require_authenticated_user,
       on_mount: [{NobullfitWeb.UserAuth, :require_authenticated}] do
       live "/d", DashboardLive
+      live "/d/food", Dashboard.FoodLive
+      live "/d/progress", Dashboard.ProgressLive
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
     end

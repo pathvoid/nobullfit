@@ -2,6 +2,7 @@ defmodule NobullfitWeb.UserLive.Settings do
   use NobullfitWeb, :live_view
   import NobullfitWeb.CoreComponents
   import NobullfitWeb.Components.Navigation, only: [navigation: 1, footer: 1]
+  import NobullfitWeb.Components.Sidebar, only: [sidebar: 1]
   import NobullfitWeb.Layouts, only: [flash_group: 1]
 
   on_mount {NobullfitWeb.UserAuth, :require_sudo_mode}
@@ -13,63 +14,71 @@ defmodule NobullfitWeb.UserLive.Settings do
     <div class="min-h-screen bg-base-100 flex flex-col">
       <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
 
-      <main class="container mx-auto px-4 py-8 md:py-24 flex-1">
-        <div class="text-center">
-          <.header>
-            Account Settings
-            <:subtitle>Manage your account email address and password settings</:subtitle>
-          </.header>
+      <div class="flex flex-1">
+        <.sidebar current_path={@current_path} />
+
+        <div class="flex-1">
+          <main class="px-4 py-8 md:py-12">
+            <div class="max-w-4xl mx-auto space-y-8">
+              <div class="text-center">
+                <.header>
+                  Account Settings
+                  <:subtitle>Manage your account email address and password settings</:subtitle>
+                </.header>
+              </div>
+
+              <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
+                <.input
+                  field={@email_form[:email]}
+                  type="email"
+                  label="Email"
+                  autocomplete="username"
+                  required
+                />
+                <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
+              </.form>
+
+              <div class="divider" />
+
+              <.form
+                for={@password_form}
+                id="password_form"
+                action={~p"/users/update-password"}
+                method="post"
+                phx-change="validate_password"
+                phx-submit="update_password"
+                phx-trigger-action={@trigger_submit}
+              >
+                <input
+                  name={@password_form[:email].name}
+                  type="hidden"
+                  id="hidden_user_email"
+                  autocomplete="username"
+                  value={@current_email}
+                />
+                <.input
+                  field={@password_form[:password]}
+                  type="password"
+                  label="New password"
+                  autocomplete="new-password"
+                  required
+                />
+                <.input
+                  field={@password_form[:password_confirmation]}
+                  type="password"
+                  label="Confirm new password"
+                  autocomplete="new-password"
+                />
+                <.button variant="primary" phx-disable-with="Saving...">
+                  Save Password
+                </.button>
+              </.form>
+            </div>
+          </main>
         </div>
+      </div>
 
-        <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
-          <.input
-            field={@email_form[:email]}
-            type="email"
-            label="Email"
-            autocomplete="username"
-            required
-          />
-          <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
-        </.form>
-
-        <div class="divider" />
-
-        <.form
-          for={@password_form}
-          id="password_form"
-          action={~p"/users/update-password"}
-          method="post"
-          phx-change="validate_password"
-          phx-submit="update_password"
-          phx-trigger-action={@trigger_submit}
-        >
-          <input
-            name={@password_form[:email].name}
-            type="hidden"
-            id="hidden_user_email"
-            autocomplete="username"
-            value={@current_email}
-          />
-          <.input
-            field={@password_form[:password]}
-            type="password"
-            label="New password"
-            autocomplete="new-password"
-            required
-          />
-          <.input
-            field={@password_form[:password_confirmation]}
-            type="password"
-            label="Confirm new password"
-            autocomplete="new-password"
-          />
-          <.button variant="primary" phx-disable-with="Saving...">
-            Save Password
-          </.button>
-        </.form>
-      </main>
-
-      <.footer />
+      <.footer current_path={@current_path} />
       <.flash_group flash={@flash} />
     </div>
     """

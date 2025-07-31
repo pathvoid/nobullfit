@@ -1,4 +1,4 @@
-defmodule NobullfitWeb.DashboardLive do
+defmodule NobullfitWeb.Dashboard.ProgressLive do
   use NobullfitWeb, :live_view
   import NobullfitWeb.CoreComponents
   import NobullfitWeb.Components.Navigation, only: [navigation: 1, footer: 1]
@@ -10,7 +10,7 @@ defmodule NobullfitWeb.DashboardLive do
   @impl true
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
-    {:ok, assign(socket, page_title: "Dashboard", current_path: "/d", maintenance_status: maintenance_status)}
+    {:ok, assign(socket, page_title: "Progress Tracking", current_path: "/d/progress", maintenance_status: maintenance_status)}
   end
 
   @impl true
@@ -27,8 +27,8 @@ defmodule NobullfitWeb.DashboardLive do
             <div class="max-w-4xl mx-auto space-y-8">
               <div class="text-center">
                 <.header>
-                  Dashboard
-                  <:subtitle>Welcome back, {@current_scope.user.email}</:subtitle>
+                  Progress Tracking
+                  <:subtitle>Monitor your fitness and nutrition progress</:subtitle>
                 </.header>
               </div>
             </div>

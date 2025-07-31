@@ -7,6 +7,6 @@ defmodule NobullfitWeb.MaintenanceController do
     conn
     |> put_status(:service_unavailable)
     |> put_layout(false)
-    |> render("maintenance.html", maintenance_status: maintenance_status)
+    |> render("maintenance.html", maintenance_status: maintenance_status, current_path: "/maintenance")
   end
 end

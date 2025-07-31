@@ -79,7 +79,7 @@ defmodule NobullfitWeb.AboutLive do
         </div>
       </main>
 
-      <.footer />
+      <.footer current_path={@current_path} />
     </div>
     """
   end

@@ -105,7 +105,7 @@ defmodule NobullfitWeb.TermsLive do
         </div>
       </main>
 
-      <.footer />
+      <.footer current_path={@current_path} />
     </div>
     """
   end

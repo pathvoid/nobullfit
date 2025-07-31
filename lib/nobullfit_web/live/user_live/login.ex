@@ -95,7 +95,7 @@ defmodule NobullfitWeb.UserLive.Login do
         </div>
       </main>
 
-      <.footer />
+      <.footer current_path={@current_path} />
       <.flash_group flash={@flash} />
     </div>
     """

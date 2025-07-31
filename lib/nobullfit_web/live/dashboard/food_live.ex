@@ -1,4 +1,4 @@
-defmodule NobullfitWeb.DashboardLive do
+defmodule NobullfitWeb.Dashboard.FoodLive do
   use NobullfitWeb, :live_view
   import NobullfitWeb.CoreComponents
   import NobullfitWeb.Components.Navigation, only: [navigation: 1, footer: 1]
@@ -10,7 +10,7 @@ defmodule NobullfitWeb.DashboardLive do
   @impl true
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
-    {:ok, assign(socket, page_title: "Dashboard", current_path: "/d", maintenance_status: maintenance_status)}
+    {:ok, assign(socket, page_title: "Food Tracking", current_path: "/d/food", maintenance_status: maintenance_status)}
   end
 
   @impl true
@@ -27,8 +27,8 @@ defmodule NobullfitWeb.DashboardLive do
             <div class="max-w-4xl mx-auto space-y-8">
               <div class="text-center">
                 <.header>
-                  Dashboard
-                  <:subtitle>Welcome back, {@current_scope.user.email}</:subtitle>
+                  Food Tracking
+                  <:subtitle>Track your daily nutrition and meals</:subtitle>
                 </.header>
               </div>
             </div>

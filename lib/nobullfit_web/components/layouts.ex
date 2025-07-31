@@ -114,7 +114,7 @@ defmodule NobullfitWeb.Layouts do
       </button>
 
       <button
-        onclick="setTheme('latte')"
+        onclick="setTheme('frappe')"
         class="flex p-2 cursor-pointer w-1/3"
       >
         <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />

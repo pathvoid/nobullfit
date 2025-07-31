@@ -34,7 +34,7 @@ defmodule NobullfitWeb.HomeLive do
         </div>
       </main>
 
-      <.footer />
+      <.footer current_path={@current_path} />
     </div>
     """
   end

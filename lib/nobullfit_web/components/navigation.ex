@@ -11,9 +11,9 @@ defmodule NobullfitWeb.Components.Navigation do
         <div class="drawer lg:hidden">
           <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />
           <div class="drawer-content">
-            <nav class="navbar bg-base-200/50 backdrop-blur-sm border-b border-base-200">
-              <div class="navbar-start">
-                <label for="mobile-drawer" class="btn btn-ghost btn-sm">
+                         <nav class="navbar bg-base-200/50 backdrop-blur-sm border-b border-base-200" style="z-index: 999999;">
+               <div class="navbar-start">
+                 <label for="mobile-drawer" class="btn btn-ghost btn-sm">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                   </svg>
@@ -69,13 +69,25 @@ defmodule NobullfitWeb.Components.Navigation do
 
           <div class="drawer-side" style="z-index: 99999;">
             <label for="mobile-drawer" aria-label="close sidebar" class="drawer-overlay" style="z-index: 99998;"></label>
-            <ul class="menu p-4 w-80 min-h-full bg-base-200 text-base-content" style="z-index: 99999;">
-              <li class="menu-title">
-                <span>Navigation</span>
-              </li>
+            <div class="relative w-80 min-h-full bg-base-200 text-base-content" style="z-index: 99999;">
+              <label for="mobile-drawer" class="btn btn-ghost btn-sm absolute top-4 right-4" style="z-index: 999999;">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </label>
+              <ul class="menu p-4 w-full min-h-full" style="z-index: 99999;">
               <%= unless String.starts_with?(@current_path || "", "/d") or (String.starts_with?(@current_path || "", "/users") and not String.starts_with?(@current_path || "", "/users/log-in") and not String.starts_with?(@current_path || "", "/users/register")) do %>
                 <li><a href="/" class="text-lg">Home</a></li>
                 <li><a href="/about" class="text-lg">About</a></li>
+              <% end %>
+              <%= if String.starts_with?(@current_path || "", "/d") do %>
+                <li class="menu-title mt-4">
+                  <span>Dashboard</span>
+                </li>
+                <li><a href="/d" class="text-lg">Overview</a></li>
+                <li><a href="/d/food" class="text-lg">Food Tracking</a></li>
+                <li><a href="/d/progress" class="text-lg">Progress</a></li>
+                <li><a href="/users/settings" class="text-lg">Settings</a></li>
               <% end %>
               <%= if @current_scope && @current_scope.user do %>
                 <li><.link href={~p"/users/log-out"} method="delete" class="text-lg">Log out</.link></li>
@@ -89,6 +101,7 @@ defmodule NobullfitWeb.Components.Navigation do
                 </div>
               </li>
             </ul>
+            </div>
           </div>
         </div>
 
@@ -140,45 +153,65 @@ defmodule NobullfitWeb.Components.Navigation do
   """
   def footer(assigns) do
     ~H"""
-    <footer class="bg-base-200/50 border-t border-base-200 mt-auto">
-      <div class="container mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <!-- Brand Section -->
-          <div class="space-y-4">
-            <h3 class="text-lg font-semibold">NoBullFit</h3>
-            <p class="text-sm text-base-content/70">
-              Free food tracking and progress monitoring with privacy first.
+    <%= if String.starts_with?(@current_path || "", "/d") or String.starts_with?(@current_path || "", "/users/settings") do %>
+      <!-- Compact footer for dashboard pages -->
+      <footer class="bg-base-200/50 border-t border-base-200 mt-auto">
+        <div class="container mx-auto px-4 py-4">
+                     <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+             <p class="text-sm text-base-content/60">
+               © <%= DateTime.utc_now().year %> NoBullFit. All rights reserved.
+             </p>
+             <div class="flex gap-6 text-sm">
+               <a href="/privacy" class="text-base-content/70 hover:text-base-content transition-colors">
+                 Privacy Policy
+               </a>
+               <a href="/terms" class="text-base-content/70 hover:text-base-content transition-colors">
+                 Terms of Service
+               </a>
+             </div>
+           </div>
+        </div>
+      </footer>
+    <% else %>
+      <!-- Full footer for other pages -->
+      <footer class="bg-base-200/50 border-t border-base-200 mt-auto">
+        <div class="container mx-auto px-4 py-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Brand Section -->
+            <div class="space-y-4">
+              <h3 class="text-lg font-semibold">NoBullFit</h3>
+              <p class="text-sm text-base-content/70">
+                Free food tracking and progress monitoring with privacy first.
+              </p>
+            </div>
+
+            <!-- Contact & Legal -->
+            <div class="space-y-4">
+              <h3 class="text-lg font-semibold">Legal</h3>
+              <ul class="space-y-2">
+                <li>
+                  <a href="/privacy" class="text-sm text-base-content/70 hover:text-base-content transition-colors">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="/terms" class="text-sm text-base-content/70 hover:text-base-content transition-colors">
+                    Terms of Service
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Copyright -->
+          <div class="mt-8 pt-8 text-center">
+            <p class="text-sm text-base-content/60">
+              © <%= DateTime.utc_now().year %> NoBullFit. All rights reserved.
             </p>
           </div>
-
-
-
-          <!-- Contact & Legal -->
-          <div class="space-y-4">
-            <h3 class="text-lg font-semibold">Legal</h3>
-            <ul class="space-y-2">
-              <li>
-                <a href="/privacy" class="text-sm text-base-content/70 hover:text-base-content transition-colors">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="/terms" class="text-sm text-base-content/70 hover:text-base-content transition-colors">
-                  Terms of Service
-                </a>
-              </li>
-            </ul>
-          </div>
         </div>
-
-        <!-- Copyright -->
-        <div class="mt-8 pt-8 text-center">
-          <p class="text-sm text-base-content/60">
-            © <%= DateTime.utc_now().year %> NoBullFit. All rights reserved.
-          </p>
-        </div>
-      </div>
-    </footer>
+      </footer>
+    <% end %>
     """
   end
 end
