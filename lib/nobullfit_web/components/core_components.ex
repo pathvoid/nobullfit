@@ -282,15 +282,23 @@ defmodule NobullfitWeb.CoreComponents do
   @doc """
   Renders a header with title.
   """
+  attr :size, :string, default: "lg", values: ~w(sm md lg xl), doc: "the size of the header"
   slot :inner_block, required: true
   slot :subtitle
   slot :actions
 
   def header(assigns) do
+    size_classes = %{
+      "sm" => "text-sm font-medium",
+      "md" => "text-base font-semibold",
+      "lg" => "text-lg font-semibold leading-8",
+      "xl" => "text-xl font-semibold leading-8"
+    }
+
     ~H"""
     <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8">
+        <h1 class={size_classes[@size]}>
           {render_slot(@inner_block)}
         </h1>
         <p :if={@subtitle != []} class="text-sm text-base-content/70">
