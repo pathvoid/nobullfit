@@ -24,6 +24,7 @@ defmodule NobullfitWeb.Components.Navigation do
                 <%= unless String.starts_with?(@current_path || "", "/d") or (String.starts_with?(@current_path || "", "/users") and not String.starts_with?(@current_path || "", "/users/log-in") and not String.starts_with?(@current_path || "", "/users/register")) do %>
                   <ul class="menu menu-horizontal gap-2">
                     <li><a href="/" class="btn btn-ghost btn-sm">Home</a></li>
+                    <li><a href="/guides" class="btn btn-ghost btn-sm">Guides</a></li>
                     <li><a href="/about" class="btn btn-ghost btn-sm">About</a></li>
                   </ul>
                 <% end %>
@@ -78,6 +79,7 @@ defmodule NobullfitWeb.Components.Navigation do
               <ul class="menu p-4 w-full min-h-full" style="z-index: 99999;">
               <%= unless String.starts_with?(@current_path || "", "/d") or (String.starts_with?(@current_path || "", "/users") and not String.starts_with?(@current_path || "", "/users/log-in") and not String.starts_with?(@current_path || "", "/users/register")) do %>
                 <li><a href="/" class="text-lg">Home</a></li>
+                <li><a href="/guides" class="text-lg">Guides</a></li>
                 <li><a href="/about" class="text-lg">About</a></li>
               <% end %>
               <%= if String.starts_with?(@current_path || "", "/d") do %>
@@ -116,6 +118,7 @@ defmodule NobullfitWeb.Components.Navigation do
             <%= unless String.starts_with?(@current_path || "", "/d") or (String.starts_with?(@current_path || "", "/users") and not String.starts_with?(@current_path || "", "/users/log-in") and not String.starts_with?(@current_path || "", "/users/register")) do %>
               <ul class="menu menu-horizontal gap-2">
                 <li><a href="/" class="btn btn-ghost btn-sm">Home</a></li>
+                <li><a href="/guides" class="btn btn-ghost btn-sm">Guides</a></li>
                 <li><a href="/about" class="btn btn-ghost btn-sm">About</a></li>
               </ul>
             <% end %>

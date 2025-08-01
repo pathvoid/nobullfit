@@ -24,6 +24,7 @@ defmodule NobullfitWeb.Router do
     pipe_through :browser
 
     live "/", HomeLive
+    live "/guides", GuidesLive
     live "/about", AboutLive
     live "/privacy", PrivacyLive
     live "/terms", TermsLive
