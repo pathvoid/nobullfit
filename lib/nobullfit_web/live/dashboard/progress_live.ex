@@ -572,7 +572,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                     <!-- Mobile Layout -->
                     <div class="md:hidden">
                       <div class="grid grid-cols-4 gap-1">
-                        <%= for {day_summary, _index} <- Enum.take(@weekly_summary.daily_summaries, 4) do %>
+                        <%= for {day_summary, _index_day} <- Enum.with_index(@weekly_summary.daily_summaries, 4) do %>
                           <div class={get_mobile_week_day_class(day_summary.date, @selected_date)}>
                             <div class="text-xs font-medium"><%= get_day_name(day_summary.date) %></div>
                             <div class={get_mobile_status_class(day_summary.total_duration)}>
