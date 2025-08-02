@@ -15,6 +15,31 @@
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/themes.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}></script>
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/theme_init.js"}></script>
+    
+    <script>
+      // Detect timezone and local date immediately
+      (function() {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        
+        // Get local date correctly (not UTC)
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const localDate = `${year}-${month}-${day}`; // YYYY-MM-DD format
+        
+        window.userTimezone = timezone;
+        window.userLocalDate = localDate;
+        sessionStorage.setItem('user_timezone', timezone);
+        sessionStorage.setItem('user_local_date', localDate);
+        
+        // Store timezone data globally for LiveView to access
+        window.timezoneData = {
+          timezone: timezone,
+          localDate: localDate
+        };
+      })();
+    </script>
   </head>
   <body>
     {@inner_content}

@@ -9,6 +9,9 @@ defmodule Nobullfit.Accounts.User do
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
 
+    has_many :activities, Nobullfit.Activities.Activity
+    has_many :weight_entries, Nobullfit.WeightEntries.WeightEntry
+
     timestamps(type: :utc_datetime)
   end
 
