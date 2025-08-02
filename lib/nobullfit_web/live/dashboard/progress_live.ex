@@ -289,26 +289,26 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
         <div class="flex-1">
           <main class="px-4 py-8 md:py-12">
             <div class="px-4 space-y-4">
-               <!-- Header Section -->
-               <div>
-                 <.header>
-                   Activity Log
-                   <:subtitle>Track your daily exercises and workouts</:subtitle>
-                   <:actions>
+              <!-- Header Section -->
+              <div>
+                <.header>
+                  Activity Log
+                  <:subtitle>Track your daily exercises and workouts</:subtitle>
+                  <:actions>
                     <div class="hidden md:flex items-center gap-2">
-                       <input type="date" class="input input-sm input-bordered" value={@selected_date |> Date.to_string()} max={@max_date} id="desktop-date-picker" phx-hook="DatePicker" />
-                         <button class="btn btn-sm btn-ghost" phx-click="change_date" phx-value-date={@max_date}>Today</button>
-                       </div>
-                   </:actions>
-                 </.header>
-                 <!-- Mobile Date Picker -->
-                 <div class="md:hidden mt-4">
-                    <div class="flex items-center gap-2">
-                       <input type="date" class="input input-sm input-bordered" value={@selected_date |> Date.to_string()} max={@max_date} id="mobile-date-picker" phx-hook="DatePicker" />
-                       <button class="btn btn-sm btn-ghost" phx-click="change_date" phx-value-date={@max_date}>Today</button>
+                      <input type="date" class="input input-sm input-bordered" value={@selected_date |> Date.to_string()} max={@max_date} id="desktop-date-picker" phx-hook="DatePicker" />
+                      <button class="btn btn-sm btn-ghost" phx-click="change_date" phx-value-date={@max_date}>Today</button>
                     </div>
+                  </:actions>
+                </.header>
+                <!-- Mobile Date Picker -->
+                <div class="md:hidden mt-4">
+                  <div class="flex items-center gap-2">
+                    <input type="date" class="input input-sm input-bordered" value={@selected_date |> Date.to_string()} max={@max_date} id="mobile-date-picker" phx-hook="DatePicker" />
+                    <button class="btn btn-sm btn-ghost" phx-click="change_date" phx-value-date={@max_date}>Today</button>
                   </div>
-               </div>
+                </div>
+              </div>
 
               <!-- Today's Summary -->
               <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -353,49 +353,49 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <!-- Add Activity -->
                   <div class="space-y-4">
-                  <.header size="md">
-                  Add Activity
-                  <:subtitle>Log your exercises and workouts</:subtitle>
-                  </.header>
+                    <.header size="md">
+                      Add Activity
+                      <:subtitle>Log your exercises and workouts</:subtitle>
+                    </.header>
 
                     <div class="card bg-base-200 shadow-sm">
                       <div class="card-body">
-                                                 <.form for={@activity_form} phx-submit="save_activity" id="activity-form" phx-hook="ActivityForm" novalidate>
+                        <.form for={@activity_form} phx-submit="save_activity" id="activity-form" phx-hook="ActivityForm" novalidate>
                           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Exercise Type</legend>
-                                                             <.input
-                                 field={@activity_form[:exercise_type]}
-                                 type="select"
-                                 class={if @activity_submitted && @activity_changeset.errors[:exercise_type], do: "select select-bordered select-error w-full", else: "select select-bordered w-full"}
-                                 prompt="Select exercise type"
-                                 options={[
-                                   {"Cardio", "Cardio"},
-                                   {"Strength Training", "Strength Training"},
-                                   {"Yoga", "Yoga"},
-                                   {"Running", "Running"},
-                                   {"Cycling", "Cycling"},
-                                   {"Swimming", "Swimming"}
-                                 ]}
-                               />
+                              <.input
+                                field={@activity_form[:exercise_type]}
+                                type="select"
+                                class={if @activity_submitted && @activity_changeset.errors[:exercise_type], do: "select select-bordered select-error w-full", else: "select select-bordered w-full"}
+                                prompt="Select exercise type"
+                                options={[
+                                  {"Cardio", "Cardio"},
+                                  {"Strength Training", "Strength Training"},
+                                  {"Yoga", "Yoga"},
+                                  {"Running", "Running"},
+                                  {"Cycling", "Cycling"},
+                                  {"Swimming", "Swimming"}
+                                ]}
+                              />
                             </fieldset>
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Duration (min)</legend>
-                                                                                              <.input
-                                   field={@activity_form[:duration_minutes]}
-                                   type="number"
-                                   class={if @activity_submitted && @activity_changeset.errors[:duration_minutes], do: "input input-bordered input-error", else: "input input-bordered"}
-                                   placeholder="30"
-                                 />
+                              <.input
+                                field={@activity_form[:duration_minutes]}
+                                type="number"
+                                class={if @activity_submitted && @activity_changeset.errors[:duration_minutes], do: "input input-bordered input-error", else: "input input-bordered"}
+                                placeholder="30"
+                              />
                             </fieldset>
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Calories Burned</legend>
-                                                                                              <.input
-                                   field={@activity_form[:calories_burned]}
-                                   type="number"
-                                   class={if @activity_submitted && @activity_changeset.errors[:calories_burned], do: "input input-bordered input-error", else: "input input-bordered"}
-                                   placeholder="150"
-                                 />
+                              <.input
+                                field={@activity_form[:calories_burned]}
+                                type="number"
+                                class={if @activity_submitted && @activity_changeset.errors[:calories_burned], do: "input input-bordered input-error", else: "input input-bordered"}
+                                placeholder="150"
+                              />
                             </fieldset>
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">&nbsp;</legend>
@@ -416,32 +416,32 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
 
                     <div class="card bg-base-200 shadow-sm">
                       <div class="card-body">
-                                                 <.form for={@weight_form} phx-submit="save_weight" id="weight-form" phx-hook="WeightForm" novalidate>
+                        <.form for={@weight_form} phx-submit="save_weight" id="weight-form" phx-hook="WeightForm" novalidate>
                           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Weight</legend>
-                                                                                              <.input
-                                   field={@weight_form[:weight]}
-                                   type="number"
-                                   class={if @weight_submitted && @weight_changeset.errors[:weight], do: "input input-bordered input-error", else: "input input-bordered"}
-                                   placeholder="75.2"
-                                   step="0.1"
-                                 />
+                              <.input
+                                field={@weight_form[:weight]}
+                                type="number"
+                                class={if @weight_submitted && @weight_changeset.errors[:weight], do: "input input-bordered input-error", else: "input input-bordered"}
+                                placeholder="75.2"
+                                step="0.1"
+                              />
                             </fieldset>
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Unit</legend>
-                                                             <.input
-                                 field={@weight_form[:unit]}
-                                 type="select"
-                                 class={if @weight_submitted && @weight_changeset.errors[:unit], do: "select select-bordered select-error w-full", else: "select select-bordered w-full"}
-                                 prompt="Select unit"
-                                 options={[
-                                   {"Kilograms (kg)", "kg"},
-                                   {"Pounds (lbs)", "lbs"}
-                                 ]}
-                                 value={@preferred_unit}
-                                 data-preferred-unit={@preferred_unit}
-                               />
+                              <.input
+                                field={@weight_form[:unit]}
+                                type="select"
+                                class={if @weight_submitted && @weight_changeset.errors[:unit], do: "select select-bordered select-error w-full", else: "select select-bordered w-full"}
+                                prompt="Select unit"
+                                options={[
+                                  {"Kilograms (kg)", "kg"},
+                                  {"Pounds (lbs)", "lbs"}
+                                ]}
+                                value={@preferred_unit}
+                                data-preferred-unit={@preferred_unit}
+                              />
                             </fieldset>
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">&nbsp;</legend>
