@@ -44,11 +44,13 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
       daily_summary: daily_summary,
       weekly_summary: weekly_summary,
       activity_changeset: activity_changeset,
-      activity_form: to_form(activity_changeset, action: :insert),
+      activity_form: to_form(activity_changeset),
+      activity_submitted: false,
       weight_summary: weight_summary,
       preferred_unit: preferred_unit,
       weight_changeset: weight_changeset,
-      weight_form: to_form(weight_changeset, action: :insert)
+      weight_form: to_form(weight_changeset),
+      weight_submitted: false
     )
 
     {:ok, socket}
@@ -71,13 +73,14 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
 
           # Create new empty changeset for the form and reset it
           activity_changeset = Activities.change_activity(%Activity{})
-          activity_form = to_form(activity_changeset, action: :insert)
+          activity_form = to_form(activity_changeset)
 
           socket = assign(socket,
             daily_summary: daily_summary,
             weekly_summary: weekly_summary,
             activity_changeset: activity_changeset,
-            activity_form: activity_form
+            activity_form: activity_form,
+            activity_submitted: false
           )
 
           {:noreply, socket |> put_flash(:info, "Activity added successfully!") |> push_event("activity-added", %{})}
@@ -85,7 +88,8 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
           {:error, %Ecto.Changeset{} = changeset} ->
             socket = assign(socket,
               activity_changeset: changeset,
-              activity_form: to_form(changeset, action: :insert)
+              activity_form: to_form(changeset, action: :insert),
+              activity_submitted: true
             )
             {:noreply, socket}
     end
@@ -163,24 +167,26 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
           # Reload weight summary for the current date
           weight_summary = WeightEntries.get_user_weight_summary_for_date(socket.assigns.current_scope.user.id, socket.assigns.selected_date)
           preferred_unit = WeightEntries.get_user_preferred_unit(socket.assigns.current_scope.user.id)
-          weight_changeset = WeightEntries.change_weight_entry(%WeightEntry{})
-          weight_form = to_form(weight_changeset, action: :insert)
+                     weight_changeset = WeightEntries.change_weight_entry(%WeightEntry{})
+           weight_form = to_form(weight_changeset)
 
-          socket = assign(socket,
-            weight_summary: weight_summary,
-            preferred_unit: preferred_unit,
-            weight_changeset: weight_changeset,
-            weight_form: weight_form
-          )
+           socket = assign(socket,
+             weight_summary: weight_summary,
+             preferred_unit: preferred_unit,
+             weight_changeset: weight_changeset,
+             weight_form: weight_form,
+             weight_submitted: false
+           )
 
           {:noreply, socket |> put_flash(:info, "Weight logged successfully!") |> push_event("weight-added", %{})}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        socket = assign(socket,
-          weight_changeset: changeset,
-          weight_form: to_form(changeset, action: :insert)
-        )
-        {:noreply, socket}
+             {:error, %Ecto.Changeset{} = changeset} ->
+         socket = assign(socket,
+           weight_changeset: changeset,
+           weight_form: to_form(changeset, action: :insert),
+           weight_submitted: true
+         )
+         {:noreply, socket}
     end
   end
 
@@ -354,54 +360,42 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
 
                     <div class="card bg-base-200 shadow-sm">
                       <div class="card-body">
-                        <.form for={@activity_form} phx-submit="save_activity" id="activity-form" phx-hook="ActivityForm">
+                                                 <.form for={@activity_form} phx-submit="save_activity" id="activity-form" phx-hook="ActivityForm" novalidate>
                           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Exercise Type</legend>
-                              <.input
-                                field={@activity_form[:exercise_type]}
-                                type="select"
-                                class="select select-bordered w-full"
-                                prompt="Select exercise type"
-                                options={[
-                                  {"Cardio", "Cardio"},
-                                  {"Strength Training", "Strength Training"},
-                                  {"Yoga", "Yoga"},
-                                  {"Running", "Running"},
-                                  {"Cycling", "Cycling"},
-                                  {"Swimming", "Swimming"}
-                                ]}
-                              />
+                                                             <.input
+                                 field={@activity_form[:exercise_type]}
+                                 type="select"
+                                 class={if @activity_submitted && @activity_changeset.errors[:exercise_type], do: "select select-bordered select-error w-full", else: "select select-bordered w-full"}
+                                 prompt="Select exercise type"
+                                 options={[
+                                   {"Cardio", "Cardio"},
+                                   {"Strength Training", "Strength Training"},
+                                   {"Yoga", "Yoga"},
+                                   {"Running", "Running"},
+                                   {"Cycling", "Cycling"},
+                                   {"Swimming", "Swimming"}
+                                 ]}
+                               />
                             </fieldset>
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Duration (min)</legend>
-                              <.input
-                                field={@activity_form[:duration_minutes]}
-                                type="number"
-                                class="input input-bordered"
-                                placeholder="30"
-                                min="1"
-                                max="1440"
-                                required
-                              />
-                              <p class={if @activity_changeset.errors[:duration_minutes], do: "validator-hint", else: "validator-hint hidden"}>
-                                Must be between 1 and 1440 minutes
-                              </p>
+                                                                                              <.input
+                                   field={@activity_form[:duration_minutes]}
+                                   type="number"
+                                   class={if @activity_submitted && @activity_changeset.errors[:duration_minutes], do: "input input-bordered input-error", else: "input input-bordered"}
+                                   placeholder="30"
+                                 />
                             </fieldset>
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Calories Burned</legend>
-                              <.input
-                                field={@activity_form[:calories_burned]}
-                                type="number"
-                                class="input input-bordered"
-                                placeholder="150"
-                                min="0"
-                                max="10000"
-                                required
-                              />
-                              <p class={if @activity_changeset.errors[:calories_burned], do: "validator-hint", else: "validator-hint hidden"}>
-                                Must be between 0 and 10000 calories
-                              </p>
+                                                                                              <.input
+                                   field={@activity_form[:calories_burned]}
+                                   type="number"
+                                   class={if @activity_submitted && @activity_changeset.errors[:calories_burned], do: "input input-bordered input-error", else: "input input-bordered"}
+                                   placeholder="150"
+                                 />
                             </fieldset>
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">&nbsp;</legend>
@@ -422,38 +416,32 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
 
                     <div class="card bg-base-200 shadow-sm">
                       <div class="card-body">
-                        <.form for={@weight_form} phx-submit="save_weight" id="weight-form" phx-hook="WeightForm">
+                                                 <.form for={@weight_form} phx-submit="save_weight" id="weight-form" phx-hook="WeightForm" novalidate>
                           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Weight</legend>
-                              <.input
-                                field={@weight_form[:weight]}
-                                type="number"
-                                class="input input-bordered"
-                                placeholder="75.2"
-                                step="0.1"
-                                min="1"
-                                max="1000"
-                                required
-                              />
-                              <p class={if @weight_changeset.errors[:weight], do: "validator-hint", else: "validator-hint hidden"}>
-                                Must be between 1 and 1000
-                              </p>
+                                                                                              <.input
+                                   field={@weight_form[:weight]}
+                                   type="number"
+                                   class={if @weight_submitted && @weight_changeset.errors[:weight], do: "input input-bordered input-error", else: "input input-bordered"}
+                                   placeholder="75.2"
+                                   step="0.1"
+                                 />
                             </fieldset>
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Unit</legend>
-                              <.input
-                                field={@weight_form[:unit]}
-                                type="select"
-                                class="select select-bordered w-full"
-                                prompt="Select unit"
-                                options={[
-                                  {"Kilograms (kg)", "kg"},
-                                  {"Pounds (lbs)", "lbs"}
-                                ]}
-                                value={@preferred_unit}
-                                data-preferred-unit={@preferred_unit}
-                              />
+                                                             <.input
+                                 field={@weight_form[:unit]}
+                                 type="select"
+                                 class={if @weight_submitted && @weight_changeset.errors[:unit], do: "select select-bordered select-error w-full", else: "select select-bordered w-full"}
+                                 prompt="Select unit"
+                                 options={[
+                                   {"Kilograms (kg)", "kg"},
+                                   {"Pounds (lbs)", "lbs"}
+                                 ]}
+                                 value={@preferred_unit}
+                                 data-preferred-unit={@preferred_unit}
+                               />
                             </fieldset>
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">&nbsp;</legend>
