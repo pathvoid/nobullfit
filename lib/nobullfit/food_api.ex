@@ -178,11 +178,11 @@ defmodule NoBullFit.FoodAPI do
 
   # Helper function to get credentials from options or environment
   defp get_credentials(opts) do
-    app_id = Keyword.get(opts, :app_id) || System.get_env("EDAMAM_APP_ID") || @app_id
-    app_key = Keyword.get(opts, :app_key) || System.get_env("EDAMAM_APP_KEY") || @app_key
+    app_id = Keyword.get(opts, :app_id) || System.get_env("EDAMAM_FOOD_APP_ID") || @app_id
+    app_key = Keyword.get(opts, :app_key) || System.get_env("EDAMAM_FOOD_APP_KEY") || @app_key
 
-    if app_id == "your_edamam_app_id_here" or app_key == "your_edamam_app_key_here" do
-      raise "Edamam credentials required. Please update @app_id and @app_key in the FoodAPI module or set EDAMAM_APP_ID and EDAMAM_APP_KEY environment variables."
+    if app_id == "your_edamam_food_app_id_here" or app_key == "your_edamam_food_app_key_here" do
+      raise "Edamam credentials required. Please update @app_id and @app_key in the FoodAPI module or set EDAMAM_FOOD_APP_ID and EDAMAM_FOOD_APP_KEY environment variables."
     end
 
     {app_id, app_key}

@@ -55,17 +55,14 @@ defmodule NoBullFit.RecipeAPI do
         case Jason.decode(body) do
           {:ok, data} ->
             {:ok, data}
-          {:error, error} -> {:error, "Failed to parse response: #{inspect(error)}"}
+          {:error, _error} -> {:error, "Unable to process the recipe search results. Please try again."}
         end
 
-      {:ok, %HTTPoison.Response{status_code: status_code, body: body}} ->
-        case Jason.decode(body) do
-          {:ok, error_data} -> {:error, "API Error (#{status_code}): #{inspect(error_data)}"}
-          {:error, _} -> {:error, "API Error (#{status_code}): #{body}"}
-        end
+      {:ok, %HTTPoison.Response{status_code: status_code, body: _body}} ->
+        {:error, format_api_error(status_code)}
 
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        {:error, "Request failed: #{inspect(reason)}"}
+      {:error, %HTTPoison.Error{reason: _reason}} ->
+        {:error, "Unable to connect to the recipe database. Please check your internet connection and try again."}
     end
   end
 
@@ -94,17 +91,14 @@ defmodule NoBullFit.RecipeAPI do
         case Jason.decode(body) do
           {:ok, data} ->
             {:ok, data}
-          {:error, error} -> {:error, "Failed to parse response: #{inspect(error)}"}
+          {:error, _error} -> {:error, "Unable to process the recipe data. Please try again."}
         end
 
-      {:ok, %HTTPoison.Response{status_code: status_code, body: body}} ->
-        case Jason.decode(body) do
-          {:ok, error_data} -> {:error, "API Error (#{status_code}): #{inspect(error_data)}"}
-          {:error, _} -> {:error, "API Error (#{status_code}): #{body}"}
-        end
+      {:ok, %HTTPoison.Response{status_code: status_code, body: _body}} ->
+        {:error, format_api_error(status_code)}
 
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        {:error, "Request failed: #{inspect(reason)}"}
+      {:error, %HTTPoison.Error{reason: _reason}} ->
+        {:error, "Unable to connect to the recipe database. Please check your internet connection and try again."}
     end
   end
 
@@ -140,17 +134,28 @@ defmodule NoBullFit.RecipeAPI do
         case Jason.decode(body) do
           {:ok, data} ->
             {:ok, data}
-          {:error, error} -> {:error, "Failed to parse response: #{inspect(error)}"}
+          {:error, _error} -> {:error, "Unable to process the recipe data. Please try again."}
         end
 
-      {:ok, %HTTPoison.Response{status_code: status_code, body: body}} ->
-        case Jason.decode(body) do
-          {:ok, error_data} -> {:error, "API Error (#{status_code}): #{inspect(error_data)}"}
-          {:error, _} -> {:error, "API Error (#{status_code}): #{body}"}
-        end
+      {:ok, %HTTPoison.Response{status_code: status_code, body: _body}} ->
+        {:error, format_api_error(status_code)}
 
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        {:error, "Request failed: #{inspect(reason)}"}
+      {:error, %HTTPoison.Error{reason: _reason}} ->
+        {:error, "Unable to connect to the recipe database. Please check your internet connection and try again."}
+    end
+  end
+
+  # Helper function to format API errors for user-friendly messages
+  defp format_api_error(status_code) do
+    case status_code do
+      401 -> "Authentication failed. Please check your API credentials."
+      403 -> "Access denied. Please check your API permissions."
+      429 -> "Too many requests. Please wait a moment and try again."
+      500 -> "The recipe database is temporarily unavailable. Please try again later."
+      502 -> "The recipe database is temporarily unavailable. Please try again later."
+      503 -> "The recipe database is temporarily unavailable. Please try again later."
+      504 -> "The recipe database is temporarily unavailable. Please try again later."
+      _ -> "Unable to search the recipe database at this time. Please try again later."
     end
   end
 
@@ -159,8 +164,8 @@ defmodule NoBullFit.RecipeAPI do
     app_id = Keyword.get(opts, :app_id) || System.get_env("EDAMAM_RECIPE_APP_ID") || @app_id
     app_key = Keyword.get(opts, :app_key) || System.get_env("EDAMAM_RECIPE_APP_KEY") || @app_key
 
-    if app_id == "your_edamam_app_id_here" or app_key == "your_edamam_app_key_here" do
-      raise "Edamam credentials required. Please update @app_id and @app_key in the RecipeAPI module or set EDAMAM_APP_ID and EDAMAM_APP_KEY environment variables."
+    if app_id == "your_edamam_recipe_app_id_here" or app_key == "your_edamam_recipe_app_key_here" do
+      raise "Edamam credentials required. Please update @app_id and @app_key in the RecipeAPI module or set EDAMAM_RECIPE_APP_ID and EDAMAM_RECIPE_APP_KEY environment variables."
     end
 
     {app_id, app_key}
