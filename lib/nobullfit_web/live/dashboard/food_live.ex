@@ -25,26 +25,26 @@ defmodule NobullfitWeb.Dashboard.FoodLive do
         <div class="flex-1">
           <main class="px-4 py-8 md:py-12">
             <div class="px-4 space-y-4">
-                             <!-- Header Section -->
-               <div>
-                 <.header>
-                   Food Tracking
-                   <:subtitle>Track your daily nutrition and meals</:subtitle>
-                   <:actions>
-                     <div class="hidden md:flex items-center gap-2">
-                       <input type="date" class="input input-sm input-bordered" value={Date.utc_today() |> Date.to_string()} />
-                       <button class="btn btn-sm btn-ghost">Today</button>
-                     </div>
-                   </:actions>
-                 </.header>
-                 <!-- Mobile Date Picker -->
-                 <div class="md:hidden mt-4">
-                   <div class="flex items-center gap-2">
-                     <input type="date" class="input input-sm input-bordered" value={Date.utc_today() |> Date.to_string()} />
-                     <button class="btn btn-sm btn-ghost">Today</button>
-                   </div>
-                 </div>
-               </div>
+              <!-- Header Section -->
+              <div>
+                <.header centered={true} actions_right={true}>
+                  Food Tracking
+                  <:subtitle>Track your daily nutrition and meals</:subtitle>
+                  <:actions>
+                    <div class="hidden md:flex items-center gap-2">
+                      <input type="date" class="input input-sm input-bordered" value={Date.utc_today() |> Date.to_string()} />
+                      <button class="btn btn-sm btn-ghost">Today</button>
+                    </div>
+                  </:actions>
+                </.header>
+                <!-- Mobile Date Picker -->
+                <div class="md:hidden mt-4">
+                  <div class="flex items-center gap-2">
+                    <input type="date" class="input input-sm input-bordered" value={Date.utc_today() |> Date.to_string()} />
+                    <button class="btn btn-sm btn-ghost">Today</button>
+                  </div>
+                </div>
+              </div>
 
               <!-- Today's Summary -->
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -80,44 +80,44 @@ defmodule NobullfitWeb.Dashboard.FoodLive do
                   </div>
                 </div>
 
-                                 <!-- Lunch -->
-                 <div class="card bg-base-200 shadow-sm">
-                   <div class="card-body">
-                     <div class="flex justify-between items-center">
-                       <h3 class="card-title text-base">Lunch</h3>
-                       <button class="btn btn-sm btn-ghost">Add Food</button>
-                     </div>
-                     <div class="space-y-3 mt-4">
-                       <div class="flex justify-between items-center p-3 bg-base-100 rounded-lg">
-                         <div class="flex-1">
-                           <div class="font-medium">Grilled Chicken Breast</div>
-                           <div class="text-sm text-base-content/70">165 calories • 31g protein • 0g carbs</div>
-                         </div>
-                         <button class="btn btn-sm btn-ghost text-error hover:text-error">
-                           <.icon name="hero-trash" class="size-4" />
-                         </button>
-                       </div>
-                       <div class="flex justify-between items-center p-3 bg-base-100 rounded-lg">
-                         <div class="flex-1">
-                           <div class="font-medium">Brown Rice</div>
-                           <div class="text-sm text-base-content/70">110 calories • 2g protein • 23g carbs</div>
-                         </div>
-                         <button class="btn btn-sm btn-ghost text-error hover:text-error">
-                           <.icon name="hero-trash" class="size-4" />
-                         </button>
-                       </div>
-                       <div class="flex justify-between items-center p-3 bg-base-100 rounded-lg">
-                         <div class="flex-1">
-                           <div class="font-medium">Steamed Broccoli</div>
-                           <div class="text-sm text-base-content/70">55 calories • 4g protein • 11g carbs</div>
-                         </div>
-                         <button class="btn btn-sm btn-ghost text-error hover:text-error">
-                           <.icon name="hero-trash" class="size-4" />
-                         </button>
-                       </div>
-                     </div>
-                   </div>
-                 </div>
+                <!-- Lunch -->
+                <div class="card bg-base-200 shadow-sm">
+                  <div class="card-body">
+                    <div class="flex justify-between items-center">
+                      <h3 class="card-title text-base">Lunch</h3>
+                      <button class="btn btn-sm btn-ghost">Add Food</button>
+                    </div>
+                    <div class="space-y-3 mt-4">
+                      <div class="flex justify-between items-center p-3 bg-base-100 rounded-lg">
+                        <div class="flex-1">
+                          <div class="font-medium">Grilled Chicken Breast</div>
+                          <div class="text-sm text-base-content/70">165 calories • 31g protein • 0g carbs</div>
+                        </div>
+                        <button class="btn btn-sm btn-ghost text-error hover:text-error">
+                          <.icon name="hero-trash" class="size-4" />
+                        </button>
+                      </div>
+                      <div class="flex justify-between items-center p-3 bg-base-100 rounded-lg">
+                        <div class="flex-1">
+                          <div class="font-medium">Brown Rice</div>
+                          <div class="text-sm text-base-content/70">110 calories • 2g protein • 23g carbs</div>
+                        </div>
+                        <button class="btn btn-sm btn-ghost text-error hover:text-error">
+                          <.icon name="hero-trash" class="size-4" />
+                        </button>
+                      </div>
+                      <div class="flex justify-between items-center p-3 bg-base-100 rounded-lg">
+                        <div class="flex-1">
+                          <div class="font-medium">Steamed Broccoli</div>
+                          <div class="text-sm text-base-content/70">55 calories • 4g protein • 11g carbs</div>
+                        </div>
+                        <button class="btn btn-sm btn-ghost text-error hover:text-error">
+                          <.icon name="hero-trash" class="size-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 <!-- Dinner -->
                 <div class="card bg-base-200 shadow-sm">

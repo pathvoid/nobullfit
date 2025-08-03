@@ -33,25 +33,26 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
     preferred_unit = WeightEntries.get_user_preferred_unit(socket.assigns.current_scope.user.id)
     weight_changeset = WeightEntries.change_weight_entry(%WeightEntry{})
 
-    socket = assign(socket,
-      page_title: "Activity Log",
-      current_path: "/d/progress",
-      maintenance_status: maintenance_status,
-      selected_date: today,
-      user_timezone: user_timezone,
-      user_local_date: local_date,
-      max_date: (if local_date, do: local_date, else: today |> Date.to_string()),
-      daily_summary: daily_summary,
-      weekly_summary: weekly_summary,
-      activity_changeset: activity_changeset,
-      activity_form: to_form(activity_changeset),
-      activity_submitted: false,
-      weight_summary: weight_summary,
-      preferred_unit: preferred_unit,
-      weight_changeset: weight_changeset,
-      weight_form: to_form(weight_changeset),
-      weight_submitted: false
-    )
+    socket =
+      assign(socket,
+        page_title: "Progress",
+        current_path: "/d/progress",
+        maintenance_status: maintenance_status,
+        selected_date: today,
+        user_timezone: user_timezone,
+        user_local_date: local_date,
+        max_date: (if local_date, do: local_date, else: today |> Date.to_string()),
+        daily_summary: daily_summary,
+        weekly_summary: weekly_summary,
+        activity_changeset: activity_changeset,
+        activity_form: to_form(activity_changeset),
+        activity_submitted: false,
+        weight_summary: weight_summary,
+        preferred_unit: preferred_unit,
+        weight_changeset: weight_changeset,
+        weight_form: to_form(weight_changeset),
+        weight_submitted: false
+      )
 
     {:ok, socket}
   end
@@ -59,23 +60,26 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
   @impl true
   def handle_event("save_activity", %{"activity" => activity_params}, socket) do
     # Clean up empty exercise_type and add user_id and current date to the params
-    activity_params = activity_params
-    |> Map.update("exercise_type", nil, fn value -> if value == "", do: nil, else: value end)
-    |> Map.merge(%{
-      "user_id" => socket.assigns.current_scope.user.id,
-      "activity_date" => socket.assigns.selected_date
-    })
+    activity_params =
+      activity_params
+      |> Map.update("exercise_type", nil, fn value -> if value == "", do: nil, else: value end)
+      |> Map.merge(%{
+        "user_id" => socket.assigns.current_scope.user.id,
+        "activity_date" => socket.assigns.selected_date
+      })
+
     case Activities.create_activity(activity_params) do
-        {:ok, _activity} ->
-          # Reload activities and summary
-          daily_summary = Activities.get_user_daily_summary(socket.assigns.current_scope.user.id, socket.assigns.selected_date)
-          weekly_summary = Activities.get_user_weekly_summary(socket.assigns.current_scope.user.id, get_week_start(socket.assigns.selected_date))
+      {:ok, _activity} ->
+        # Reload activities and summary
+        daily_summary = Activities.get_user_daily_summary(socket.assigns.current_scope.user.id, socket.assigns.selected_date)
+        weekly_summary = Activities.get_user_weekly_summary(socket.assigns.current_scope.user.id, get_week_start(socket.assigns.selected_date))
 
-          # Create new empty changeset for the form and reset it
-          activity_changeset = Activities.change_activity(%Activity{})
-          activity_form = to_form(activity_changeset)
+        # Create new empty changeset for the form and reset it
+        activity_changeset = Activities.change_activity(%Activity{})
+        activity_form = to_form(activity_changeset)
 
-          socket = assign(socket,
+        socket =
+          assign(socket,
             daily_summary: daily_summary,
             weekly_summary: weekly_summary,
             activity_changeset: activity_changeset,
@@ -83,15 +87,17 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
             activity_submitted: false
           )
 
-          {:noreply, socket |> put_flash(:info, "Activity added successfully!") |> push_event("activity-added", %{})}
+        {:noreply, socket |> put_flash(:info, "Activity added successfully!") |> push_event("activity-added", %{})}
 
-          {:error, %Ecto.Changeset{} = changeset} ->
-            socket = assign(socket,
-              activity_changeset: changeset,
-              activity_form: to_form(changeset, action: :insert),
-              activity_submitted: true
-            )
-            {:noreply, socket}
+      {:error, %Ecto.Changeset{} = changeset} ->
+        socket =
+          assign(socket,
+            activity_changeset: changeset,
+            activity_form: to_form(changeset, action: :insert),
+            activity_submitted: true
+          )
+
+        {:noreply, socket}
     end
   end
 
@@ -104,10 +110,11 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
         daily_summary = Activities.get_user_daily_summary(socket.assigns.current_scope.user.id, socket.assigns.selected_date)
         weekly_summary = Activities.get_user_weekly_summary(socket.assigns.current_scope.user.id, get_week_start(socket.assigns.selected_date))
 
-        socket = assign(socket,
-          daily_summary: daily_summary,
-          weekly_summary: weekly_summary
-        )
+        socket =
+          assign(socket,
+            daily_summary: daily_summary,
+            weekly_summary: weekly_summary
+          )
 
         {:noreply, put_flash(socket, :info, "Activity deleted successfully!")}
 
@@ -122,15 +129,17 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
 
     case Date.from_iso8601(date_str) do
       {:ok, date} ->
-         # Check if the date is in the future (using local date as reference)
-         today = case socket.assigns.user_local_date do
-           nil -> socket.assigns.selected_date
-           local_date_str ->
-             case Date.from_iso8601(local_date_str) do
-               {:ok, date} -> date
-               {:error, _} -> socket.assigns.selected_date
-             end
-         end
+        # Check if the date is in the future (using local date as reference)
+        today =
+          case socket.assigns.user_local_date do
+            nil -> socket.assigns.selected_date
+            local_date_str ->
+              case Date.from_iso8601(local_date_str) do
+                {:ok, date} -> date
+                {:error, _} -> socket.assigns.selected_date
+              end
+          end
+
         if Date.compare(date, today) == :gt do
           {:noreply, put_flash(socket, :error, "Cannot select future dates.")}
         else
@@ -139,12 +148,13 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
           weekly_summary = Activities.get_user_weekly_summary(socket.assigns.current_scope.user.id, get_week_start(date))
           weight_summary = WeightEntries.get_user_weight_summary_for_date(socket.assigns.current_scope.user.id, date)
 
-          socket = assign(socket,
-            selected_date: date,
-            daily_summary: daily_summary,
-            weekly_summary: weekly_summary,
-            weight_summary: weight_summary
-          )
+          socket =
+            assign(socket,
+              selected_date: date,
+              daily_summary: daily_summary,
+              weekly_summary: weekly_summary,
+              weight_summary: weight_summary
+            )
 
           {:noreply, socket}
         end
@@ -156,62 +166,69 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
 
   def handle_event("save_weight", %{"weight_entry" => weight_params}, socket) do
     # Add user_id and current date to the params
-    weight_params = weight_params
-    |> Map.merge(%{
-      "user_id" => socket.assigns.current_scope.user.id,
-      "entry_date" => socket.assigns.selected_date
-    })
+    weight_params =
+      weight_params
+      |> Map.merge(%{
+        "user_id" => socket.assigns.current_scope.user.id,
+        "entry_date" => socket.assigns.selected_date
+      })
 
     case WeightEntries.create_weight_entry(weight_params) do
-        {:ok, _weight_entry} ->
-          # Reload weight summary for the current date
-          weight_summary = WeightEntries.get_user_weight_summary_for_date(socket.assigns.current_scope.user.id, socket.assigns.selected_date)
-          preferred_unit = WeightEntries.get_user_preferred_unit(socket.assigns.current_scope.user.id)
-                     weight_changeset = WeightEntries.change_weight_entry(%WeightEntry{})
-           weight_form = to_form(weight_changeset)
+      {:ok, _weight_entry} ->
+        # Reload weight summary for the current date
+        weight_summary = WeightEntries.get_user_weight_summary_for_date(socket.assigns.current_scope.user.id, socket.assigns.selected_date)
+        preferred_unit = WeightEntries.get_user_preferred_unit(socket.assigns.current_scope.user.id)
+        weight_changeset = WeightEntries.change_weight_entry(%WeightEntry{})
+        weight_form = to_form(weight_changeset)
 
-           socket = assign(socket,
-             weight_summary: weight_summary,
-             preferred_unit: preferred_unit,
-             weight_changeset: weight_changeset,
-             weight_form: weight_form,
-             weight_submitted: false
-           )
+        socket =
+          assign(socket,
+            weight_summary: weight_summary,
+            preferred_unit: preferred_unit,
+            weight_changeset: weight_changeset,
+            weight_form: weight_form,
+            weight_submitted: false
+          )
 
-          {:noreply, socket |> put_flash(:info, "Weight logged successfully!") |> push_event("weight-added", %{})}
+        {:noreply, socket |> put_flash(:info, "Weight logged successfully!") |> push_event("weight-added", %{})}
 
-             {:error, %Ecto.Changeset{} = changeset} ->
-         socket = assign(socket,
-           weight_changeset: changeset,
-           weight_form: to_form(changeset, action: :insert),
-           weight_submitted: true
-         )
-         {:noreply, socket}
+      {:error, %Ecto.Changeset{} = changeset} ->
+        socket =
+          assign(socket,
+            weight_changeset: changeset,
+            weight_form: to_form(changeset, action: :insert),
+            weight_submitted: true
+          )
+
+        {:noreply, socket}
     end
   end
 
   def handle_event("timezone-data", %{"timezone" => timezone, "localDate" => local_date}, socket) do
     # Update the socket assigns with the timezone data
-    socket = assign(socket,
-      user_timezone: timezone,
-      user_local_date: local_date,
-      selected_date: case Date.from_iso8601(local_date) do
-        {:ok, date} -> date
-        {:error, _} -> Date.utc_today()
-      end,
-      max_date: local_date
-    )
+    socket =
+      assign(socket,
+        user_timezone: timezone,
+        user_local_date: local_date,
+        selected_date:
+          case Date.from_iso8601(local_date) do
+            {:ok, date} -> date
+            {:error, _} -> Date.utc_today()
+          end,
+        max_date: local_date
+      )
 
     # Reload data with the correct date
     daily_summary = Activities.get_user_daily_summary(socket.assigns.current_scope.user.id, socket.assigns.selected_date)
     weekly_summary = Activities.get_user_weekly_summary(socket.assigns.current_scope.user.id, get_week_start(socket.assigns.selected_date))
     weight_summary = WeightEntries.get_user_weight_summary_for_date(socket.assigns.current_scope.user.id, socket.assigns.selected_date)
 
-    socket = assign(socket,
-      daily_summary: daily_summary,
-      weekly_summary: weekly_summary,
-      weight_summary: weight_summary
-    )
+    socket =
+      assign(socket,
+        daily_summary: daily_summary,
+        weekly_summary: weekly_summary,
+        weight_summary: weight_summary
+      )
 
     {:noreply, socket}
   end
@@ -291,9 +308,9 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
             <div class="px-4 space-y-4">
               <!-- Header Section -->
               <div>
-                <.header>
-                  Activity Log
-                  <:subtitle>Track your daily exercises and workouts</:subtitle>
+                <.header centered={true} actions_right={true}>
+                  Progress
+                  <:subtitle>Track your daily progress</:subtitle>
                   <:actions>
                     <div class="hidden md:flex items-center gap-2">
                       <input type="date" class="input input-sm input-bordered" value={@selected_date |> Date.to_string()} max={@max_date} id="desktop-date-picker" phx-hook="DatePicker" />
@@ -303,7 +320,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                 </.header>
                 <!-- Mobile Date Picker -->
                 <div class="md:hidden mt-4">
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-2 justify-center">
                     <input type="date" class="input input-sm input-bordered" value={@selected_date |> Date.to_string()} max={@max_date} id="mobile-date-picker" phx-hook="DatePicker" />
                     <button class="btn btn-sm btn-ghost" phx-click="change_date" phx-value-date={@max_date}>Today</button>
                   </div>

@@ -20,15 +20,15 @@ defmodule NoBullFit.FoodAPI do
   Search for foods using the parser endpoint.
 
   ## Parameters
-  - `query` - The search query (ingredient name, brand, or UPC)
-  - `opts` - Optional parameters including:
-    - `app_id` - Your Edamam app ID (required)
-    - `app_key` - Your Edamam app key (required)
-    - `nutrition_type` - "cooking" or "logging" (default: "cooking")
-    - `health` - List of health labels
-    - `calories` - Calorie range (e.g., "100-300")
-    - `category` - List of categories
-    - `nutrients` - Map of nutrient filters
+    - `query` - The search query (ingredient name, brand, or UPC)
+    - `opts` - Optional parameters including:
+      - `app_id` - Your Edamam app ID (required)
+      - `app_key` - Your Edamam app key (required)
+      - `nutrition_type` - "cooking" or "logging" (default: "cooking")
+      - `health` - List of health labels
+      - `calories` - Calorie range (e.g., "100-300")
+      - `category` - List of categories
+      - `nutrients` - Map of nutrient filters
 
   ## Examples
       iex> FoodAPI.search_foods("apple", app_id: "your_app_id", app_key: "your_app_key")
@@ -49,7 +49,9 @@ defmodule NoBullFit.FoodAPI do
         case Jason.decode(body) do
           {:ok, data} ->
             {:ok, data}
-          {:error, _error} -> {:error, "Unable to process the search results. Please try again."}
+
+          {:error, _error} ->
+            {:error, "Unable to process the search results. Please try again."}
         end
 
       {:ok, %HTTPoison.Response{status_code: status_code, body: _body}} ->
@@ -64,10 +66,10 @@ defmodule NoBullFit.FoodAPI do
   Get detailed nutrition information for specific foods.
 
   ## Parameters
-  - `ingredients` - List of ingredient maps with foodId, quantity, and measureURI
-  - `opts` - Optional parameters including:
-    - `app_id` - Your Edamam app ID (required)
-    - `app_key` - Your Edamam app key (required)
+    - `ingredients` - List of ingredient maps with foodId, quantity, and measureURI
+    - `opts` - Optional parameters including:
+      - `app_id` - Your Edamam app ID (required)
+      - `app_key` - Your Edamam app key (required)
 
   ## Examples
       iex> ingredients = [
@@ -85,8 +87,11 @@ defmodule NoBullFit.FoodAPI do
     case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
         case Jason.decode(response_body) do
-          {:ok, data} -> {:ok, data}
-          {:error, _error} -> {:error, "Unable to process the nutrition data. Please try again."}
+          {:ok, data} ->
+            {:ok, data}
+
+          {:error, _error} ->
+            {:error, "Unable to process the nutrition data. Please try again."}
         end
 
       {:ok, %HTTPoison.Response{status_code: status_code, body: _body}} ->
@@ -101,10 +106,10 @@ defmodule NoBullFit.FoodAPI do
   Get nutrition information from an image.
 
   ## Parameters
-  - `image_data` - Map with either "image" (base64) or "image_url" (URL)
-  - `opts` - Optional parameters including:
-    - `app_id` - Your Edamam app ID (required)
-    - `app_key` - Your Edamam app key (required)
+    - `image_data` - Map with either "image" (base64) or "image_url" (URL)
+    - `opts` - Optional parameters including:
+      - `app_id` - Your Edamam app ID (required)
+      - `app_key` - Your Edamam app key (required)
 
   ## Examples
       iex> FoodAPI.get_nutrients_from_image(%{image_url: "https://example.com/food.jpg"},
@@ -122,8 +127,11 @@ defmodule NoBullFit.FoodAPI do
     case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} ->
         case Jason.decode(response_body) do
-          {:ok, data} -> {:ok, data}
-          {:error, _error} -> {:error, "Unable to process the image data. Please try again."}
+          {:ok, data} ->
+            {:ok, data}
+
+          {:error, _error} ->
+            {:error, "Unable to process the image data. Please try again."}
         end
 
       {:ok, %HTTPoison.Response{status_code: status_code, body: _body}} ->
@@ -138,11 +146,11 @@ defmodule NoBullFit.FoodAPI do
   Get autocomplete suggestions for food search.
 
   ## Parameters
-  - `query` - The search query
-  - `opts` - Optional parameters including:
-    - `app_id` - Your Edamam app ID (required)
-    - `app_key` - Your Edamam app key (required)
-    - `limit` - Number of suggestions (1-10, default: 10)
+    - `query` - The search query
+    - `opts` - Optional parameters including:
+      - `app_id` - Your Edamam app ID (required)
+      - `app_key` - Your Edamam app key (required)
+      - `limit` - Number of suggestions (1-10, default: 10)
 
   ## Examples
       iex> FoodAPI.autocomplete("chi", app_id: "your_app_id", app_key: "your_app_key")
@@ -164,8 +172,11 @@ defmodule NoBullFit.FoodAPI do
     case HTTPoison.get(url, [], params: params) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         case Jason.decode(body) do
-          {:ok, data} -> {:ok, data}
-          {:error, _error} -> {:error, "Unable to process the autocomplete suggestions. Please try again."}
+          {:ok, data} ->
+            {:ok, data}
+
+          {:error, _error} ->
+            {:error, "Unable to process the autocomplete suggestions. Please try again."}
         end
 
       {:ok, %HTTPoison.Response{status_code: status_code, body: _body}} ->
@@ -210,49 +221,57 @@ defmodule NoBullFit.FoodAPI do
     ]
 
     # Determine query type and add appropriate parameter
-    query_params = cond do
-      String.match?(query, ~r/^\d+$/) -> [{"upc", query}]
-      String.contains?(query, " ") -> [{"ingr", query}]
-      true -> [{"ingr", query}]
-    end
+    query_params =
+      cond do
+        String.match?(query, ~r/^\d+$/) -> [{"upc", query}]
+        String.contains?(query, " ") -> [{"ingr", query}]
+        true -> [{"ingr", query}]
+      end
 
     # Add optional parameters
     optional_params = []
 
-    optional_params = if nutrition_type = Keyword.get(opts, :nutrition_type) do
-      [{"nutrition-type", nutrition_type} | optional_params]
-    else
-      optional_params
-    end
+    optional_params =
+      if nutrition_type = Keyword.get(opts, :nutrition_type) do
+        [{"nutrition-type", nutrition_type} | optional_params]
+      else
+        optional_params
+      end
 
-    optional_params = if health = Keyword.get(opts, :health) do
-      health_params = Enum.map(health, &{"health", &1})
-      health_params ++ optional_params
-    else
-      optional_params
-    end
+    optional_params =
+      if health = Keyword.get(opts, :health) do
+        health_params = Enum.map(health, &{"health", &1})
+        health_params ++ optional_params
+      else
+        optional_params
+      end
 
-    optional_params = if calories = Keyword.get(opts, :calories) do
-      [{"calories", calories} | optional_params]
-    else
-      optional_params
-    end
+    optional_params =
+      if calories = Keyword.get(opts, :calories) do
+        [{"calories", calories} | optional_params]
+      else
+        optional_params
+      end
 
-    optional_params = if category = Keyword.get(opts, :category) do
-      category_params = Enum.map(category, &{"category", &1})
-      category_params ++ optional_params
-    else
-      optional_params
-    end
+    optional_params =
+      if category = Keyword.get(opts, :category) do
+        category_params = Enum.map(category, &{"category", &1})
+        category_params ++ optional_params
+      else
+        optional_params
+      end
 
-    optional_params = if nutrients = Keyword.get(opts, :nutrients) do
-      nutrient_params = Enum.map(nutrients, fn {key, value} ->
-        {"nutrients[#{key}]", value}
-      end)
-      nutrient_params ++ optional_params
-    else
-      optional_params
-    end
+    optional_params =
+      if nutrients = Keyword.get(opts, :nutrients) do
+        nutrient_params =
+          Enum.map(nutrients, fn {key, value} ->
+            {"nutrients[#{key}]", value}
+          end)
+
+        nutrient_params ++ optional_params
+      else
+        optional_params
+      end
 
     base_params ++ query_params ++ optional_params
   end
@@ -294,6 +313,7 @@ defmodule NoBullFit.FoodAPI do
 
         if data["hints"] do
           IO.puts("\n=== Additional Suggestions ===")
+
           Enum.take(data["hints"], 3)
           |> Enum.each(fn hint ->
             food = hint["food"]
@@ -377,6 +397,7 @@ defmodule NoBullFit.FoodAPI do
         Enum.each(suggestions, fn suggestion ->
           IO.puts("- #{suggestion}")
         end)
+
         {:ok, suggestions}
 
       {:error, error} ->

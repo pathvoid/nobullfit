@@ -19,36 +19,46 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
   defp round_nutrient_value(value) when is_number(value) do
     float_value = value * 1.0
     rounded = Float.round(float_value, 1)
+
     if rounded == Float.round(float_value, 0) do
       "#{trunc(value)}"
     else
       "#{rounded}"
     end
   end
+
   defp round_nutrient_value(value), do: "#{value}"
 
   @impl true
-  def mount(%{"food_id" => food_id, "food_label" => food_label, "quantity" => quantity} = params, session, socket) do
+  def mount(
+        %{"food_id" => food_id, "food_label" => food_label, "quantity" => quantity} = params,
+        session,
+        socket
+      ) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
-    measure_uri = Map.get(params, "measure_uri", "http://www.edamam.com/ontologies/edamam.owl#Measure_gram")
+    measure_uri =
+      Map.get(params, "measure_uri", "http://www.edamam.com/ontologies/edamam.owl#Measure_gram")
 
-    ingredients = [%{
-      foodId: food_id,
-      measureURI: measure_uri,
-      quantity: String.to_integer(quantity) * 1.0
-    }]
+    ingredients = [
+      %{
+        foodId: food_id,
+        measureURI: measure_uri,
+        quantity: String.to_integer(quantity) * 1.0
+      }
+    ]
 
     # Start fetching nutrition data immediately
     send(self(), {:get_nutrition, ingredients, food_label})
 
-    {:ok, assign(socket,
-      page_title: "Nutrition Information - #{food_label}",
-      current_path: "/d/nutrition-info",
-      maintenance_status: maintenance_status,
-      nutrition_data: nil,
-      loading: true,
-      error: nil
-    )}
+    {:ok,
+     assign(socket,
+       page_title: "Nutrition Information - #{food_label}",
+       current_path: "/d/nutrition-info",
+       maintenance_status: maintenance_status,
+       nutrition_data: nil,
+       loading: true,
+       error: nil
+     )}
   end
 
   @impl true
@@ -57,12 +67,15 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
       {:ok, data} ->
         # Add the food label to the nutrition data
         nutrition_data_with_label = Map.put(data, "food_label", food_label)
+
         {:noreply, assign(socket, nutrition_data: nutrition_data_with_label, loading: false)}
+
       {:error, error} ->
-        {:noreply, assign(socket,
-          error: "Failed to get nutrition data: #{error}",
-          loading: false
-        )}
+        {:noreply,
+         assign(socket,
+           error: "Failed to get nutrition data: #{error}",
+           loading: false
+         )}
     end
   end
 
@@ -78,12 +91,10 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
         <div class="flex-1">
           <main class="px-4 py-8 md:py-12">
             <div class="max-w-4xl mx-auto space-y-8">
-              <div class="text-center">
-                <.header>
-                  Nutrition Information
-                  <:subtitle>Detailed nutrition analysis for your selected food</:subtitle>
-                </.header>
-              </div>
+              <.header centered={true}>
+                Nutrition Information
+                <:subtitle>Detailed nutrition analysis for your selected food</:subtitle>
+              </.header>
 
               <!-- Loading State -->
               <%= if @loading do %>
@@ -103,7 +114,8 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
                       <div>
                         <h3 class="card-title text-2xl">Nutrition Information</h3>
                         <p class="text-sm text-base-content/70 mt-2">
-                          Showing nutrition data for: <span class="font-medium"><%= @nutrition_data["food_label"] || "Unknown food" %></span>
+                          Showing nutrition data for:
+                          <span class="font-medium"><%= @nutrition_data["food_label"] || "Unknown food" %></span>
                         </p>
                       </div>
                       <a href="/d/food-database" class="btn btn-sm btn-ghost">

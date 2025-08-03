@@ -27,39 +27,39 @@ defmodule NobullfitWeb.Components.Sidebar do
     <div class="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-base-200 lg:bg-base-200/50 lg:backdrop-blur-sm">
       <div class="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
         <nav class="flex-1 px-2 space-y-1">
-                     <div class="space-y-2">
-             <h3 class="px-3 text-xs font-semibold text-base-content/70 uppercase tracking-wider">
-               Dashboard
-             </h3>
-             <div class="space-y-1">
-               <.sidebar_link href={~p"/d"} current_path={@current_path} icon="home">
-                 Overview
-               </.sidebar_link>
-               <details class="group" open={is_parent_open?(@current_path, ["/d/food-database"])}>
-                 <summary class="flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors hover:bg-base-300">
-                   <span class="mr-3 flex-shrink-0 h-5 w-5">
-                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
-                     </svg>
-                   </span>
-                   Database
-                 </summary>
-                 <ul class="mt-1 space-y-1 pl-4">
-                   <li>
-                     <.sidebar_link href={~p"/d/food-database"} current_path={@current_path} icon="search">
-                       Food Database
-                     </.sidebar_link>
-                   </li>
-                 </ul>
-               </details>
-               <.sidebar_link href={~p"/d/food"} current_path={@current_path} icon="utensils">
-                 Food Tracking
-               </.sidebar_link>
-               <.sidebar_link href={~p"/d/progress"} current_path={@current_path} icon="chart-line">
-                 Progress
-               </.sidebar_link>
-             </div>
-           </div>
+          <div class="space-y-2">
+            <h3 class="px-3 text-xs font-semibold text-base-content/70 uppercase tracking-wider">
+              Dashboard
+            </h3>
+            <div class="space-y-1">
+              <.sidebar_link href={~p"/d"} current_path={@current_path} icon="home">
+                Overview
+              </.sidebar_link>
+              <details class="group" open={is_parent_open?(@current_path, ["/d/food-database"])}>
+                <summary class="flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors hover:bg-base-300">
+                  <span class="mr-3 flex-shrink-0 h-5 w-5">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                    </svg>
+                  </span>
+                  Database
+                </summary>
+                <ul class="mt-1 space-y-1 pl-4">
+                  <li>
+                    <.sidebar_link href={~p"/d/food-database"} current_path={@current_path} icon="search">
+                      Food Database
+                    </.sidebar_link>
+                  </li>
+                </ul>
+              </details>
+              <.sidebar_link href={~p"/d/food"} current_path={@current_path} icon="utensils">
+                Food Tracking
+              </.sidebar_link>
+              <.sidebar_link href={~p"/d/progress"} current_path={@current_path} icon="chart-line">
+                Progress
+              </.sidebar_link>
+            </div>
+          </div>
         </nav>
       </div>
     </div>

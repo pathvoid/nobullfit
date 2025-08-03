@@ -283,6 +283,9 @@ defmodule NobullfitWeb.CoreComponents do
   Renders a header with title.
   """
   attr :size, :string, default: "lg", values: ~w(sm md lg xl), doc: "the size of the header"
+  attr :class, :string, default: nil, doc: "the class of the header"
+  attr :centered, :boolean, default: false, doc: "whether to center the header content"
+  attr :actions_right, :boolean, default: false, doc: "whether to keep actions on the right when centered"
   slot :inner_block, required: true
   slot :subtitle
   slot :actions
@@ -291,8 +294,17 @@ defmodule NobullfitWeb.CoreComponents do
     assigns = assign(assigns, :size_class, get_size_class(assigns.size))
 
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
-      <div>
+    <header class={[
+      @actions != [] && !@centered && "flex items-center justify-between gap-6",
+      @centered && !@actions_right && "text-center",
+      @centered && @actions_right && "relative",
+      "pb-4",
+      @class
+    ]}>
+      <div class={[
+        @centered && !@actions_right && "flex flex-col items-center",
+        @centered && @actions_right && "text-center"
+      ]}>
         <h1 class={@size_class}>
           {render_slot(@inner_block)}
         </h1>
@@ -300,7 +312,9 @@ defmodule NobullfitWeb.CoreComponents do
           {render_slot(@subtitle)}
         </p>
       </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
+      <div :if={@actions != [] && !@centered} class="flex-none">{render_slot(@actions)}</div>
+      <div :if={@actions != [] && @centered && !@actions_right} class="mt-4 flex justify-center">{render_slot(@actions)}</div>
+      <div :if={@actions != [] && @centered && @actions_right} class="absolute top-0 right-0">{render_slot(@actions)}</div>
     </header>
     """
   end

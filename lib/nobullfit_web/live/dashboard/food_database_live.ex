@@ -7,22 +7,21 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
 
   on_mount {NobullfitWeb.UserAuth, :require_authenticated}
 
-
-
   @impl true
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
-    {:ok, assign(socket,
-      page_title: "Food Database",
-      current_path: "/d/food-database",
-      maintenance_status: maintenance_status,
-             search_query: "",
+    {:ok,
+     assign(socket,
+       page_title: "Food Database",
+       current_path: "/d/food-database",
+       maintenance_status: maintenance_status,
+       search_query: "",
        search_results: [],
        hints: [],
        loading: false,
        error: nil
-    )}
+     )}
   end
 
   @impl true
@@ -42,11 +41,13 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
 
     # Navigate to nutrition info page
     nutrition_url = "/d/nutrition-info/#{food_id}/#{URI.encode(food_label)}/#{quantity}"
-    final_url = if measure_uri != "http://www.edamam.com/ontologies/edamam.owl#Measure_gram" do
-      nutrition_url <> "?measure_uri=#{URI.encode(measure_uri)}"
-    else
-      nutrition_url
-    end
+
+    final_url =
+      if measure_uri != "http://www.edamam.com/ontologies/edamam.owl#Measure_gram" do
+        nutrition_url <> "?measure_uri=#{URI.encode(measure_uri)}"
+      else
+        nutrition_url
+      end
 
     {:noreply, push_navigate(socket, to: final_url)}
   end
@@ -58,44 +59,48 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
 
     # Navigate to nutrition info page
     nutrition_url = "/d/nutrition-info/#{food_id}/#{URI.encode(food_label)}/100"
-    final_url = if measure_uri != "http://www.edamam.com/ontologies/edamam.owl#Measure_gram" do
-      nutrition_url <> "?measure_uri=#{URI.encode(measure_uri)}"
-    else
-      nutrition_url
-    end
+
+    final_url =
+      if measure_uri != "http://www.edamam.com/ontologies/edamam.owl#Measure_gram" do
+        nutrition_url <> "?measure_uri=#{URI.encode(measure_uri)}"
+      else
+        nutrition_url
+      end
 
     {:noreply, push_navigate(socket, to: final_url)}
   end
 
   @impl true
   def handle_event("clear_search", _params, socket) do
-    {:noreply, assign(socket,
-      search_query: "",
-      search_results: [],
-      hints: [],
-      nutrition_data: nil,
-      error: nil
-    )}
+    {:noreply,
+     assign(socket,
+       search_query: "",
+       search_results: [],
+       hints: [],
+       nutrition_data: nil,
+       error: nil
+     )}
   end
 
   @impl true
   def handle_info({:perform_search, query}, socket) do
     case NoBullFit.FoodAPI.search_foods(query) do
       {:ok, data} ->
-        {:noreply, assign(socket,
-          search_results: data["parsed"] || [],
-          hints: data["hints"] || [],
-          loading: false
-        )}
+        {:noreply,
+         assign(socket,
+           search_results: data["parsed"] || [],
+           hints: data["hints"] || [],
+           loading: false
+         )}
+
       {:error, error} ->
-        {:noreply, assign(socket,
-          error: "Search failed: #{error}",
-          loading: false
-        )}
+        {:noreply,
+         assign(socket,
+           error: "Search failed: #{error}",
+           loading: false
+         )}
     end
   end
-
-
 
   @impl true
   def render(assigns) do
@@ -109,138 +114,136 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
         <div class="flex-1">
           <main class="px-4 py-8 md:py-12">
             <div class="max-w-6xl mx-auto space-y-8">
-              <div class="text-center">
-                <.header>
-                  Food Database
-                  <:subtitle>Search and analyze nutrition information for foods</:subtitle>
-                </.header>
-              </div>
+              <.header centered={true}>
+                Food Database
+                <:subtitle>Search and analyze nutrition information for foods</:subtitle>
+              </.header>
 
-                             <!-- Search Section -->
-               <div class="max-w-5xl mx-auto">
-                 <div class="bg-base-200 rounded-lg p-10 mb-12">
-                   <div class="flex justify-between items-center mb-6">
-                     <.header>
-                       Search Foods
-                       <:subtitle>Enter a food name, brand, or UPC code to find nutrition information</:subtitle>
-                     </.header>
-                     <button phx-click="clear_search" class="btn btn-sm btn-ghost">Clear</button>
-                   </div>
+              <!-- Search Section -->
+              <div class="max-w-5xl mx-auto">
+                <div class="bg-base-200 rounded-lg p-10 mb-12">
+                  <div class="flex justify-between items-center mb-6">
+                    <.header>
+                      Search Foods
+                      <:subtitle>Enter a food name, brand, or UPC code to find nutrition information</:subtitle>
+                    </.header>
+                    <button phx-click="clear_search" class="btn btn-sm btn-ghost">Clear</button>
+                  </div>
 
-                   <form phx-submit="search" class="space-y-6">
-                     <fieldset class="fieldset">
-                       <legend class="fieldset-legend">Search Query</legend>
-                       <input
-                         type="text"
-                         name="query"
-                         value={@search_query}
-                         placeholder="Enter food name, brand, or UPC..."
-                         class="input input-bordered w-full"
-                         autocomplete="off"
-                       />
-                     </fieldset>
+                  <form phx-submit="search" class="space-y-6">
+                    <fieldset class="fieldset">
+                      <legend class="fieldset-legend">Search Query</legend>
+                      <input
+                        type="text"
+                        name="query"
+                        value={@search_query}
+                        placeholder="Enter food name, brand, or UPC..."
+                        class="input input-bordered w-full"
+                        autocomplete="off"
+                      />
+                    </fieldset>
 
-                     <button type="submit" class="btn btn-primary w-full" disabled={@loading}>
-                       <%= if @loading do %>
-                         <span class="loading loading-spinner loading-sm"></span>
-                       <% end %>
-                       Search
-                     </button>
-                   </form>
-                 </div>
-
-                                                  <!-- Search Results -->
-                 <%= if length(@search_results) > 0 do %>
-                   <div class="max-w-5xl mx-auto">
-                     <div class="bg-base-200 rounded-lg p-8">
-                       <.header>
-                         Search Results
-                         <:subtitle>Found foods matching your search query. Click "Get Nutrition" to view detailed nutrition information.</:subtitle>
-                       </.header>
-                       <div class="grid grid-cols-1 gap-6">
-                      <%= for {result, _index} <- Enum.with_index(@search_results) do %>
-                                                 <div class="bg-base-100 rounded-lg p-6 border border-base-300 shadow-sm">
-                           <div class="flex justify-between items-start mb-4">
-                             <h4 class="text-lg font-semibold"><%= result["food"]["label"] %></h4>
-                            <button
-                              phx-click="get_nutrition"
-                              phx-value-food_id={result["food"]["foodId"]}
-                              phx-value-food_label={result["food"]["label"]}
-                              phx-value-measure_uri={result["measure"]["uri"]}
-                              phx-value-quantity="100"
-                              class="btn btn-primary"
-                              disabled={@loading}
-                            >
-                              Get Nutrition
-                            </button>
-                          </div>
-
-                                                     <div class="space-y-3 mb-4">
-                            <%= if result["food"]["brand"] do %>
-                              <p class="text-base-content/70">Brand: <span class="font-medium"><%= result["food"]["brand"] %></span></p>
-                            <% end %>
-
-                            <%= if result["food"]["categoryLabel"] do %>
-                              <p class="text-base-content/70">Category: <span class="font-medium"><%= result["food"]["categoryLabel"] %></span></p>
-                            <% end %>
-
-                            <%= if result["measure"] do %>
-                              <p class="text-base-content/70">
-                                Serving: <span class="font-medium"><%= result["measure"]["label"] %> (<%= result["measure"]["weight"] %>g)</span>
-                              </p>
-                            <% end %>
-                          </div>
-
-                          <%= if result["food"]["nutrients"] do %>
-                            <div class="grid grid-cols-2 gap-4 text-sm">
-                              <div class="bg-base-300 rounded p-3">
-                                <p class="font-medium">Calories</p>
-                                <p class="text-primary"><%= result["food"]["nutrients"]["ENERC_KCAL"] || "N/A" %> kcal</p>
-                              </div>
-                              <div class="bg-base-300 rounded p-3">
-                                <p class="font-medium">Protein</p>
-                                <p class="text-primary"><%= result["food"]["nutrients"]["PROCNT"] || "N/A" %>g</p>
-                              </div>
-                              <div class="bg-base-300 rounded p-3">
-                                <p class="font-medium">Carbs</p>
-                                <p class="text-primary"><%= result["food"]["nutrients"]["CHOCDF"] || "N/A" %>g</p>
-                              </div>
-                              <div class="bg-base-300 rounded p-3">
-                                <p class="font-medium">Fat</p>
-                                <p class="text-primary"><%= result["food"]["nutrients"]["FAT"] || "N/A" %>g</p>
-                              </div>
-                            </div>
-                          <% end %>
-                        </div>
+                    <button type="submit" class="btn btn-primary w-full" disabled={@loading}>
+                      <%= if @loading do %>
+                        <span class="loading loading-spinner loading-sm"></span>
                       <% end %>
-                       </div>
-                     </div>
-                   </div>
+                      Search
+                    </button>
+                  </form>
+                </div>
+
+                <!-- Search Results -->
+                <%= if length(@search_results) > 0 do %>
+                  <div class="max-w-5xl mx-auto">
+                    <div class="bg-base-200 rounded-lg p-8">
+                      <.header>
+                        Search Results
+                        <:subtitle>Found foods matching your search query. Click "Get Nutrition" to view detailed nutrition information.</:subtitle>
+                      </.header>
+                      <div class="grid grid-cols-1 gap-6">
+                        <%= for {result, _index} <- Enum.with_index(@search_results) do %>
+                          <div class="bg-base-100 rounded-lg p-6 border border-base-300 shadow-sm">
+                            <div class="flex justify-between items-start mb-4">
+                              <h4 class="text-lg font-semibold"><%= result["food"]["label"] %></h4>
+                              <button
+                                phx-click="get_nutrition"
+                                phx-value-food_id={result["food"]["foodId"]}
+                                phx-value-food_label={result["food"]["label"]}
+                                phx-value-measure_uri={result["measure"]["uri"]}
+                                phx-value-quantity="100"
+                                class="btn btn-primary"
+                                disabled={@loading}
+                              >
+                                Get Nutrition
+                              </button>
+                            </div>
+
+                            <div class="space-y-3 mb-4">
+                              <%= if result["food"]["brand"] do %>
+                                <p class="text-base-content/70">Brand: <span class="font-medium"><%= result["food"]["brand"] %></span></p>
+                              <% end %>
+
+                              <%= if result["food"]["categoryLabel"] do %>
+                                <p class="text-base-content/70">Category: <span class="font-medium"><%= result["food"]["categoryLabel"] %></span></p>
+                              <% end %>
+
+                              <%= if result["measure"] do %>
+                                <p class="text-base-content/70">
+                                  Serving: <span class="font-medium"><%= result["measure"]["label"] %> (<%= result["measure"]["weight"] %>g)</span>
+                                </p>
+                              <% end %>
+                            </div>
+
+                            <%= if result["food"]["nutrients"] do %>
+                              <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div class="bg-base-300 rounded p-3">
+                                  <p class="font-medium">Calories</p>
+                                  <p class="text-primary"><%= result["food"]["nutrients"]["ENERC_KCAL"] || "N/A" %> kcal</p>
+                                </div>
+                                <div class="bg-base-300 rounded p-3">
+                                  <p class="font-medium">Protein</p>
+                                  <p class="text-primary"><%= result["food"]["nutrients"]["PROCNT"] || "N/A" %>g</p>
+                                </div>
+                                <div class="bg-base-300 rounded p-3">
+                                  <p class="font-medium">Carbs</p>
+                                  <p class="text-primary"><%= result["food"]["nutrients"]["CHOCDF"] || "N/A" %>g</p>
+                                </div>
+                                <div class="bg-base-300 rounded p-3">
+                                  <p class="font-medium">Fat</p>
+                                  <p class="text-primary"><%= result["food"]["nutrients"]["FAT"] || "N/A" %>g</p>
+                                </div>
+                              </div>
+                            <% end %>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
                 <% end %>
 
-                                 <!-- No Results Message -->
-                 <%= if @search_query != "" && length(@search_results) == 0 do %>
-                   <div class="text-center py-12">
-                     <h3 class="text-xl font-semibold mb-4">No Results Found</h3>
-                     <p class="text-base-content/70">
+                <!-- No Results Message -->
+                <%= if @search_query != "" && length(@search_results) == 0 do %>
+                  <div class="text-center py-12">
+                    <h3 class="text-xl font-semibold mb-4">No Results Found</h3>
+                    <p class="text-base-content/70">
                       No foods found matching "<%= @search_query %>". Try searching for a different term or check your spelling.
                     </p>
                   </div>
                 <% end %>
 
-                                                  <!-- Suggestions -->
-                 <%= if @hints && length(@hints) > 0 do %>
-                   <div class="mt-12">
-                     <.header>
-                       Suggestions
-                       <:subtitle>Here are some similar foods you might be looking for:</:subtitle>
-                     </.header>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Suggestions -->
+                <%= if @hints && length(@hints) > 0 do %>
+                  <div class="mt-12">
+                    <.header>
+                      Suggestions
+                      <:subtitle>Here are some similar foods you might be looking for:</:subtitle>
+                    </.header>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <%= for hint <- @hints do %>
-                                                 <div class="bg-base-100 rounded-lg p-6 border border-base-300 shadow-sm">
-                           <div class="flex justify-between items-start">
-                             <div class="flex-1">
-                               <h4 class="text-base font-semibold mb-2"><%= hint["food"]["label"] %></h4>
+                        <div class="bg-base-100 rounded-lg p-6 border border-base-300 shadow-sm">
+                          <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                              <h4 class="text-base font-semibold mb-2"><%= hint["food"]["label"] %></h4>
                               <div class="space-y-1 text-sm">
                                 <%= if hint["food"]["brand"] do %>
                                   <p class="text-base-content/70">Brand: <span class="font-medium"><%= hint["food"]["brand"] %></span></p>

@@ -1,9 +1,9 @@
 defmodule NoBullFit.RecipeAPI do
   @moduledoc """
-  Module for interacting with the Edamam Recipe Search API.
+    Module for interacting with the Edamam Recipe Search API.
 
-  This module provides functions to search for recipes, get recipe details,
-  and use various filtering options.
+    This module provides functions to search for recipes, get recipe details,
+    and use various filtering options.
   """
 
   @base_url "https://api.edamam.com"
@@ -15,31 +15,31 @@ defmodule NoBullFit.RecipeAPI do
   @app_key "your_edamam_recipe_app_key_here"
 
   @doc """
-  Search for recipes using various criteria.
+    Search for recipes using various criteria.
 
-  ## Parameters
-  - `opts` - Optional parameters including:
-    - `app_id` - Your Edamam app ID (required)
-    - `app_key` - Your Edamam app key (required)
-    - `q` - Query text (e.g., "chicken")
-    - `type` - Type of recipes (public, user, edamam-generic)
-    - `diet` - Diet labels (balanced, high-fiber, high-protein, low-carb, low-fat, low-sodium)
-    - `health` - Health labels (gluten-free, vegan, vegetarian, etc.)
-    - `cuisineType` - Cuisine types (American, Italian, Mexican, etc.)
-    - `mealType` - Meal types (Breakfast, Lunch, Dinner, Snack, Teatime)
-    - `dishType` - Dish types (Main course, Side dish, Desserts, etc.)
-    - `calories` - Calorie range (e.g., "100-300")
-    - `time` - Time range in minutes (e.g., "30-60")
-    - `ingr` - Number of ingredients range (e.g., "5-8")
-    - `excluded` - Ingredients to exclude
-    - `nutrients` - Map of nutrient filters
-    - `random` - Boolean for random selection
-    - `field` - Fields to include in response
+    ## Parameters
+    - `opts` - Optional parameters including:
+      - `app_id` - Your Edamam app ID (required)
+      - `app_key` - Your Edamam app key (required)
+      - `q` - Query text (e.g., "chicken")
+      - `type` - Type of recipes (public, user, edamam-generic)
+      - `diet` - Diet labels (balanced, high-fiber, high-protein, low-carb, low-fat, low-sodium)
+      - `health` - Health labels (gluten-free, vegan, vegetarian, etc.)
+      - `cuisineType` - Cuisine types (American, Italian, Mexican, etc.)
+      - `mealType` - Meal types (Breakfast, Lunch, Dinner, Snack, Teatime)
+      - `dishType` - Dish types (Main course, Side dish, Desserts, etc.)
+      - `calories` - Calorie range (e.g., "100-300")
+      - `time` - Time range in minutes (e.g., "30-60")
+      - `ingr` - Number of ingredients range (e.g., "5-8")
+      - `excluded` - Ingredients to exclude
+      - `nutrients` - Map of nutrient filters
+      - `random` - Boolean for random selection
+      - `field` - Fields to include in response
 
-  ## Examples
-      iex> RecipeAPI.search_recipes(q: "chicken", app_id: "your_app_id", app_key: "your_app_key")
-      iex> RecipeAPI.search_recipes(q: "pasta", cuisineType: ["Italian"], mealType: ["Dinner"])
-      iex> RecipeAPI.search_recipes(q: "salad", health: ["vegan"], calories: "100-300")
+    ## Examples
+        iex> RecipeAPI.search_recipes(q: "chicken", app_id: "your_app_id", app_key: "your_app_key")
+        iex> RecipeAPI.search_recipes(q: "pasta", cuisineType: ["Italian"], mealType: ["Dinner"])
+        iex> RecipeAPI.search_recipes(q: "salad", health: ["vegan"], calories: "100-300")
   """
   def search_recipes(opts \\ []) do
     perform_search(opts)
@@ -55,7 +55,9 @@ defmodule NoBullFit.RecipeAPI do
         case Jason.decode(body) do
           {:ok, data} ->
             {:ok, data}
-          {:error, _error} -> {:error, "Unable to process the recipe search results. Please try again."}
+
+          {:error, _error} ->
+            {:error, "Unable to process the recipe search results. Please try again."}
         end
 
       {:ok, %HTTPoison.Response{status_code: status_code, body: _body}} ->
@@ -67,18 +69,18 @@ defmodule NoBullFit.RecipeAPI do
   end
 
   @doc """
-  Get a specific recipe by ID.
+    Get a specific recipe by ID.
 
-  ## Parameters
-  - `recipe_id` - The recipe ID
-  - `opts` - Optional parameters including:
-    - `app_id` - Your Edamam app ID (required)
-    - `app_key` - Your Edamam app key (required)
-    - `type` - Recipe type (public, user, edamam-generic)
-    - `field` - Fields to include in response
+    ## Parameters
+    - `recipe_id` - The recipe ID
+    - `opts` - Optional parameters including:
+      - `app_id` - Your Edamam app ID (required)
+      - `app_key` - Your Edamam app key (required)
+      - `type` - Recipe type (public, user, edamam-generic)
+      - `field` - Fields to include in response
 
-  ## Examples
-      iex> RecipeAPI.get_recipe("recipe_id", app_id: "your_app_id", app_key: "your_app_key")
+    ## Examples
+        iex> RecipeAPI.get_recipe("recipe_id", app_id: "your_app_id", app_key: "your_app_key")
   """
   def get_recipe(recipe_id, opts \\ []) do
     {app_id, app_key} = get_credentials(opts)
@@ -91,7 +93,9 @@ defmodule NoBullFit.RecipeAPI do
         case Jason.decode(body) do
           {:ok, data} ->
             {:ok, data}
-          {:error, _error} -> {:error, "Unable to process the recipe data. Please try again."}
+
+          {:error, _error} ->
+            {:error, "Unable to process the recipe data. Please try again."}
         end
 
       {:ok, %HTTPoison.Response{status_code: status_code, body: _body}} ->
@@ -103,17 +107,17 @@ defmodule NoBullFit.RecipeAPI do
   end
 
   @doc """
-  Get recipes by URI(s).
+    Get recipes by URI(s).
 
-  ## Parameters
-  - `uris` - List of recipe URIs (up to 20)
-  - `opts` - Optional parameters including:
-    - `app_id` - Your Edamam app ID (required)
-    - `app_key` - Your Edamam app key (required)
-    - `field` - Fields to include in response
+    ## Parameters
+    - `uris` - List of recipe URIs (up to 20)
+    - `opts` - Optional parameters including:
+      - `app_id` - Your Edamam app ID (required)
+      - `app_key` - Your Edamam app key (required)
+      - `field` - Fields to include in response
 
-  ## Examples
-      iex> RecipeAPI.get_recipes_by_uri(["uri1", "uri2"], app_id: "your_app_id", app_key: "your_app_key")
+    ## Examples
+        iex> RecipeAPI.get_recipes_by_uri(["uri1", "uri2"], app_id: "your_app_id", app_key: "your_app_key")
   """
   def get_recipes_by_uri(uris, opts \\ []) do
     {app_id, app_key} = get_credentials(opts)
@@ -134,7 +138,9 @@ defmodule NoBullFit.RecipeAPI do
         case Jason.decode(body) do
           {:ok, data} ->
             {:ok, data}
-          {:error, _error} -> {:error, "Unable to process the recipe data. Please try again."}
+
+          {:error, _error} ->
+            {:error, "Unable to process the recipe data. Please try again."}
         end
 
       {:ok, %HTTPoison.Response{status_code: status_code, body: _body}} ->
@@ -185,103 +191,118 @@ defmodule NoBullFit.RecipeAPI do
     params = [{"type", type} | base_params]
 
     # Add optional parameters
-    params = if q = Keyword.get(opts, :q) do
-      [{"q", q} | params]
-    else
-      params
-    end
+    params =
+      if q = Keyword.get(opts, :q) do
+        [{"q", q} | params]
+      else
+        params
+      end
 
-    params = if diet = Keyword.get(opts, :diet) do
-      diet_params = Enum.map(diet, &{"diet", &1})
-      diet_params ++ params
-    else
-      params
-    end
+    params =
+      if diet = Keyword.get(opts, :diet) do
+        diet_params = Enum.map(diet, &{"diet", &1})
+        diet_params ++ params
+      else
+        params
+      end
 
-    params = if health = Keyword.get(opts, :health) do
-      health_params = Enum.map(health, &{"health", &1})
-      health_params ++ params
-    else
-      params
-    end
+    params =
+      if health = Keyword.get(opts, :health) do
+        health_params = Enum.map(health, &{"health", &1})
+        health_params ++ params
+      else
+        params
+      end
 
-    params = if cuisine_type = Keyword.get(opts, :cuisineType) do
-      cuisine_params = Enum.map(cuisine_type, &{"cuisineType", &1})
-      cuisine_params ++ params
-    else
-      params
-    end
+    params =
+      if cuisine_type = Keyword.get(opts, :cuisineType) do
+        cuisine_params = Enum.map(cuisine_type, &{"cuisineType", &1})
+        cuisine_params ++ params
+      else
+        params
+      end
 
-    params = if meal_type = Keyword.get(opts, :mealType) do
-      meal_params = Enum.map(meal_type, &{"mealType", &1})
-      meal_params ++ params
-    else
-      params
-    end
+    params =
+      if meal_type = Keyword.get(opts, :mealType) do
+        meal_params = Enum.map(meal_type, &{"mealType", &1})
+        meal_params ++ params
+      else
+        params
+      end
 
-    params = if dish_type = Keyword.get(opts, :dishType) do
-      dish_params = Enum.map(dish_type, &{"dishType", &1})
-      dish_params ++ params
-    else
-      params
-    end
+    params =
+      if dish_type = Keyword.get(opts, :dishType) do
+        dish_params = Enum.map(dish_type, &{"dishType", &1})
+        dish_params ++ params
+      else
+        params
+      end
 
-    params = if calories = Keyword.get(opts, :calories) do
-      [{"calories", calories} | params]
-    else
-      params
-    end
+    params =
+      if calories = Keyword.get(opts, :calories) do
+        [{"calories", calories} | params]
+      else
+        params
+      end
 
-    params = if time = Keyword.get(opts, :time) do
-      [{"time", time} | params]
-    else
-      params
-    end
+    params =
+      if time = Keyword.get(opts, :time) do
+        [{"time", time} | params]
+      else
+        params
+      end
 
-    params = if ingr = Keyword.get(opts, :ingr) do
-      [{"ingr", ingr} | params]
-    else
-      params
-    end
+    params =
+      if ingr = Keyword.get(opts, :ingr) do
+        [{"ingr", ingr} | params]
+      else
+        params
+      end
 
-    params = if excluded = Keyword.get(opts, :excluded) do
-      excluded_params = Enum.map(excluded, &{"excluded", &1})
-      excluded_params ++ params
-    else
-      params
-    end
+    params =
+      if excluded = Keyword.get(opts, :excluded) do
+        excluded_params = Enum.map(excluded, &{"excluded", &1})
+        excluded_params ++ params
+      else
+        params
+      end
 
-    params = if nutrients = Keyword.get(opts, :nutrients) do
-      nutrient_params = Enum.map(nutrients, fn {key, value} ->
-        {"nutrients[#{key}]", value}
-      end)
-      nutrient_params ++ params
-    else
-      params
-    end
+    params =
+      if nutrients = Keyword.get(opts, :nutrients) do
+        nutrient_params =
+          Enum.map(nutrients, fn {key, value} ->
+            {"nutrients[#{key}]", value}
+          end)
 
-    params = if random = Keyword.get(opts, :random) do
-      [{"random", random} | params]
-    else
-      params
-    end
+        nutrient_params ++ params
+      else
+        params
+      end
 
-    params = if field = Keyword.get(opts, :field) do
-      field_params = Enum.map(field, &{"field", &1})
-      field_params ++ params
-    else
-      params
-    end
+    params =
+      if random = Keyword.get(opts, :random) do
+        [{"random", random} | params]
+      else
+        params
+      end
+
+    params =
+      if field = Keyword.get(opts, :field) do
+        field_params = Enum.map(field, &{"field", &1})
+        field_params ++ params
+      else
+        params
+      end
 
     params
   end
 
   @doc """
-  Convenience function to search for recipes and print results to console.
+    Convenience function to search for recipes and print results to console.
 
-  ## Examples
-      iex> RecipeAPI.search_and_print(q: "chicken")
-      iex> RecipeAPI.search_and_print(q: "pasta", cuisineType: ["Italian"], mealType: ["Dinner"])
+    ## Examples
+        iex> RecipeAPI.search_and_print(q: "chicken")
+        iex> RecipeAPI.search_and_print(q: "pasta", cuisineType: ["Italian"], mealType: ["Dinner"])
   """
   def search_and_print(opts \\ []) do
     case search_recipes(opts) do
@@ -362,10 +383,10 @@ defmodule NoBullFit.RecipeAPI do
   end
 
   @doc """
-  Convenience function to get a specific recipe and print details to console.
+    Convenience function to get a specific recipe and print details to console.
 
-  ## Examples
-      iex> RecipeAPI.get_recipe_and_print("recipe_id")
+    ## Examples
+        iex> RecipeAPI.get_recipe_and_print("recipe_id")
   """
   def get_recipe_and_print(recipe_id, opts \\ []) do
     case get_recipe(recipe_id, opts) do
@@ -444,10 +465,10 @@ defmodule NoBullFit.RecipeAPI do
   end
 
   @doc """
-  Convenience function to get recipes by URI and print results to console.
+    Convenience function to get recipes by URI and print results to console.
 
-  ## Examples
-      iex> RecipeAPI.get_recipes_by_uri_and_print(["uri1", "uri2"])
+    ## Examples
+        iex> RecipeAPI.get_recipes_by_uri_and_print(["uri1", "uri2"])
   """
   def get_recipes_by_uri_and_print(uris, opts \\ []) do
     case get_recipes_by_uri(uris, opts) do
