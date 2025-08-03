@@ -77,23 +77,36 @@ defmodule NobullfitWeb.Components.Navigation do
                 </svg>
               </label>
               <ul class="menu p-4 w-full min-h-full" style="z-index: 99999;">
-              <%= unless String.starts_with?(@current_path || "", "/d") or (String.starts_with?(@current_path || "", "/users") and not String.starts_with?(@current_path || "", "/users/log-in") and not String.starts_with?(@current_path || "", "/users/register")) do %>
-                <li><a href="/" class="text-lg">Home</a></li>
-                <li><a href="/guides" class="text-lg">Guides</a></li>
-                <li><a href="/about" class="text-lg">About</a></li>
-              <% end %>
-              <%= if String.starts_with?(@current_path || "", "/d") do %>
-                <li class="menu-title mt-4">
-                  <span>Dashboard</span>
-                </li>
-                <li><a href="/d" class="text-lg">Overview</a></li>
-                <li><a href="/d/food" class="text-lg">Food Tracking</a></li>
-                <li><a href="/d/progress" class="text-lg">Progress</a></li>
-                <li><a href="/users/settings" class="text-lg">Settings</a></li>
-              <% end %>
-              <%= if @current_scope && @current_scope.user do %>
-                <li><.link href={~p"/users/log-out"} method="delete" class="text-lg">Log out</.link></li>
-              <% end %>
+                             <li class="menu-title">
+                 <span>NoBullFit</span>
+               </li>
+               <%= unless String.starts_with?(@current_path || "", "/d") or (String.starts_with?(@current_path || "", "/users") and not String.starts_with?(@current_path || "", "/users/log-in") and not String.starts_with?(@current_path || "", "/users/register")) do %>
+                 <li><a href="/" class="text-lg">Home</a></li>
+                 <li><a href="/guides" class="text-lg">Guides</a></li>
+                 <li><a href="/about" class="text-lg">About</a></li>
+               <% end %>
+               <%= if String.starts_with?(@current_path || "", "/d") do %>
+                 <li><a href="/d" class="text-lg">Overview</a></li>
+                                 <li>
+                   <details class="group" open={String.starts_with?(@current_path || "", "/d/food-database")}>
+                     <summary class="text-lg cursor-pointer">
+                       Database
+                     </summary>
+                     <ul class="pl-4 space-y-1">
+                       <li><a href="/d/food-database" class="text-lg">Food Database</a></li>
+                     </ul>
+                   </details>
+                 </li>
+                 <li><a href="/d/food" class="text-lg">Food Tracking</a></li>
+                 <li><a href="/d/progress" class="text-lg">Progress</a></li>
+               <% end %>
+               <%= if @current_scope && @current_scope.user do %>
+                 <li class="menu-title mt-4">
+                   <span>Account</span>
+                 </li>
+                 <li><a href="/users/settings" class="text-lg">Settings</a></li>
+                 <li><.link href={~p"/users/log-out"} method="delete" class="text-lg">Log out</.link></li>
+               <% end %>
               <li class="menu-title mt-8">
                 <span>Theme</span>
               </li>

@@ -52,6 +52,8 @@ defmodule NobullfitWeb.Router do
       on_mount: [{NobullfitWeb.UserAuth, :require_authenticated}] do
       live "/d", DashboardLive
       live "/d/food", Dashboard.FoodLive
+      live "/d/food-database", Dashboard.FoodDatabaseLive
+      live "/d/nutrition-info/:food_id/:food_label/:quantity", Dashboard.NutritionInfoLive
       live "/d/progress", Dashboard.ProgressLive
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email

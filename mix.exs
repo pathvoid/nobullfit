@@ -58,6 +58,7 @@ defmodule Nobullfit.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
+      {:httpoison, "~> 2.0"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:gen_smtp, "~> 1.0"},
