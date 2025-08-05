@@ -28,7 +28,7 @@ defmodule NobullfitWeb.AboutLive do
           <img src="/assets/images/campfire.png" alt="NoBullFit" class="w-60 h-auto mx-auto" />
 
           <div class="space-y-24">
-            <div class="space-y-12">
+            <div class="space-y-6">
               <h2 class="text-2xl font-semibold">Mission</h2>
               <div class="space-y-6">
                 <p class="text-base-content/70 leading-relaxed">
@@ -37,7 +37,7 @@ defmodule NobullfitWeb.AboutLive do
               </div>
             </div>
 
-            <div class="space-y-12">
+            <div class="space-y-6">
               <h2 class="text-2xl font-semibold">What We Offer</h2>
               <div class="space-y-6">
                 <div class="grid gap-4">
@@ -45,34 +45,28 @@ defmodule NobullfitWeb.AboutLive do
                     <div class="w-2 h-2 bg-primary rounded-full mt-2"></div>
                     <div>
                       <span class="font-medium">Free Food Tracking</span>
-                      <p class="text-sm text-base-content/60 mt-1">
-                        Log your meals, track calories, and monitor nutritional intake
-                      </p>
+                      <p class="text-sm text-base-content/60 mt-1">Log your meals, track calories, and monitor nutritional intake</p>
                     </div>
                   </div>
                   <div class="flex items-start space-x-3">
                     <div class="w-2 h-2 bg-primary rounded-full mt-2"></div>
                     <div>
                       <span class="font-medium">Progress Monitoring</span>
-                      <p class="text-sm text-base-content/60 mt-1">
-                        Track your fitness journey with detailed progress analytics
-                      </p>
+                      <p class="text-sm text-base-content/60 mt-1">Track your fitness journey with detailed progress analytics</p>
                     </div>
                   </div>
                   <div class="flex items-start space-x-3">
                     <div class="w-2 h-2 bg-primary rounded-full mt-2"></div>
                     <div>
                       <span class="font-medium">Data Privacy First</span>
-                      <p class="text-sm text-base-content/60 mt-1">
-                        Your personal data stays private and secure
-                      </p>
+                      <p class="text-sm text-base-content/60 mt-1">Your personal data stays private and secure</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="space-y-12">
+            <div class="space-y-6">
               <h2 class="text-2xl font-semibold">Our Approach</h2>
               <div class="space-y-6">
                 <p class="text-base-content/70 leading-relaxed">
@@ -84,7 +78,7 @@ defmodule NobullfitWeb.AboutLive do
               </div>
             </div>
 
-            <div class="space-y-12">
+            <div class="space-y-6">
               <h2 class="text-2xl font-semibold">Privacy Commitment</h2>
               <div class="space-y-6">
                 <p class="text-base-content/70 leading-relaxed">

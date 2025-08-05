@@ -25,7 +25,7 @@ defmodule NobullfitWeb.GuidesLive do
           <img src="/assets/images/professor-pear.png" alt="NoBullFit" class="w-50 h-auto mx-auto" />
 
           <div class="space-y-24">
-            <div class="space-y-12">
+            <div class="space-y-6">
               <h2 class="text-2xl font-semibold">Start Simple, Stay Consistent</h2>
               <div class="space-y-6">
                 <p class="text-base-content/70 leading-relaxed">
@@ -37,7 +37,7 @@ defmodule NobullfitWeb.GuidesLive do
               </div>
             </div>
 
-            <div class="space-y-12">
+            <div class="space-y-6">
               <h2 class="text-2xl font-semibold">What You Eat Matters (But It Doesn't Have to Be Miserable)</h2>
               <div class="space-y-6">
                 <p class="text-base-content/70 leading-relaxed">
@@ -49,7 +49,7 @@ defmodule NobullfitWeb.GuidesLive do
               </div>
             </div>
 
-            <div class="space-y-12">
+            <div class="space-y-6">
               <h2 class="text-2xl font-semibold">Movement Isn't Just the Gym</h2>
               <div class="space-y-6">
                 <p class="text-base-content/70 leading-relaxed">
@@ -61,7 +61,7 @@ defmodule NobullfitWeb.GuidesLive do
               </div>
             </div>
 
-            <div class="space-y-12">
+            <div class="space-y-6">
               <h2 class="text-2xl font-semibold">Rest Is Part of the Process</h2>
               <div class="space-y-6">
                 <p class="text-base-content/70 leading-relaxed">
@@ -73,7 +73,7 @@ defmodule NobullfitWeb.GuidesLive do
               </div>
             </div>
 
-            <div class="space-y-12">
+            <div class="space-y-6">
               <h2 class="text-2xl font-semibold">Fat Loss? It's All About the Deficit</h2>
               <div class="space-y-6">
                 <p class="text-base-content/70 leading-relaxed">
@@ -85,7 +85,7 @@ defmodule NobullfitWeb.GuidesLive do
               </div>
             </div>
 
-            <div class="space-y-12">
+            <div class="space-y-6">
               <h2 class="text-2xl font-semibold">Forget Perfection. Aim for Progress.</h2>
               <div class="space-y-6">
                 <p class="text-base-content/70 leading-relaxed">
