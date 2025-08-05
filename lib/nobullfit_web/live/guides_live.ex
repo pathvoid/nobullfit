@@ -3,6 +3,8 @@ defmodule NobullfitWeb.GuidesLive do
   import NobullfitWeb.Components.Navigation, only: [navigation: 1, footer: 1]
   import NobullfitWeb.Layouts, only: [flash_group: 1]
 
+  on_mount {NobullfitWeb.UserAuth, :mount_current_scope}
+
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
@@ -101,6 +103,6 @@ defmodule NobullfitWeb.GuidesLive do
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
-    {:ok, assign(socket, current_path: "/guides", maintenance_status: maintenance_status, current_scope: nil)}
+    {:ok, assign(socket, current_path: "/guides", maintenance_status: maintenance_status)}
   end
 end
