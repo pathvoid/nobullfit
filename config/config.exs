@@ -27,7 +27,7 @@ config :nobullfit, NobullfitWeb.Endpoint,
     layout: false
   ],
   pubsub_server: Nobullfit.PubSub,
-  live_view: [signing_salt: "jw+NDidg"]
+  live_view: [signing_salt: System.get_env("SIGNING_SALT") || "jw+NDidg"]
 
 # JavaScript bundling configuration
 config :esbuild,
