@@ -162,6 +162,7 @@ defmodule NobullfitWeb.CoreComponents do
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
   attr :class, :string, default: nil, doc: "the input class to use over defaults"
   attr :error_class, :string, default: nil, doc: "the input error class to use over defaults"
+  attr :no_wrapper, :boolean, default: false, doc: "skip the fieldset wrapper for flex layouts"
 
   attr :rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
@@ -200,6 +201,27 @@ defmodule NobullfitWeb.CoreComponents do
           />{@label}
         </span>
       </label>
+      <.error :for={msg <- @errors}>{msg}</.error>
+    </div>
+    """
+  end
+
+  def input(%{type: "select", no_wrapper: true} = assigns) do
+    ~H"""
+    <div>
+      <label :if={@label}>
+        <span class="label mb-1">{@label}</span>
+      </label>
+      <select
+        id={@id}
+        name={@name}
+        class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
+        multiple={@multiple}
+        {@rest}
+      >
+        <option :if={@prompt} value="">{@prompt}</option>
+        {Phoenix.HTML.Form.options_for_select(@options, @value)}
+      </select>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -247,6 +269,28 @@ defmodule NobullfitWeb.CoreComponents do
   end
 
   # All other inputs text, datetime-local, url, password, etc. are handled here...
+  def input(%{no_wrapper: true} = assigns) do
+    ~H"""
+    <div>
+      <label :if={@label}>
+        <span class="label mb-1">{@label}</span>
+      </label>
+      <input
+        type={@type}
+        name={@name}
+        id={@id}
+        value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+        class={[
+          @class || "w-full input",
+          @errors != [] && (@error_class || "input-error")
+        ]}
+        {@rest}
+      />
+      <.error :for={msg <- @errors}>{msg}</.error>
+    </div>
+    """
+  end
+
   def input(assigns) do
     ~H"""
     <div class="fieldset mb-2">

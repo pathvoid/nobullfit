@@ -191,7 +191,7 @@ defmodule NobullfitWeb.Dashboard.FoodLive do
                         phx-hook="DatePicker"
                       />
                       <button
-                        class="btn btn-sm btn-ghost"
+                        class="btn btn-sm btn-primary"
                         phx-click="change_date"
                         phx-value-date={@max_date}
                       >
@@ -212,7 +212,7 @@ defmodule NobullfitWeb.Dashboard.FoodLive do
                       phx-hook="DatePicker"
                     />
                     <button
-                      class="btn btn-sm btn-ghost"
+                      class="btn btn-sm btn-primary"
                       phx-click="change_date"
                       phx-value-date={@max_date}
                     >

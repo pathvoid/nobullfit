@@ -22,9 +22,9 @@ defmodule NobullfitWeb.Components.Navigation do
 
             <div class="navbar-center hidden lg:flex">
               <%= unless String.starts_with?(@current_path || "", "/d") or
-                        (String.starts_with?(@current_path || "", "/users") and
-                          not String.starts_with?(@current_path || "", "/users/log-in") and
-                          not String.starts_with?(@current_path || "", "/users/register")) do %>
+                    (String.starts_with?(@current_path || "", "/users") and
+                      not String.starts_with?(@current_path || "", "/users/log-in") and
+                      not String.starts_with?(@current_path || "", "/users/register")) do %>
                 <ul class="menu menu-horizontal gap-2">
                   <li><a href="/" class="btn btn-ghost btn-sm">Home</a></li>
                   <li><a href="/guides" class="btn btn-ghost btn-sm">Guides</a></li>
@@ -84,9 +84,9 @@ defmodule NobullfitWeb.Components.Navigation do
                 <span>NoBullFit</span>
               </li>
               <%= unless String.starts_with?(@current_path || "", "/d") or
-                        (String.starts_with?(@current_path || "", "/users") and
-                          not String.starts_with?(@current_path || "", "/users/log-in") and
-                          not String.starts_with?(@current_path || "", "/users/register")) do %>
+                    (String.starts_with?(@current_path || "", "/users") and
+                      not String.starts_with?(@current_path || "", "/users/log-in") and
+                      not String.starts_with?(@current_path || "", "/users/register")) do %>
                 <li><a href="/" class="text-lg">Home</a></li>
                 <li><a href="/guides" class="text-lg">Guides</a></li>
                 <li><a href="/about" class="text-lg">About</a></li>
@@ -105,6 +105,7 @@ defmodule NobullfitWeb.Components.Navigation do
                 </li>
                 <li><a href="/d/food" class="text-lg">Food Tracking</a></li>
                 <li><a href="/d/progress" class="text-lg">Progress</a></li>
+                <li><a href="/d/groceries" class="text-lg">Groceries</a></li>
               <% end %>
               <%= if @current_scope && @current_scope.user do %>
                 <li class="menu-title mt-4">
@@ -129,18 +130,18 @@ defmodule NobullfitWeb.Components.Navigation do
       <nav class="navbar bg-base-200/50 backdrop-blur-sm border-b border-base-200 hidden lg:flex">
         <div class="navbar-start">
           <%= if String.starts_with?(@current_path || "", "/d") or
-                    (String.starts_with?(@current_path || "", "/users") and
-                      not String.starts_with?(@current_path || "", "/users/log-in") and
-                      not String.starts_with?(@current_path || "", "/users/register")) do %>
+                (String.starts_with?(@current_path || "", "/users") and
+                  not String.starts_with?(@current_path || "", "/users/log-in") and
+                  not String.starts_with?(@current_path || "", "/users/register")) do %>
             <a href="/d" class="text-xl font-bold text-primary ml-2">NoBullFit</a>
           <% end %>
         </div>
 
         <div class="navbar-center">
           <%= unless String.starts_with?(@current_path || "", "/d") or
-                    (String.starts_with?(@current_path || "", "/users") and
-                      not String.starts_with?(@current_path || "", "/users/log-in") and
-                      not String.starts_with?(@current_path || "", "/users/register")) do %>
+                (String.starts_with?(@current_path || "", "/users") and
+                  not String.starts_with?(@current_path || "", "/users/log-in") and
+                  not String.starts_with?(@current_path || "", "/users/register")) do %>
             <ul class="menu menu-horizontal gap-2">
               <li><a href="/" class="btn btn-ghost btn-sm">Home</a></li>
               <li><a href="/guides" class="btn btn-ghost btn-sm">Guides</a></li>

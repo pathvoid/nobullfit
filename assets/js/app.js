@@ -81,6 +81,19 @@ const TimezoneDataHook = {
   }
 }
 
+// Hook to reset grocery item form inputs after successful submission
+const GroceryItemFormHook = {
+  mounted() {
+    this.handleEvent("reset-item-form", () => {
+      // Reset all form inputs
+      const inputs = this.el.querySelectorAll('input')
+      inputs.forEach(input => {
+        input.value = ''
+      })
+    })
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
@@ -89,7 +102,8 @@ const liveSocket = new LiveSocket("/live", Socket, {
     ActivityForm: ActivityFormHook,
     DatePicker: DatePickerHook,
     WeightForm: WeightFormHook,
-    TimezoneData: TimezoneDataHook
+    TimezoneData: TimezoneDataHook,
+    GroceryItemForm: GroceryItemFormHook
   }
 })
 

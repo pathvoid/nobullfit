@@ -314,7 +314,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                   <:actions>
                     <div class="hidden md:flex items-center gap-2">
                       <input type="date" class="input input-sm input-bordered" value={@selected_date |> Date.to_string()} max={@max_date} id="desktop-date-picker" phx-hook="DatePicker" />
-                      <button class="btn btn-sm btn-ghost" phx-click="change_date" phx-value-date={@max_date}>Today</button>
+                      <button class="btn btn-sm btn-primary" phx-click="change_date" phx-value-date={@max_date}>Today</button>
                     </div>
                   </:actions>
                 </.header>
@@ -322,7 +322,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                 <div class="md:hidden mt-4">
                   <div class="flex items-center gap-2 justify-center">
                     <input type="date" class="input input-sm input-bordered" value={@selected_date |> Date.to_string()} max={@max_date} id="mobile-date-picker" phx-hook="DatePicker" />
-                    <button class="btn btn-sm btn-ghost" phx-click="change_date" phx-value-date={@max_date}>Today</button>
+                    <button class="btn btn-sm btn-primary" phx-click="change_date" phx-value-date={@max_date}>Today</button>
                   </div>
                 </div>
               </div>
@@ -378,7 +378,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                     <div class="card bg-base-200 shadow-sm">
                       <div class="card-body">
                         <.form for={@activity_form} phx-submit="save_activity" id="activity-form" phx-hook="ActivityForm" novalidate>
-                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div class="flex gap-4">
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Exercise Type</legend>
                               <.input
@@ -394,6 +394,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                                   {"Cycling", "Cycling"},
                                   {"Swimming", "Swimming"}
                                 ]}
+                                no_wrapper={true}
                               />
                             </fieldset>
                             <fieldset class="fieldset">
@@ -403,6 +404,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                                 type="number"
                                 class={if @activity_submitted && @activity_changeset.errors[:duration_minutes], do: "input input-bordered input-error", else: "input input-bordered"}
                                 placeholder="30"
+                                no_wrapper={true}
                               />
                             </fieldset>
                             <fieldset class="fieldset">
@@ -412,6 +414,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                                 type="number"
                                 class={if @activity_submitted && @activity_changeset.errors[:calories_burned], do: "input input-bordered input-error", else: "input input-bordered"}
                                 placeholder="150"
+                                no_wrapper={true}
                               />
                             </fieldset>
                             <fieldset class="fieldset">
@@ -434,7 +437,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                     <div class="card bg-base-200 shadow-sm">
                       <div class="card-body">
                         <.form for={@weight_form} phx-submit="save_weight" id="weight-form" phx-hook="WeightForm" novalidate>
-                          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div class="flex gap-4">
                             <fieldset class="fieldset">
                               <legend class="fieldset-legend">Weight</legend>
                               <.input
@@ -443,6 +446,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                                 class={if @weight_submitted && @weight_changeset.errors[:weight], do: "input input-bordered input-error", else: "input input-bordered"}
                                 placeholder="75.2"
                                 step="0.1"
+                                no_wrapper={true}
                               />
                             </fieldset>
                             <fieldset class="fieldset">
@@ -458,6 +462,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                                 ]}
                                 value={@preferred_unit}
                                 data-preferred-unit={@preferred_unit}
+                                no_wrapper={true}
                               />
                             </fieldset>
                             <fieldset class="fieldset">
