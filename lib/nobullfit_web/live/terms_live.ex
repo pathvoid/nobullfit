@@ -21,62 +21,63 @@ defmodule NobullfitWeb.TermsLive do
           <div class="text-center space-y-6">
             <h1 class="text-4xl font-bold">Terms of Service</h1>
             <p class="text-lg text-base-content/60">
-              These terms of service are currently under development as NoBullFit is still in development.
+              <strong>Effective Date: 2025-08-05</strong>
             </p>
           </div>
 
           <div class="space-y-8">
             <div class="space-y-4">
+              <p class="text-base-content/70 leading-relaxed">
+                Welcome to <strong>NoBullFit</strong>. By using our services, you agree to these Terms of Service. NoBullFit is a privacy-first platform dedicated to helping users track food, monitor progress, and achieve their health goals while respecting their data.
+              </p>
+            </div>
+
+            <div class="space-y-4">
               <h2 class="text-2xl font-semibold">Development Status</h2>
               <p class="text-base-content/70 leading-relaxed">
-                NoBullFit is currently under active development and is not yet publicly accessible. These terms of service will be finalized before the application is launched to ensure clear understanding of the service agreement.
+                NoBullFit is currently in early development but is now publicly accessible. These Terms of Service ensure that all users clearly understand their rights and responsibilities while using the platform.
               </p>
             </div>
 
             <div class="space-y-4">
               <h2 class="text-2xl font-semibold">Service Overview</h2>
               <p class="text-base-content/70 leading-relaxed">
-                When NoBullFit launches, it will provide free food tracking and progress monitoring services with a focus on data privacy. The core features will be available at no cost, with potential premium features available through paid plans.
+                NoBullFit provides free tools for food tracking and progress monitoring with a strong focus on data privacy. Core features are available at no cost, and optional premium features may be introduced in the future. However, essential functionality will always remain accessible without charge.
               </p>
             </div>
 
             <div class="space-y-4">
-              <h2 class="text-2xl font-semibold">What These Terms Will Cover</h2>
-              <div class="grid gap-4">
-                <div class="flex items-start space-x-3">
-                  <div class="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                  <div>
-                    <span class="font-medium">Acceptance of Terms</span>
-                    <p class="text-sm text-base-content/60 mt-1">Agreement to use the service</p>
-                  </div>
+              <h2 class="text-2xl font-semibold">What These Terms Cover</h2>
+              <div class="grid gap-6">
+                <div class="space-y-2">
+                  <h3 class="text-xl font-medium">Acceptance of Terms</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    By accessing or using NoBullFit, you agree to be bound by these Terms of Service. If you do not agree, you may not use our services.
+                  </p>
                 </div>
-                <div class="flex items-start space-x-3">
-                  <div class="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                  <div>
-                    <span class="font-medium">Service Description</span>
-                    <p class="text-sm text-base-content/60 mt-1">What NoBullFit provides</p>
-                  </div>
+                <div class="space-y-2">
+                  <h3 class="text-xl font-medium">Service Description</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    NoBullFit provides tools for health and wellness tracking, including food logs, activity monitoring, and progress insights. These features are designed to support healthier habits while protecting your privacy.
+                  </p>
                 </div>
-                <div class="flex items-start space-x-3">
-                  <div class="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                  <div>
-                    <span class="font-medium">User Responsibilities</span>
-                    <p class="text-sm text-base-content/60 mt-1">How users should use the service</p>
-                  </div>
+                <div class="space-y-2">
+                  <h3 class="text-xl font-medium">User Responsibilities</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    You agree to use NoBullFit for lawful, personal, and non-commercial purposes. Misuse of the service, including attempts to access unauthorized areas or impersonate others, may result in account suspension or termination.
+                  </p>
                 </div>
-                <div class="flex items-start space-x-3">
-                  <div class="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                  <div>
-                    <span class="font-medium">Privacy and Data</span>
-                    <p class="text-sm text-base-content/60 mt-1">How we handle your data</p>
-                  </div>
+                <div class="space-y-2">
+                  <h3 class="text-xl font-medium">Privacy and Data</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    NoBullFit is a privacy-first platform. We collect only the data needed to provide our services and will <strong>never</strong> sell your personal information. Please refer to our <a href="/privacy" class="link link-primary">Privacy Policy</a> for full details.
+                  </p>
                 </div>
-                <div class="flex items-start space-x-3">
-                  <div class="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                  <div>
-                    <span class="font-medium">Limitations of Liability</span>
-                    <p class="text-sm text-base-content/60 mt-1">Service limitations and disclaimers</p>
-                  </div>
+                <div class="space-y-2">
+                  <h3 class="text-xl font-medium">Limitations of Liability</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    NoBullFit is provided "as is." While we strive to offer a reliable and accurate service, we are not liable for any issues such as data loss, service disruptions, or indirect damages arising from the use of the platform.
+                  </p>
                 </div>
               </div>
             </div>
@@ -84,21 +85,22 @@ defmodule NobullfitWeb.TermsLive do
             <div class="space-y-4">
               <h2 class="text-2xl font-semibold">Free Service Commitment</h2>
               <p class="text-base-content/70 leading-relaxed">
-                NoBullFit is committed to providing core food tracking and progress monitoring features free of charge. While we may introduce premium features in the future, the essential functionality will always remain accessible without cost.
+                We are committed to offering our core food tracking and progress monitoring features free of charge. If premium features are introduced in the future, the core experience will always remain free and accessible to all users.
               </p>
             </div>
 
             <div class="space-y-4">
               <h2 class="text-2xl font-semibold">Contact Information</h2>
               <p class="text-base-content/70 leading-relaxed">
-                Once NoBullFit is launched, you will be able to contact us regarding any questions about these terms of service or the application itself.
+                For questions about these terms or the application itself, please contact us at:<br>
+                <strong>support@nobull.fit</strong>
               </p>
             </div>
 
             <div class="space-y-4">
               <h2 class="text-2xl font-semibold">Updates to These Terms</h2>
               <p class="text-base-content/70 leading-relaxed">
-                These terms of service will be updated as NoBullFit development progresses and before the final launch. We will notify users of any significant changes to these terms.
+                These Terms of Service may be updated as NoBullFit evolves. If significant changes are made, we will notify users clearly on our platform.
               </p>
             </div>
           </div>

@@ -17,20 +17,87 @@ defmodule NobullfitWeb.HomeLive do
       <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
 
       <main class="container mx-auto px-4 py-8 md:py-24 flex-1">
-        <div class="max-w-2xl mx-auto text-center space-y-12">
-          <div class="space-y-8">
+        <div class="max-w-4xl mx-auto space-y-12">
+          <div class="text-center space-y-8">
             <h1 class="text-6xl md:text-7xl font-bold">
               <span class="text-primary">NoBullFit</span>
             </h1>
-          </div>
-
-          <div class="space-y-6">
+            <p class="text-xl text-base-content/70 leading-relaxed">
+              <strong>NoBullFit</strong> is a privacy-first platform designed to help you track your food, stay organized, and monitor your health — without compromising your data.
+            </p>
             <p class="text-lg text-base-content/70">
-              This project is currently under development and not publicly accessible yet.
+              This project is currently in <strong>early development</strong>, but it's already publicly available. You're welcome to explore and use the features, all completely free.
             </p>
           </div>
 
           <img src="/assets/images/avocado.png" alt="NoBullFit" class="w-30 h-auto mx-auto parachuting-avocado" />
+
+          <div class="space-y-24">
+            <div class="space-y-12">
+              <h2 class="text-3xl font-bold text-center">What You Can Do</h2>
+              <div class="grid md:grid-cols-2 gap-12">
+                <div class="space-y-6">
+                  <h3 class="text-xl font-semibold">Food Database</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    Browse a growing list of foods and view nutritional details to make informed choices.
+                  </p>
+                </div>
+                <div class="space-y-6">
+                  <h3 class="text-xl font-semibold">Food Tracking</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    Log your meals throughout the day to keep track of what you're eating and how much.
+                  </p>
+                </div>
+                <div class="space-y-6">
+                  <h3 class="text-xl font-semibold">Progress</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    See a clear summary of your daily efforts:
+                  </p>
+                  <ul class="list-disc list-inside text-base-content/70 space-y-3 ml-4">
+                    <li>Calories burned</li>
+                    <li>Workout time</li>
+                    <li>Daily weight entries</li>
+                    <li>Logged activities</li>
+                    <li>Active days this week</li>
+                  </ul>
+                </div>
+                <div class="space-y-6">
+                  <h3 class="text-xl font-semibold">Groceries</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    Create your own grocery list based on what you plan to eat or track. No more forgotten items at the store.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-8">
+              <h2 class="text-3xl font-bold text-center">Built with Privacy in Mind</h2>
+              <p class="text-base-content/70 leading-relaxed text-center max-w-2xl mx-auto">
+                Unlike many health apps, we don't collect unnecessary data and we <strong>never</strong> sell your personal information. NoBullFit is and always will be a <em>privacy-first</em> platform.
+              </p>
+            </div>
+
+            <div class="space-y-8">
+              <h2 class="text-3xl font-bold text-center">Early Access Notice</h2>
+              <p class="text-base-content/70 leading-relaxed text-center max-w-2xl mx-auto">
+                Please note that NoBullFit is still in early development. Some features may be incomplete or subject to change. We're actively improving the platform and welcome your feedback.
+              </p>
+            </div>
+
+            <div class="text-center space-y-10">
+              <h2 class="text-3xl font-bold">Get Started</h2>
+              <p class="text-lg text-base-content/70">
+                Ready to explore?
+              </p>
+              <div class="flex justify-center">
+                <%= if @current_scope do %>
+                  <a href="/dashboard" class="btn btn-primary btn-lg">Dashboard</a>
+                <% else %>
+                  <a href="/register" class="btn btn-primary btn-lg">Sign up now!</a>
+                <% end %>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
 
