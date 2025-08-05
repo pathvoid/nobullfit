@@ -378,49 +378,55 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                     <div class="card bg-base-200 shadow-sm">
                       <div class="card-body">
                         <.form for={@activity_form} phx-submit="save_activity" id="activity-form" phx-hook="ActivityForm" novalidate>
-                          <div class="flex gap-4">
-                            <fieldset class="fieldset">
-                              <legend class="fieldset-legend">Exercise Type</legend>
-                              <.input
-                                field={@activity_form[:exercise_type]}
-                                type="select"
-                                class={if @activity_submitted && @activity_changeset.errors[:exercise_type], do: "select select-bordered select-error w-full", else: "select select-bordered w-full"}
-                                prompt="Select exercise type"
-                                options={[
-                                  {"Cardio", "Cardio"},
-                                  {"Strength Training", "Strength Training"},
-                                  {"Yoga", "Yoga"},
-                                  {"Running", "Running"},
-                                  {"Cycling", "Cycling"},
-                                  {"Swimming", "Swimming"}
-                                ]}
-                                no_wrapper={true}
-                              />
-                            </fieldset>
-                            <fieldset class="fieldset">
-                              <legend class="fieldset-legend">Duration (min)</legend>
-                              <.input
-                                field={@activity_form[:duration_minutes]}
-                                type="number"
-                                class={if @activity_submitted && @activity_changeset.errors[:duration_minutes], do: "input input-bordered input-error", else: "input input-bordered"}
-                                placeholder="30"
-                                no_wrapper={true}
-                              />
-                            </fieldset>
-                            <fieldset class="fieldset">
-                              <legend class="fieldset-legend">Calories Burned</legend>
-                              <.input
-                                field={@activity_form[:calories_burned]}
-                                type="number"
-                                class={if @activity_submitted && @activity_changeset.errors[:calories_burned], do: "input input-bordered input-error", else: "input input-bordered"}
-                                placeholder="150"
-                                no_wrapper={true}
-                              />
-                            </fieldset>
-                            <fieldset class="fieldset">
-                              <legend class="fieldset-legend">&nbsp;</legend>
-                              <button type="submit" class="btn btn-primary">Add Activity</button>
-                            </fieldset>
+                          <div class="space-y-4">
+                            <!-- First row: Exercise Type and Duration -->
+                            <div class="flex gap-4">
+                              <fieldset class="fieldset flex-1">
+                                <legend class="fieldset-legend">Exercise Type</legend>
+                                <.input
+                                  field={@activity_form[:exercise_type]}
+                                  type="select"
+                                  class={if @activity_submitted && @activity_changeset.errors[:exercise_type], do: "select select-bordered select-error w-full", else: "select select-bordered w-full"}
+                                  prompt="Select exercise type"
+                                  options={[
+                                    {"Cardio", "Cardio"},
+                                    {"Strength Training", "Strength Training"},
+                                    {"Yoga", "Yoga"},
+                                    {"Running", "Running"},
+                                    {"Cycling", "Cycling"},
+                                    {"Swimming", "Swimming"}
+                                  ]}
+                                  no_wrapper={true}
+                                />
+                              </fieldset>
+                              <fieldset class="fieldset flex-1">
+                                <legend class="fieldset-legend">Duration (min)</legend>
+                                <.input
+                                  field={@activity_form[:duration_minutes]}
+                                  type="number"
+                                  class={if @activity_submitted && @activity_changeset.errors[:duration_minutes], do: "input input-bordered input-error", else: "input input-bordered"}
+                                  placeholder="30"
+                                  no_wrapper={true}
+                                />
+                              </fieldset>
+                            </div>
+                            <!-- Second row: Calories Burned and Add Activity button -->
+                            <div class="flex gap-4">
+                              <fieldset class="fieldset">
+                                <legend class="fieldset-legend">Calories Burned</legend>
+                                <.input
+                                  field={@activity_form[:calories_burned]}
+                                  type="number"
+                                  class={if @activity_submitted && @activity_changeset.errors[:calories_burned], do: "input input-bordered input-error", else: "input input-bordered"}
+                                  placeholder="150"
+                                  no_wrapper={true}
+                                />
+                              </fieldset>
+                              <fieldset class="fieldset">
+                                <legend class="fieldset-legend">&nbsp;</legend>
+                                <button type="submit" class="btn btn-primary">Add Activity</button>
+                              </fieldset>
+                            </div>
                           </div>
                         </.form>
                       </div>
