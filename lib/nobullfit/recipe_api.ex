@@ -107,6 +107,37 @@ defmodule NoBullFit.RecipeAPI do
   end
 
   @doc """
+    Search recipes using a specific URL (for pagination).
+
+    ## Parameters
+    - `url` - The full URL to search (includes all parameters)
+    - `opts` - Optional parameters including:
+      - `app_id` - Your Edamam app ID (required)
+      - `app_key` - Your Edamam app key (required)
+
+    ## Examples
+        iex> RecipeAPI.search_recipes_by_url("https://api.edamam.com/api/recipes/v2?...")
+  """
+  def search_recipes_by_url(url, _opts \\ []) do
+    case HTTPoison.get(url) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        case Jason.decode(body) do
+          {:ok, data} ->
+            {:ok, data}
+
+          {:error, _error} ->
+            {:error, "Unable to process the recipe search results. Please try again."}
+        end
+
+      {:ok, %HTTPoison.Response{status_code: status_code, body: _body}} ->
+        {:error, format_api_error(status_code)}
+
+      {:error, %HTTPoison.Error{reason: _reason}} ->
+        {:error, "Unable to connect to the recipe database. Please check your internet connection and try again."}
+    end
+  end
+
+  @doc """
     Get recipes by URI(s).
 
     ## Parameters
@@ -290,6 +321,20 @@ defmodule NoBullFit.RecipeAPI do
       if field = Keyword.get(opts, :field) do
         field_params = Enum.map(field, &{"field", &1})
         field_params ++ params
+      else
+        params
+      end
+
+    params =
+      if from = Keyword.get(opts, :from) do
+        [{"from", from} | params]
+      else
+        params
+      end
+
+    params =
+      if to = Keyword.get(opts, :to) do
+        [{"to", to} | params]
       else
         params
       end

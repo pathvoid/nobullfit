@@ -54,6 +54,7 @@ defmodule NobullfitWeb.Router do
       live "/d/food", Dashboard.FoodLive
       live "/d/add-food", Dashboard.AddFoodLive
       live "/d/food-database", Dashboard.FoodDatabaseLive
+      live "/d/recipe-database", Dashboard.RecipeDatabaseLive
       live "/d/nutrition-info/:food_id/:food_label/:quantity", Dashboard.NutritionInfoLive
       live "/d/progress", Dashboard.ProgressLive
       live "/d/groceries", Dashboard.GroceriesLive
