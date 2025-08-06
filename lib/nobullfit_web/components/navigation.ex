@@ -91,7 +91,7 @@ defmodule NobullfitWeb.Components.Navigation do
                 <li><a href="/guides" class="text-lg">Guides</a></li>
                 <li><a href="/about" class="text-lg">About</a></li>
               <% end %>
-              <%= if String.starts_with?(@current_path || "", "/d") do %>
+              <%= if String.starts_with?(@current_path || "", "/d") or String.starts_with?(@current_path || "", "/users/settings") do %>
                 <li><a href="/d" class="text-lg">Overview</a></li>
                 <li>
                   <details class="group" open={String.starts_with?(@current_path || "", "/d/food-database")}>
