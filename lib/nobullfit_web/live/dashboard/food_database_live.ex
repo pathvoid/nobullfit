@@ -12,16 +12,17 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
     {:ok,
-     assign(socket,
-       page_title: "Food Database",
-       current_path: "/d/food-database",
-       maintenance_status: maintenance_status,
-       search_query: "",
-       search_results: [],
-       hints: [],
-       loading: false,
-       error: nil
-     )}
+      assign(socket,
+        page_title: "Food Database",
+        current_path: "/d/food-database",
+        maintenance_status: maintenance_status,
+        search_query: "",
+        search_results: [],
+        hints: [],
+        loading: false,
+        error: nil
+      )
+    }
   end
 
   @impl true
@@ -73,13 +74,14 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
   @impl true
   def handle_event("clear_search", _params, socket) do
     {:noreply,
-     assign(socket,
-       search_query: "",
-       search_results: [],
-       hints: [],
-       nutrition_data: nil,
-       error: nil
-     )}
+      assign(socket,
+        search_query: "",
+        search_results: [],
+        hints: [],
+        nutrition_data: nil,
+        error: nil
+      )
+    }
   end
 
   @impl true
@@ -87,18 +89,20 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
     case NoBullFit.FoodAPI.search_foods(query) do
       {:ok, data} ->
         {:noreply,
-         assign(socket,
-           search_results: data["parsed"] || [],
-           hints: data["hints"] || [],
-           loading: false
-         )}
+          assign(socket,
+            search_results: data["parsed"] || [],
+            hints: data["hints"] || [],
+            loading: false
+          )
+        }
 
       {:error, error} ->
         {:noreply,
-         assign(socket,
-           error: "Search failed: #{error}",
-           loading: false
-         )}
+          assign(socket,
+            error: "Search failed: #{error}",
+            loading: false
+          )
+        }
     end
   end
 
@@ -238,34 +242,46 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
                       Suggestions
                       <:subtitle>Here are some similar foods you might be looking for:</:subtitle>
                     </.header>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <%= for hint <- @hints do %>
-                        <div class="bg-base-100 rounded-lg p-6 border border-base-300 shadow-sm">
-                          <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                              <h4 class="text-base font-semibold mb-2"><%= hint["food"]["label"] %></h4>
-                              <div class="space-y-1 text-sm">
-                                <%= if hint["food"]["brand"] do %>
-                                  <p class="text-base-content/70">Brand: <span class="font-medium"><%= hint["food"]["brand"] %></span></p>
-                                <% end %>
-                                <%= if hint["food"]["categoryLabel"] do %>
-                                  <p class="text-base-content/70">Category: <span class="font-medium"><%= hint["food"]["categoryLabel"] %></span></p>
-                                <% end %>
-                              </div>
-                            </div>
-                            <button
-                              phx-click="get_nutrition_from_hint"
-                              phx-value-food_id={hint["food"]["foodId"]}
-                              phx-value-food_label={hint["food"]["label"]}
-                              phx-value-measure_uri={hint["measure"]["uri"]}
-                              class="btn btn-primary"
-                              disabled={@loading}
-                            >
-                              Get Nutrition
-                            </button>
-                          </div>
-                        </div>
-                      <% end %>
+                    <div class="overflow-x-auto">
+                      <table class="table table-zebra">
+                        <!-- head -->
+                        <thead>
+                          <tr>
+                            <th>Food Name</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <%= for hint <- @hints do %>
+                            <tr>
+                              <td>
+                                <div>
+                                  <div class="font-bold"><%= hint["food"]["label"] %></div>
+                                  <div class="text-sm opacity-50">
+                                    <%= if hint["food"]["brand"] do %>
+                                      <%= hint["food"]["brand"] %>
+                                    <% else %>
+                                      Generic food
+                                    <% end %>
+                                  </div>
+                                </div>
+                              </td>
+                              <th class="text-right">
+                                <button
+                                  phx-click="get_nutrition_from_hint"
+                                  phx-value-food_id={hint["food"]["foodId"]}
+                                  phx-value-food_label={hint["food"]["label"]}
+                                  phx-value-measure_uri={hint["measure"]["uri"]}
+                                  class="btn btn-primary btn-sm"
+                                  disabled={@loading}
+                                >
+                                  Get Nutrition
+                                </button>
+                              </th>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 <% end %>
