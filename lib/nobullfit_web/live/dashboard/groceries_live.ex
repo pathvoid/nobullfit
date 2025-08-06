@@ -333,6 +333,32 @@ defmodule NobullfitWeb.Dashboard.GroceriesLive do
     {:noreply, socket}
   end
 
+  def handle_event("uncheck_all", _params, socket) do
+    user_id = socket.assigns.current_scope.user.id
+    current_list = socket.assigns.current_list
+
+    if current_list do
+      case GroceryLists.uncheck_all_items(current_list.id) do
+        {_count, _} ->
+          # Reload the current list with items
+          updated_list = GroceryLists.get_grocery_list!(current_list.id, user_id)
+          grocery_lists = GroceryLists.list_grocery_lists(user_id)
+
+          socket =
+            socket
+            |> assign(:current_list, updated_list)
+            |> assign(:grocery_lists, grocery_lists)
+
+          {:noreply, socket}
+
+        _ ->
+          {:noreply, put_flash(socket, :error, "Failed to uncheck items.")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "No active list found.")}
+    end
+  end
+
   def handle_event("new_list", _params, socket) do
     user_id = socket.assigns.current_scope.user.id
 
@@ -572,6 +598,16 @@ defmodule NobullfitWeb.Dashboard.GroceriesLive do
                                 </button>
                               </div>
                             <% end %>
+
+                            <!-- Uncheck All Button -->
+                            <div class="flex justify-start mt-4">
+                              <button
+                                class="btn btn-sm btn-ghost"
+                                phx-click="uncheck_all"
+                              >
+                                Uncheck All
+                              </button>
+                            </div>
                           <% end %>
                         <% end %>
                       </div>

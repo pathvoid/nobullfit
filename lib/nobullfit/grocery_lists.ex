@@ -165,6 +165,15 @@ defmodule Nobullfit.GroceryLists do
   end
 
   @doc """
+  Unchecks all items in a grocery list.
+  """
+  def uncheck_all_items(list_id) do
+    GroceryItem
+    |> where([item], item.grocery_list_id == ^list_id)
+    |> Repo.update_all(set: [is_completed: false])
+  end
+
+  @doc """
   Updates an item's sort order.
   """
   def update_item_sort_order(item_id, list_id, new_order) do
