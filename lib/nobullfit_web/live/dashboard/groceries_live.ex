@@ -283,7 +283,9 @@ defmodule NobullfitWeb.Dashboard.GroceriesLive do
             current_list =
               if socket.assigns.current_list && socket.assigns.current_list.id == String.to_integer(list_id) do
                 case GroceryLists.get_or_create_active_list(user_id) do
-                  {:ok, new_list} -> new_list
+                  {:ok, new_list} ->
+                    # Ensure the new list is loaded with items
+                    GroceryLists.get_grocery_list!(new_list.id, user_id)
                   {:error, _} -> nil
                 end
               else
@@ -449,7 +451,7 @@ defmodule NobullfitWeb.Dashboard.GroceriesLive do
                                 <div class="flex-1">
                                   <h4 class="font-medium text-sm">{list.name}</h4>
                                   <p class="text-xs text-base-content/60">
-                                    {length(list.items)} items
+                                    {if list.items, do: length(list.items), else: 0} items
                                     <%= if list.is_active do %>
                                       • Active
                                     <% end %>
@@ -544,13 +546,13 @@ defmodule NobullfitWeb.Dashboard.GroceriesLive do
 
                       <!-- Items List -->
                       <div class="space-y-2">
-                        <%= if @current_list && Enum.empty?(@current_list.items) do %>
+                        <%= if @current_list && @current_list.items && Enum.empty?(@current_list.items) do %>
                           <div class="p-4 border border-base-300 rounded-lg">
                             <p class="text-sm text-base-content/70">No items in list</p>
                             <p class="text-xs text-base-content/50 mt-1">Add items above to build your grocery list</p>
                           </div>
                         <% else %>
-                          <%= if @current_list do %>
+                          <%= if @current_list && @current_list.items do %>
                             <%= for item <- @current_list.items do %>
                               <div class={[
                                 "p-3 border rounded-lg flex items-center justify-between",
