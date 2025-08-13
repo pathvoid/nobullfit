@@ -16,6 +16,26 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
     |> Enum.join(" ")
   end
 
+  # Helper function to build calorie range string for API
+  defp build_calories_range(min, max) do
+    min_trimmed = String.trim(min)
+    max_trimmed = String.trim(max)
+
+    cond do
+      min_trimmed != "" && max_trimmed != "" ->
+        "#{min_trimmed}-#{max_trimmed}"
+
+      min_trimmed != "" && max_trimmed == "" ->
+        "#{min_trimmed}+"
+
+      min_trimmed == "" && max_trimmed != "" ->
+        max_trimmed
+
+      true ->
+        ""
+    end
+  end
+
   @impl true
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
@@ -37,23 +57,37 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
        prev_url: nil,
        page_history: [],
        selected_diet_labels: [],
+       selected_meal_types: [],
+       selected_dish_types: [],
+       calories_min: "",
+       calories_max: "",
        filters_visible: false,
        search_performed: false
      )}
   end
 
   @impl true
-  def handle_event("search", %{"query" => query}, socket) do
+  def handle_event("search", %{"query" => query} = params, socket) do
     if String.length(query) >= 2 do
-      send(self(), {:perform_search_with_filters, query, socket.assigns.selected_diet_labels})
+      # Extract calorie values from form submission or use current socket assigns
+      calories_min = Map.get(params, "calories_min", socket.assigns.calories_min)
+      calories_max = Map.get(params, "calories_max", socket.assigns.calories_max)
+
+      send(
+        self(),
+        {:perform_search_with_filters, query, socket.assigns.selected_diet_labels, socket.assigns.selected_meal_types, socket.assigns.selected_dish_types, calories_min, calories_max}
+      )
 
       {:noreply,
        assign(socket,
          search_query: query,
+         calories_min: calories_min,
+         calories_max: calories_max,
          loading: true,
          error: nil,
          current_page: 1,
-         search_performed: true
+         search_performed: true,
+         filters_visible: false
        )}
     else
       {:noreply, assign(socket, search_query: query, search_results: [])}
@@ -67,7 +101,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
     case page do
       1 ->
         # Go back to first page
-        send(self(), {:perform_search_with_filters, socket.assigns.search_query, socket.assigns.selected_diet_labels})
+        send(self(), {:perform_search_with_filters, socket.assigns.search_query, socket.assigns.selected_diet_labels, socket.assigns.selected_meal_types, socket.assigns.selected_dish_types, socket.assigns.calories_min, socket.assigns.calories_max})
 
         {:noreply, assign(socket, loading: true, error: nil, current_page: page)}
 
@@ -105,7 +139,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
       case socket.assigns.prev_url do
         "page_1" ->
           # Go back to first page by performing a new search
-          send(self(), {:perform_search_with_filters, socket.assigns.search_query, socket.assigns.selected_diet_labels})
+          send(self(), {:perform_search_with_filters, socket.assigns.search_query, socket.assigns.selected_diet_labels, socket.assigns.selected_meal_types, socket.assigns.selected_dish_types, socket.assigns.calories_min, socket.assigns.calories_max})
 
           {:noreply, assign(socket, loading: true, error: nil, current_page: 1)}
 
@@ -140,6 +174,10 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
        prev_url: nil,
        page_history: [],
        selected_diet_labels: [],
+       selected_meal_types: [],
+       selected_dish_types: [],
+       calories_min: "",
+       calories_max: "",
        filters_visible: false,
        search_performed: false
      )}
@@ -157,6 +195,44 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
       end
 
     {:noreply, assign(socket, selected_diet_labels: new_labels)}
+  end
+
+  @impl true
+  def handle_event("toggle_meal_type", %{"meal_type" => meal_type}, socket) do
+    current_meal_types = socket.assigns.selected_meal_types
+
+    new_meal_types =
+      if meal_type in current_meal_types do
+        List.delete(current_meal_types, meal_type)
+      else
+        [meal_type | current_meal_types]
+      end
+
+    {:noreply, assign(socket, selected_meal_types: new_meal_types)}
+  end
+
+  @impl true
+  def handle_event("toggle_dish_type", %{"dish_type" => dish_type}, socket) do
+    current_dish_types = socket.assigns.selected_dish_types
+
+    new_dish_types =
+      if dish_type in current_dish_types do
+        List.delete(current_dish_types, dish_type)
+      else
+        [dish_type | current_dish_types]
+      end
+
+    {:noreply, assign(socket, selected_dish_types: new_dish_types)}
+  end
+
+  @impl true
+  def handle_event("update_calories_min", %{"calories_min" => value}, socket) do
+    {:noreply, assign(socket, calories_min: value)}
+  end
+
+  @impl true
+  def handle_event("update_calories_max", %{"calories_max" => value}, socket) do
+    {:noreply, assign(socket, calories_max: value)}
   end
 
   @impl true
@@ -258,12 +334,37 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
   end
 
   @impl true
-  def handle_info({:perform_search_with_filters, query, diet_labels}, socket) do
-    # Build search options with diet filters
+  def handle_info({:perform_search_with_filters, query, diet_labels, meal_types, dish_types, calories_min, calories_max}, socket) do
+    # Build search options with diet, meal type, dish type, and calorie filters
     search_opts = [q: query]
+
     search_opts =
       if length(diet_labels) > 0 do
         [diet: diet_labels] ++ search_opts
+      else
+        search_opts
+      end
+
+    search_opts =
+      if length(meal_types) > 0 do
+        [mealType: meal_types] ++ search_opts
+      else
+        search_opts
+      end
+
+    search_opts =
+      if length(dish_types) > 0 do
+        [dishType: dish_types] ++ search_opts
+      else
+        search_opts
+      end
+
+    # Build calorie range string
+    calories_range = build_calories_range(calories_min, calories_max)
+
+    search_opts =
+      if calories_range != "" do
+        [calories: calories_range] ++ search_opts
       else
         search_opts
       end
@@ -364,9 +465,9 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                         </svg>
                         Filters
-                        <%= if length(@selected_diet_labels) > 0 do %>
+                        <%= if length(@selected_diet_labels) + length(@selected_meal_types) + length(@selected_dish_types) + (if @calories_min != "" or @calories_max != "", do: 1, else: 0) > 0 do %>
                           <span class="badge badge-primary badge-xs absolute -top-2 -right-2">
-                            <%= length(@selected_diet_labels) %>
+                            <%= length(@selected_diet_labels) + length(@selected_meal_types) + length(@selected_dish_types) + (if @calories_min != "" or @calories_max != "", do: 1, else: 0) %>
                           </span>
                         <% end %>
                       </button>
@@ -375,7 +476,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                     <div class={"filter-section #{if @filters_visible, do: "", else: "hidden"}"}>
                       <fieldset class="fieldset">
                         <legend class="fieldset-legend">Diet Filters</legend>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
                           <%= for diet_label <- ["balanced", "high-fiber", "high-protein", "low-carb", "low-fat", "low-sodium"] do %>
                             <label class="flex items-center space-x-2 cursor-pointer">
                               <input
@@ -391,6 +492,75 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                             </label>
                           <% end %>
                         </div>
+                      </fieldset>
+
+                      <fieldset class="fieldset mt-2">
+                        <legend class="fieldset-legend">Meal Type Filters</legend>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                          <%= for meal_type <- ["Breakfast", "Lunch", "Dinner", "Snack", "Teatime"] do %>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                class="checkbox checkbox-sm"
+                                checked={meal_type in @selected_meal_types}
+                                phx-click="toggle_meal_type"
+                                phx-value-meal_type={meal_type}
+                              />
+                              <span class="text-sm font-medium">
+                                <%= meal_type %>
+                              </span>
+                            </label>
+                          <% end %>
+                        </div>
+                      </fieldset>
+
+                      <fieldset class="fieldset mt-2">
+                        <legend class="fieldset-legend">Dish Type Filters</legend>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                          <%= for dish_type <- ["Biscuits and cookies", "Bread", "Cereals", "Condiments and sauces", "Desserts", "Drinks", "Main course", "Pancake", "Preps", "Preserve", "Salad", "Sandwiches", "Side dish", "Soup", "Starter", "Sweets"] do %>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                class="checkbox checkbox-sm"
+                                checked={dish_type in @selected_dish_types}
+                                phx-click="toggle_dish_type"
+                                phx-value-dish_type={dish_type}
+                              />
+                              <span class="text-sm font-medium">
+                                <%= dish_type %>
+                              </span>
+                            </label>
+                          <% end %>
+                        </div>
+                      </fieldset>
+
+                      <fieldset class="fieldset mt-2">
+                        <legend class="fieldset-legend">Calorie Range</legend>
+                        <div class="grid grid-cols-2 gap-4 mt-2">
+                          <input
+                            type="number"
+                            name="calories_min"
+                            min="0"
+                            step="1"
+                            value={@calories_min}
+                            placeholder="Minimum calories (e.g., 100)"
+                            class="input input-bordered w-full"
+                            phx-change="update_calories_min"
+                            phx-debounce="300"
+                          />
+                          <input
+                            type="number"
+                            name="calories_max"
+                            min="0"
+                            step="1"
+                            value={@calories_max}
+                            placeholder="Maximum calories (e.g., 500)"
+                            class="input input-bordered w-full"
+                            phx-change="update_calories_max"
+                            phx-debounce="300"
+                          />
+                        </div>
+                        <p class="label mt-3">Leave empty for no limit. Use both for a range (e.g., 100-500), or one for minimum/maximum only.</p>
                       </fieldset>
                     </div>
                   </form>
