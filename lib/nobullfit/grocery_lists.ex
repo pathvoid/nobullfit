@@ -63,7 +63,7 @@ defmodule Nobullfit.GroceryLists do
   @doc """
   Gets the active grocery list for a user, or creates a new one.
   """
-    def get_or_create_active_list(user_id) do
+  def get_or_create_active_list(user_id) do
     case get_active_list(user_id) do
       nil ->
         # Check if there are any existing lists for this user
@@ -108,14 +108,16 @@ defmodule Nobullfit.GroceryLists do
   def set_active_list(list_id, user_id) do
     Repo.transaction(fn ->
       # Deactivate all other lists for this user
-      {_deactivated_count, _} = GroceryList
-      |> where([list], list.user_id == ^user_id)
-      |> Repo.update_all(set: [is_active: false])
+      {_deactivated_count, _} =
+        GroceryList
+        |> where([list], list.user_id == ^user_id)
+        |> Repo.update_all(set: [is_active: false])
 
       # Activate the specified list
-      {activated_count, _} = GroceryList
-      |> where([list], list.id == ^list_id and list.user_id == ^user_id)
-      |> Repo.update_all(set: [is_active: true])
+      {activated_count, _} =
+        GroceryList
+        |> where([list], list.id == ^list_id and list.user_id == ^user_id)
+        |> Repo.update_all(set: [is_active: true])
 
       activated_count
     end)
@@ -140,6 +142,198 @@ defmodule Nobullfit.GroceryLists do
     %GroceryItem{}
     |> GroceryItem.changeset(item_attrs)
     |> Repo.insert()
+  end
+
+  @doc """
+  Adds recipe ingredients to a grocery list, checking for existing items and combining quantities.
+  """
+  def add_recipe_ingredients_to_list(list_id, ingredients) do
+    Repo.transaction(fn ->
+      Enum.map(ingredients, fn ingredient ->
+        # Check if item already exists in the list (case-insensitive)
+        existing_item =
+          Repo.one(
+            from item in GroceryItem,
+              where:
+                item.grocery_list_id == ^list_id and
+                  fragment("LOWER(?)", item.name) == ^String.downcase(ingredient["food"])
+          )
+
+        if existing_item do
+          # Combine quantities if item exists
+          new_quantity = combine_quantities(existing_item.quantity, ingredient["quantity"], ingredient["measure"])
+
+          existing_item
+          |> GroceryItem.changeset(%{quantity: new_quantity})
+          |> Repo.update()
+        else
+          # Get the current max sort_order for this list
+          max_order =
+            GroceryItem
+            |> where([item], item.grocery_list_id == ^list_id)
+            |> select([item], fragment("COALESCE(MAX(?), 0)", item.sort_order))
+            |> Repo.one()
+
+          # Create new item directly within transaction
+          quantity_str =
+            if ingredient["quantity"] == 0.0 or ingredient["quantity"] == 0 do
+              "As needed"
+            else
+              if ingredient["measure"] == "<unit>" do
+                # Just show the quantity without the generic "<unit>" text
+                if is_float(ingredient["quantity"]) and ingredient["quantity"] == trunc(ingredient["quantity"]) do
+                  "#{trunc(ingredient["quantity"])}"
+                else
+                  "#{ingredient["quantity"]}"
+                end
+              else
+                if is_float(ingredient["quantity"]) and ingredient["quantity"] == trunc(ingredient["quantity"]) do
+                  "#{trunc(ingredient["quantity"])} #{ingredient["measure"]}"
+                else
+                  "#{ingredient["quantity"]} #{ingredient["measure"]}"
+                end
+              end
+            end
+
+          %GroceryItem{}
+          |> GroceryItem.changeset(%{
+            "grocery_list_id" => list_id,
+            "name" => String.capitalize(ingredient["food"]),
+            "quantity" => quantity_str,
+            "sort_order" => (max_order || 0) + 1
+          })
+          |> Repo.insert()
+        end
+      end)
+    end)
+  end
+
+  # Helper function to combine quantities
+  defp combine_quantities(existing_quantity, new_quantity, new_measure) do
+    # Handle zero quantities - don't add them
+    if new_quantity == 0.0 or new_quantity == 0 do
+      existing_quantity
+    else
+      # Handle "<unit>" measure specially
+      if new_measure == "<unit>" do
+        case parse_quantity(existing_quantity) do
+          {existing_amount, existing_unit} when existing_unit == "<unit>" ->
+            # Both are "<unit>", add numerically
+            total_amount = existing_amount + new_quantity
+            format_number(total_amount)
+
+          {_existing_amount, _existing_unit} ->
+            # Units don't match, just append
+            new_quantity_str = format_number(new_quantity)
+
+            if existing_quantity && existing_quantity != "" do
+              "#{existing_quantity} + #{new_quantity_str}"
+            else
+              new_quantity_str
+            end
+
+          nil ->
+            # Can't parse existing quantity, just append
+            new_quantity_str = format_number(new_quantity)
+
+            if existing_quantity && existing_quantity != "" do
+              "#{existing_quantity} + #{new_quantity_str}"
+            else
+              new_quantity_str
+            end
+        end
+      else
+        # Try to parse existing quantity and add numerically if units match
+        case parse_quantity(existing_quantity) do
+          {existing_amount, existing_unit} when existing_unit == new_measure ->
+            # Units match, add numerically
+            total_amount = existing_amount + new_quantity
+            format_quantity(total_amount, new_measure)
+
+          {_existing_amount, _existing_unit} ->
+            # Units don't match, just append
+            new_quantity_str = format_number(new_quantity)
+            new_quantity_with_measure = "#{new_quantity_str} #{new_measure}"
+
+            if existing_quantity && existing_quantity != "" do
+              "#{existing_quantity} + #{new_quantity_with_measure}"
+            else
+              new_quantity_with_measure
+            end
+
+          nil ->
+            # Can't parse existing quantity, just append
+            new_quantity_str = format_number(new_quantity)
+            new_quantity_with_measure = "#{new_quantity_str} #{new_measure}"
+
+            if existing_quantity && existing_quantity != "" do
+              "#{existing_quantity} + #{new_quantity_with_measure}"
+            else
+              new_quantity_with_measure
+            end
+        end
+      end
+    end
+  end
+
+  # Helper function to parse quantity strings like "2 cups", "1.5 tablespoon", etc.
+  defp parse_quantity(quantity_str) when is_binary(quantity_str) do
+    # Handle "As needed" case
+    if quantity_str == "As needed" do
+      nil
+    else
+      # Handle "<unit>" case - just extract the number
+      if String.contains?(quantity_str, "<unit>") do
+        case Regex.run(~r/^(\d+(?:\.\d+)?)\s*<unit>/, quantity_str) do
+          [_, amount_str] ->
+            case Float.parse(amount_str) do
+              {amount, _} -> {amount, "<unit>"}
+              :error -> nil
+            end
+
+          nil ->
+            nil
+        end
+      else
+        # Check if it's just a plain number (no unit) - treat as "<unit>"
+        case Regex.run(~r/^(\d+(?:\.\d+)?)$/, quantity_str) do
+          [_, amount_str] ->
+            case Float.parse(amount_str) do
+              {amount, _} -> {amount, "<unit>"}
+              :error -> nil
+            end
+
+          nil ->
+            # Try to extract number and unit from strings like "2 cups", "1.5 tablespoon", "2 cups + 1 cup"
+            case Regex.run(~r/^(\d+(?:\.\d+)?)\s+(.+)$/, quantity_str) do
+              [_, amount_str, unit] ->
+                case Float.parse(amount_str) do
+                  {amount, _} -> {amount, unit}
+                  :error -> nil
+                end
+
+              nil ->
+                nil
+            end
+        end
+      end
+    end
+  end
+
+  defp parse_quantity(_), do: nil
+
+  # Helper function to format numbers (remove .0 for whole numbers)
+  defp format_number(number) when is_float(number) and number == trunc(number) do
+    "#{trunc(number)}"
+  end
+
+  defp format_number(number) do
+    "#{number}"
+  end
+
+  # Helper function to format quantity with unit
+  defp format_quantity(amount, unit) do
+    "#{format_number(amount)} #{unit}"
   end
 
   @doc """

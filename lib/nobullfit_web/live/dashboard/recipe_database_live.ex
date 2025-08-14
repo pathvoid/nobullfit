@@ -62,7 +62,10 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
        calories_min: "",
        calories_max: "",
        filters_visible: false,
-       search_performed: false
+       search_performed: false,
+       grocery_lists: [],
+       show_grocery_menu: false,
+       selected_recipe_index: nil
      )}
   end
 
@@ -246,6 +249,92 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
   def handle_event("update_search_query", %{"query" => query}, socket) do
     # Update the search query as the user types
     {:noreply, assign(socket, search_query: query)}
+  end
+
+  @impl true
+  def handle_event("print_ingredients", %{"recipe-index" => recipe_index}, socket) do
+    index = String.to_integer(recipe_index)
+
+    if index < length(socket.assigns.search_results) do
+      recipe = Enum.at(socket.assigns.search_results, index)["recipe"]
+
+      IO.puts("\n=== Ingredients for: #{recipe["label"]} ===")
+
+      if recipe["ingredients"] && length(recipe["ingredients"]) > 0 do
+        Enum.each(recipe["ingredients"], fn ingredient ->
+          IO.puts("• #{ingredient["text"]}")
+          IO.puts("  Quantity: #{ingredient["quantity"]} #{ingredient["measure"]}")
+          IO.puts("  Food: #{ingredient["food"]}")
+          IO.puts("  Weight: #{ingredient["weight"]}g")
+          IO.puts("  Food ID: #{ingredient["foodId"]}")
+          IO.puts("")
+        end)
+      else
+        IO.puts("No ingredients data available for this recipe.")
+      end
+
+      IO.puts("=")
+    end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("show_grocery_menu", %{"recipe-index" => recipe_index}, socket) do
+    # Load user's grocery lists when menu is opened
+    user_id = socket.assigns.current_scope.user.id
+    grocery_lists = Nobullfit.GroceryLists.list_grocery_lists(user_id)
+
+    if length(grocery_lists) > 0 do
+      {:noreply, assign(socket,
+        show_grocery_menu: true,
+        selected_recipe_index: String.to_integer(recipe_index),
+        grocery_lists: grocery_lists
+      )}
+    else
+      {:noreply,
+       socket
+       |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
+      }
+    end
+  end
+
+  @impl true
+  def handle_event("hide_grocery_menu", _params, socket) do
+    {:noreply, assign(socket, show_grocery_menu: false, selected_recipe_index: nil)}
+  end
+
+  @impl true
+  def handle_event("add_to_grocery_list", %{"list-id" => list_id}, socket) do
+    if socket.assigns.selected_recipe_index && socket.assigns.selected_recipe_index < length(socket.assigns.search_results) do
+      recipe = Enum.at(socket.assigns.search_results, socket.assigns.selected_recipe_index)["recipe"]
+
+      if recipe["ingredients"] && length(recipe["ingredients"]) > 0 do
+        case Nobullfit.GroceryLists.add_recipe_ingredients_to_list(String.to_integer(list_id), recipe["ingredients"]) do
+          {:ok, _result} ->
+            {:noreply,
+             socket
+             |> assign(show_grocery_menu: false, selected_recipe_index: nil)
+             |> put_flash(:info, "Ingredients added to grocery list successfully!")
+            }
+
+          {:error, _error} ->
+            {:noreply,
+             socket
+             |> assign(show_grocery_menu: false, selected_recipe_index: nil)
+             |> put_flash(:error, "Failed to add ingredients to grocery list.")
+            }
+        end
+      else
+        {:noreply,
+         socket
+         |> assign(show_grocery_menu: false, selected_recipe_index: nil)
+         |> put_flash(:error, "No ingredients found for this recipe.")
+        }
+      end
+    else
+      {:noreply, assign(socket, show_grocery_menu: false, selected_recipe_index: nil)}
+    end
   end
 
   @impl true
@@ -589,12 +678,13 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                               <th>Recipe Name</th>
                               <th>Calories</th>
                               <th>Diet Labels</th>
+                              <th>Add to List</th>
                             </tr>
                           </thead>
                           <tbody>
                             <%= if @loading do %>
                               <tr>
-                                <td colspan="3" class="text-center py-8">
+                                <td colspan="4" class="text-center py-8">
                                   <div class="flex items-center justify-center">
                                     <span class="loading loading-spinner loading-md"></span>
                                     <span class="ml-2">Loading recipes...</span>
@@ -635,6 +725,48 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                                     <% else %>
                                       <span class="text-base-content/50 text-sm">None</span>
                                     <% end %>
+                                  </td>
+                                  <td>
+                                    <div class="dropdown dropdown-end">
+                                      <button
+                                        phx-click="show_grocery_menu"
+                                        phx-value-recipe-index={index}
+                                        class="btn btn-sm btn-primary"
+                                        title="Add ingredients to grocery list"
+                                      >
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="h-4 w-4">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                        </svg>
+                                        Add to List
+                                      </button>
+
+                                      <%= if @show_grocery_menu && @selected_recipe_index == index do %>
+                                        <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-50">
+                                          <li class="menu-title">
+                                            <span>Select Grocery List</span>
+                                          </li>
+                                          <%= for list <- @grocery_lists do %>
+                                            <li>
+                                              <button
+                                                phx-click="add_to_grocery_list"
+                                                phx-value-list-id={list.id}
+                                                class="text-left"
+                                              >
+                                                <%= list.name %>
+                                              </button>
+                                            </li>
+                                          <% end %>
+                                          <li>
+                                            <button
+                                              phx-click="hide_grocery_menu"
+                                              class="text-left text-error"
+                                            >
+                                              Cancel
+                                            </button>
+                                          </li>
+                                        </ul>
+                                      <% end %>
+                                    </div>
                                   </td>
                                 </tr>
                               <% end %>
