@@ -94,12 +94,14 @@ defmodule NobullfitWeb.Components.Navigation do
               <%= if String.starts_with?(@current_path || "", "/d") or String.starts_with?(@current_path || "", "/users/settings") do %>
                 <li><a href="/d" class="text-lg">Overview</a></li>
                 <li>
-                  <details class="group" open={String.starts_with?(@current_path || "", "/d/food-database")}>
+                  <details class="group" open={String.starts_with?(@current_path || "", "/d/food-database") or String.starts_with?(@current_path || "", "/d/recipe-database") or String.starts_with?(@current_path || "", "/d/favorites")}>
                     <summary class="text-lg cursor-pointer">
                       Database
                     </summary>
                     <ul class="pl-4 space-y-1">
                       <li><a href="/d/food-database" class="text-lg">Food Database</a></li>
+                      <li><a href="/d/recipe-database" class="text-lg">Recipe Database</a></li>
+                      <li><a href="/d/favorites" class="text-lg">Favorites</a></li>
                     </ul>
                   </details>
                 </li>

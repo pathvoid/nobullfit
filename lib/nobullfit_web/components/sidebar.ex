@@ -35,7 +35,7 @@ defmodule NobullfitWeb.Components.Sidebar do
               <.sidebar_link href={~p"/d"} current_path={@current_path} icon="home">
                 Overview
               </.sidebar_link>
-              <details class="group" open={is_parent_open?(@current_path, ["/d/food-database", "/d/recipe-database"])}>
+              <details class="group" open={is_parent_open?(@current_path, ["/d/food-database", "/d/recipe-database", "/d/favorites"])}>
                 <summary class="flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors hover:bg-base-300">
                   <span class="mr-3 flex-shrink-0 h-5 w-5">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,6 +53,11 @@ defmodule NobullfitWeb.Components.Sidebar do
                   <li>
                     <.sidebar_link href={~p"/d/recipe-database"} current_path={@current_path} icon="book-open">
                       Recipe Database
+                    </.sidebar_link>
+                  </li>
+                  <li>
+                    <.sidebar_link href={~p"/d/favorites"} current_path={@current_path} icon="heart">
+                      Favorites
                     </.sidebar_link>
                   </li>
                 </ul>
@@ -112,6 +117,10 @@ defmodule NobullfitWeb.Components.Sidebar do
           <% "shopping-cart" -> %>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+          <% "heart" -> %>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
             </svg>
         <% end %>
       </span>
