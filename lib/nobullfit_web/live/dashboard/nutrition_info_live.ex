@@ -32,15 +32,17 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
   defp round_nutrient_value(value), do: "#{value}"
 
   # Helper function to format decimal values for query parameters
-  defp format_decimal(value) when is_struct(value, Decimal) do
-    Decimal.round(value, 2) |> Decimal.to_string()
+  defp format_decimal(value) do
+    if is_struct(value, Decimal) do
+      Decimal.round(value, 2) |> Decimal.to_string()
+    else
+      try do
+        Decimal.new("#{value}") |> Decimal.round(2) |> Decimal.to_string()
+      rescue
+        _ -> ""
+      end
+    end
   end
-
-  defp format_decimal(value) when is_integer(value) or is_float(value) do
-    Decimal.new("#{value}") |> Decimal.round(2) |> Decimal.to_string()
-  end
-
-  defp format_decimal(_), do: ""
 
   @impl true
   def handle_event("toggle_favorite", _params, socket) do
