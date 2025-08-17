@@ -23,7 +23,7 @@ defmodule NobullfitWeb.HomeLive do
               <span class="text-primary">NoBullFit</span>
             </h1>
             <p class="text-xl text-base-content/70 leading-relaxed">
-              <strong>NoBullFit</strong> is a privacy-first platform designed to help you track your food, stay organized, and monitor your health — without compromising your data.
+              <strong>NoBullFit</strong> is a comprehensive privacy-first platform designed to help you track your nutrition, discover recipes, manage grocery lists, and monitor your health progress — all without compromising your data.
             </p>
             <p class="text-lg text-base-content/70">
               This project is currently in <strong>early development</strong>, but it's already publicly available. You're welcome to explore and use the features, all completely free.
@@ -39,33 +39,43 @@ defmodule NobullfitWeb.HomeLive do
                 <div class="space-y-6">
                   <h3 class="text-xl font-semibold">Food Database</h3>
                   <p class="text-base-content/70 leading-relaxed">
-                    Browse a growing list of foods and view nutritional details to make informed choices.
+                    Browse a comprehensive database of foods with detailed nutritional information to make informed dietary choices.
                   </p>
                 </div>
                 <div class="space-y-6">
                   <h3 class="text-xl font-semibold">Food Tracking</h3>
                   <p class="text-base-content/70 leading-relaxed">
-                    Log your meals throughout the day to keep track of what you're eating and how much.
+                    Log your daily meals and snacks to track your nutrition intake and maintain a detailed food diary.
                   </p>
                 </div>
                 <div class="space-y-6">
-                  <h3 class="text-xl font-semibold">Progress</h3>
+                  <h3 class="text-xl font-semibold">Recipe Database</h3>
                   <p class="text-base-content/70 leading-relaxed">
-                    See a clear summary of your daily efforts:
+                    Discover and save recipes with complete nutritional breakdowns and ingredient lists.
+                  </p>
+                </div>
+                <div class="space-y-6">
+                  <h3 class="text-xl font-semibold">Favorites</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    Save your favorite foods and recipes for quick access and easy meal planning.
+                  </p>
+                </div>
+                <div class="space-y-6">
+                  <h3 class="text-xl font-semibold">Grocery Lists</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    Create and manage multiple grocery lists. Perfect for meal planning and shopping.
+                  </p>
+                </div>
+                <div class="space-y-6">
+                  <h3 class="text-xl font-semibold">Progress Tracking</h3>
+                  <p class="text-base-content/70 leading-relaxed">
+                    Monitor your health journey with comprehensive tracking:
                   </p>
                   <ul class="list-disc list-inside text-base-content/70 space-y-3 ml-4">
-                    <li>Calories burned</li>
-                    <li>Workout time</li>
-                    <li>Daily weight entries</li>
-                    <li>Logged activities</li>
-                    <li>Active days this week</li>
+                    <li>Weight tracking and trends</li>
+                    <li>Activity logging</li>
+                    <li>Daily nutrition tracking</li>
                   </ul>
-                </div>
-                <div class="space-y-6">
-                  <h3 class="text-xl font-semibold">Groceries</h3>
-                  <p class="text-base-content/70 leading-relaxed">
-                    Create your own grocery list based on what you plan to eat or track. No more forgotten items at the store.
-                  </p>
                 </div>
               </div>
             </div>
