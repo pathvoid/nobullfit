@@ -40,7 +40,8 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         max_date: (if local_date, do: local_date, else: selected_date |> Date.to_string()),
         food_changeset: food_changeset,
         food_form: to_form(food_changeset),
-        food_submitted: false
+        food_submitted: false,
+        quantity_info: ""
       )
 
     {:ok, socket}
@@ -74,6 +75,46 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
     {:ok, socket}
   end
 
+  # Handle query parameters for pre-filling food data
+  def mount(%{"food_name" => food_name} = params, session, socket) do
+    maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
+
+    # Initialize with UTC defaults - will be updated when timezone data is received from client
+    user_timezone = "UTC"
+    local_date = nil
+    today = Date.utc_today()
+
+    # Create food changeset with pre-filled data from query parameters
+    food_entry = %FoodEntry{
+      name: food_name,
+      calories: Map.get(params, "calories", "") |> parse_decimal(),
+      protein: Map.get(params, "protein", "") |> parse_decimal(),
+      carbs: Map.get(params, "carbs", "") |> parse_decimal()
+    }
+
+    food_changeset = FoodEntries.change_food_entry(food_entry)
+
+    # Get quantity information if provided
+    quantity_info = Map.get(params, "quantity", "")
+
+    socket =
+      assign(socket,
+        page_title: "Add Food",
+        current_path: "/d/add-food",
+        maintenance_status: maintenance_status,
+        selected_date: today,
+        user_timezone: user_timezone,
+        user_local_date: local_date,
+        max_date: (if local_date, do: local_date, else: today |> Date.to_string()),
+        food_changeset: food_changeset,
+        food_form: to_form(food_changeset),
+        food_submitted: false,
+        quantity_info: quantity_info
+      )
+
+    {:ok, socket}
+  end
+
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
@@ -96,11 +137,22 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         max_date: (if local_date, do: local_date, else: today |> Date.to_string()),
         food_changeset: food_changeset,
         food_form: to_form(food_changeset),
-        food_submitted: false
+        food_submitted: false,
+        quantity_info: ""
       )
 
     {:ok, socket}
   end
+
+  # Helper functions for parsing query parameters
+  defp parse_decimal(value) when is_binary(value) and value != "" do
+    case Decimal.parse(value) do
+      {decimal, _} -> decimal
+      :error -> nil
+    end
+  end
+
+  defp parse_decimal(_), do: nil
 
   @impl true
   def handle_event("save_food", %{"food_entry" => food_params}, socket) do
@@ -242,6 +294,14 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
               <!-- Food Form -->
               <div class="card bg-base-200 shadow-sm">
                 <div class="card-body">
+                  <%= if @quantity_info != "" do %>
+                    <div class="alert alert-info mb-6">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      <span>Quantity: <strong><%= @quantity_info %></strong></span>
+                    </div>
+                  <% end %>
                   <.form for={@food_form} phx-submit="save_food" id="food-form" novalidate>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <!-- Basic Information -->

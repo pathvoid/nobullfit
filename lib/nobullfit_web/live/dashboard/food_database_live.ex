@@ -12,16 +12,16 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
     {:ok,
-      assign(socket,
-        page_title: "Food Database",
-        current_path: "/d/food-database",
-        maintenance_status: maintenance_status,
-        search_query: "",
-        search_results: [],
-        hints: [],
-        loading: false,
-        error: nil
-      )
+     assign(socket,
+       page_title: "Food Database",
+       current_path: "/d/food-database",
+       maintenance_status: maintenance_status,
+       search_query: "",
+       search_results: [],
+       hints: [],
+       loading: false,
+       error: nil
+     )
     }
   end
 
@@ -37,7 +37,16 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
 
   @impl true
   def handle_event("get_nutrition", params, socket) do
-    %{"food_id" => food_id, "food_label" => food_label, "quantity" => quantity} = params
+    %{"food_id" => food_id, "food_label" => food_label} = params
+
+    # Try to get quantity from various possible parameter names, ensure it's not empty
+    quantity =
+      case Map.get(params, "quantity") || Map.get(params, "value") do
+        nil -> "100"
+        "" -> "100"
+        qty -> qty
+      end
+
     measure_uri = Map.get(params, "measure_uri", "http://www.edamam.com/ontologies/edamam.owl#Measure_gram")
 
     # Navigate to nutrition info page
@@ -58,7 +67,7 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
     %{"food_id" => food_id, "food_label" => food_label} = params
     measure_uri = Map.get(params, "measure_uri", "http://www.edamam.com/ontologies/edamam.owl#Measure_gram")
 
-    # Navigate to nutrition info page
+    # Navigate to nutrition info page with a reasonable default quantity
     nutrition_url = "/d/nutrition-info/#{food_id}/#{URI.encode(food_label)}/100"
 
     final_url =
@@ -74,13 +83,13 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
   @impl true
   def handle_event("clear_search", _params, socket) do
     {:noreply,
-      assign(socket,
-        search_query: "",
-        search_results: [],
-        hints: [],
-        nutrition_data: nil,
-        error: nil
-      )
+     assign(socket,
+       search_query: "",
+       search_results: [],
+       hints: [],
+       nutrition_data: nil,
+       error: nil
+     )
     }
   end
 
@@ -89,19 +98,19 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
     case NoBullFit.FoodAPI.search_foods(query) do
       {:ok, data} ->
         {:noreply,
-          assign(socket,
-            search_results: data["parsed"] || [],
-            hints: data["hints"] || [],
-            loading: false
-          )
+         assign(socket,
+           search_results: data["parsed"] || [],
+           hints: data["hints"] || [],
+           loading: false
+         )
         }
 
       {:error, error} ->
         {:noreply,
-          assign(socket,
-            error: "Search failed: #{error}",
-            loading: false
-          )
+         assign(socket,
+           error: "Search failed: #{error}",
+           loading: false
+         )
         }
     end
   end
@@ -131,7 +140,7 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
                       Search Foods
                       <:subtitle>Enter a food name, brand, or UPC code to find nutrition information</:subtitle>
                     </.header>
-                    <button phx-click="clear_search" class="btn btn-sm btn-ghost">Clear</button>
+                    <button phx-click="clear_search" class="btn btn-sm btn-ghost hidden md:inline-flex">Clear</button>
                   </div>
 
                   <form phx-submit="search" class="space-y-6">
@@ -174,7 +183,7 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
                                 phx-value-food_id={result["food"]["foodId"]}
                                 phx-value-food_label={result["food"]["label"]}
                                 phx-value-measure_uri={result["measure"]["uri"]}
-                                phx-value-quantity="100"
+                                phx-value-quantity={if result["measure"]["weight"], do: result["measure"]["weight"] |> to_string(), else: "100"}
                                 class="btn btn-primary"
                                 disabled={@loading}
                               >
@@ -242,47 +251,45 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
                       Suggestions
                       <:subtitle>Here are some similar foods you might be looking for:</:subtitle>
                     </.header>
-                    <div class="overflow-x-auto">
-                      <table class="table table-zebra">
-                        <!-- head -->
-                        <thead>
+                    <table class="table table-zebra">
+                      <!-- head -->
+                      <thead>
+                        <tr>
+                          <th>Food Name</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <%= for hint <- @hints do %>
                           <tr>
-                            <th>Food Name</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <%= for hint <- @hints do %>
-                            <tr>
-                              <td>
-                                <div>
-                                  <div class="font-bold"><%= hint["food"]["label"] %></div>
-                                  <div class="text-sm opacity-50">
-                                    <%= if hint["food"]["brand"] do %>
-                                      <%= hint["food"]["brand"] %>
-                                    <% else %>
-                                      Generic food
-                                    <% end %>
-                                  </div>
+                            <td>
+                              <div>
+                                <div class="font-bold"><%= hint["food"]["label"] %></div>
+                                <div class="text-sm opacity-50">
+                                  <%= if hint["food"]["brand"] do %>
+                                    <%= hint["food"]["brand"] %>
+                                  <% else %>
+                                    Generic food
+                                  <% end %>
                                 </div>
-                              </td>
-                              <th class="text-right">
-                                <button
-                                  phx-click="get_nutrition_from_hint"
-                                  phx-value-food_id={hint["food"]["foodId"]}
-                                  phx-value-food_label={hint["food"]["label"]}
-                                  phx-value-measure_uri={hint["measure"]["uri"]}
-                                  class="btn btn-primary btn-sm"
-                                  disabled={@loading}
-                                >
-                                  Get Nutrition
-                                </button>
-                              </th>
-                            </tr>
-                          <% end %>
-                        </tbody>
-                      </table>
-                    </div>
+                              </div>
+                            </td>
+                            <th class="text-right">
+                              <button
+                                phx-click="get_nutrition_from_hint"
+                                phx-value-food_id={hint["food"]["foodId"]}
+                                phx-value-food_label={hint["food"]["label"]}
+                                phx-value-measure_uri={hint["measure"]["uri"]}
+                                class="btn btn-primary btn-sm"
+                                disabled={@loading}
+                              >
+                                Get Nutrition
+                              </button>
+                            </th>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
                   </div>
                 <% end %>
               </div>
