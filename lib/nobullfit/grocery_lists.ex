@@ -14,7 +14,7 @@ defmodule Nobullfit.GroceryLists do
     GroceryList
     |> where([list], list.user_id == ^user_id)
     |> order_by([list], [desc: list.updated_at])
-    |> preload(:items)
+    |> preload(items: ^from(item in GroceryItem, order_by: [asc: item.name]))
     |> Repo.all()
   end
 
@@ -24,7 +24,7 @@ defmodule Nobullfit.GroceryLists do
   def get_grocery_list!(id, user_id) do
     GroceryList
     |> where([list], list.id == ^id and list.user_id == ^user_id)
-    |> preload(:items)
+    |> preload(items: ^from(item in GroceryItem, order_by: [asc: item.name]))
     |> Repo.one!()
   end
 
@@ -99,7 +99,7 @@ defmodule Nobullfit.GroceryLists do
   def get_active_list(user_id) do
     GroceryList
     |> where([list], list.user_id == ^user_id and list.is_active == true)
-    |> preload(:items)
+    |> preload(items: ^from(item in GroceryItem, order_by: [asc: item.name]))
     |> Repo.one()
   end
 
@@ -489,12 +489,12 @@ defmodule Nobullfit.GroceryLists do
   end
 
   @doc """
-  Gets all items for a grocery list, ordered by sort_order.
+  Gets all items for a grocery list, ordered alphabetically by name.
   """
   def get_list_items(list_id) do
     GroceryItem
     |> where([item], item.grocery_list_id == ^list_id)
-    |> order_by([item], item.sort_order)
+    |> order_by([item], [asc: item.name])
     |> Repo.all()
   end
 
