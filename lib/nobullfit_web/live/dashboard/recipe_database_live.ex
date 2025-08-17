@@ -1026,7 +1026,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                                   <% end %>
                                 </td>
                                 <th>
-                                  <div class="flex gap-2">
+                                  <div class="flex justify-end gap-2">
                                     <button
                                       phx-click="toggle_recipe_favorite"
                                       phx-value-recipe-index={index}

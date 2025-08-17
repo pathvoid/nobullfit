@@ -82,6 +82,7 @@ defmodule Nobullfit.GroceryLists do
             case set_active_list(first_list.id, user_id) do
               {:ok, _} ->
                 {:ok, get_grocery_list!(first_list.id, user_id)}
+
               {:error, _error} ->
                 {:error, "Failed to set active list"}
             end
@@ -150,22 +151,96 @@ defmodule Nobullfit.GroceryLists do
   def add_recipe_ingredients_to_list(list_id, ingredients) do
     Repo.transaction(fn ->
       Enum.map(ingredients, fn ingredient ->
-        # Check if item already exists in the list (case-insensitive)
-        existing_item =
-          Repo.one(
+        # Check if items already exist in the list (case-insensitive)
+        existing_items =
+          Repo.all(
             from item in GroceryItem,
               where:
                 item.grocery_list_id == ^list_id and
                   fragment("LOWER(?)", item.name) == ^String.downcase(ingredient["food"])
           )
 
-        if existing_item do
-          # Combine quantities if item exists
-          new_quantity = combine_quantities(existing_item.quantity, ingredient["quantity"], ingredient["measure"])
+        if length(existing_items) > 0 do
+          # Find the best matching item based on units
+          best_match = find_best_matching_item(existing_items, ingredient["quantity"], ingredient["measure"])
 
-          existing_item
-          |> GroceryItem.changeset(%{quantity: new_quantity})
-          |> Repo.update()
+          case best_match do
+            {:match, item} ->
+              # Found a matching item, but first combine all items with the same units
+              new_measure = ingredient["measure"]
+
+              # Find all items with the same units
+              same_unit_items = Enum.filter(existing_items, fn other_item ->
+                case parse_quantity(other_item.quantity) do
+                  {_amount, unit} when unit == new_measure -> true
+                  _ -> false
+                end
+              end)
+
+              # Combine all quantities with the same units
+              combined_quantity = Enum.reduce(same_unit_items, "", fn other_item, acc ->
+                if acc == "" do
+                  other_item.quantity
+                else
+                  combine_quantities(acc, parse_quantity(other_item.quantity) |> elem(0), new_measure)
+                end
+              end)
+
+              # Add the new ingredient quantity
+              final_quantity = combine_quantities(combined_quantity, ingredient["quantity"], ingredient["measure"])
+
+              # Update the first item with combined quantity
+              updated_item =
+                item
+                |> GroceryItem.changeset(%{quantity: final_quantity})
+                |> Repo.update()
+
+              # Delete all other items with the same units
+              Enum.each(same_unit_items -- [item], fn other_item ->
+                Repo.delete(other_item)
+              end)
+
+              updated_item
+
+            {:combine, _items} ->
+              # No matching units found, create a new separate item
+              # Get the current max sort_order for this list
+              max_order =
+                GroceryItem
+                |> where([item], item.grocery_list_id == ^list_id)
+                |> select([item], fragment("COALESCE(MAX(?), 0)", item.sort_order))
+                |> Repo.one()
+
+              # Create new item with different units
+              quantity_str =
+                if ingredient["quantity"] == 0.0 or ingredient["quantity"] == 0 do
+                  "As needed"
+                else
+                  if ingredient["measure"] == "<unit>" do
+                    # Just show the quantity without the generic "<unit>" text
+                    if is_float(ingredient["quantity"]) and ingredient["quantity"] == trunc(ingredient["quantity"]) do
+                      "#{trunc(ingredient["quantity"])}"
+                    else
+                      "#{ingredient["quantity"]}"
+                    end
+                  else
+                    if is_float(ingredient["quantity"]) and ingredient["quantity"] == trunc(ingredient["quantity"]) do
+                      "#{trunc(ingredient["quantity"])} #{ingredient["measure"]}"
+                    else
+                      "#{ingredient["quantity"]} #{ingredient["measure"]}"
+                    end
+                  end
+                end
+
+              %GroceryItem{}
+              |> GroceryItem.changeset(%{
+                "grocery_list_id" => list_id,
+                "name" => String.capitalize(ingredient["food"]),
+                "quantity" => quantity_str,
+                "sort_order" => (max_order || 0) + 1
+              })
+              |> Repo.insert()
+          end
         else
           # Get the current max sort_order for this list
           max_order =
@@ -208,11 +283,48 @@ defmodule Nobullfit.GroceryLists do
     end)
   end
 
+  # Helper function to find the best matching item based on units
+  defp find_best_matching_item(existing_items, new_quantity, new_measure) do
+    # Handle "As needed" quantities specially
+    if new_quantity == 0.0 or new_quantity == 0 do
+      # Look for existing "As needed" items
+      as_needed_item = Enum.find(existing_items, fn item ->
+        item.quantity == "As needed"
+      end)
+
+      if as_needed_item do
+        {:match, as_needed_item}
+      else
+        {:combine, existing_items}
+      end
+    else
+      # Try to find an item with matching units
+      matching_item = Enum.find(existing_items, fn item ->
+        case parse_quantity(item.quantity) do
+          {_amount, unit} when unit == new_measure -> true
+          _ -> false
+        end
+      end)
+
+      if matching_item do
+        {:match, matching_item}
+      else
+        # No matching units found, combine all items
+        {:combine, existing_items}
+      end
+    end
+  end
+
   # Helper function to combine quantities
   defp combine_quantities(existing_quantity, new_quantity, new_measure) do
     # Handle zero quantities - don't add them
     if new_quantity == 0.0 or new_quantity == 0 do
-      existing_quantity
+      # If existing is already "As needed", keep it
+      if existing_quantity == "As needed" do
+        existing_quantity
+      else
+        "As needed"
+      end
     else
       # Handle "<unit>" measure specially
       if new_measure == "<unit>" do

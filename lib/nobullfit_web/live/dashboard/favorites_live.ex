@@ -633,7 +633,7 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                                     <% end %>
                                   </td>
                                   <th>
-                                    <div class="flex gap-2">
+                                    <div class="flex justify-end gap-2">
                                       <button
                                         class="btn btn-ghost btn-xs text-error"
                                         phx-click="show_delete_confirm"
@@ -814,7 +814,7 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                                     <% end %>
                                   </td>
                                   <th>
-                                    <div class="flex gap-2">
+                                    <div class="flex justify-end gap-2">
                                       <button
                                         class="btn btn-ghost btn-xs text-error"
                                         phx-click="show_delete_confirm"
