@@ -30,6 +30,12 @@ defmodule NobullfitWeb.DashboardLive do
                   Dashboard
                   <:subtitle>Welcome back, {@current_scope.user.email}</:subtitle>
                 </.header>
+
+                <div class="text-center py-8 text-base-content/70 mt-10">
+                  <img src="/assets/images/under-construction.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
+                  <h3 class="text-lg font-semibold mb-2">Under construction</h3>
+                  <p class="text-sm">This page is currently under construction. Please check back soon!</p>
+                </div>
               </div>
             </div>
           </main>
