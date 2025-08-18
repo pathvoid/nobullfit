@@ -471,6 +471,9 @@ defmodule NobullfitWeb.Dashboard.GroceriesLive do
                             </div>
                           <% end %>
                         <% end %>
+                        <div class="hidden md:block text-center py-8">
+                          <img src="/assets/images/shopping.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
+                        </div>
                       </div>
                     </div>
                   </div>
