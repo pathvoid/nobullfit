@@ -550,9 +550,7 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                       <div class="text-center py-12">
                         <div class="max-w-md mx-auto">
                           <div class="mb-6">
-                            <svg class="w-16 h-16 mx-auto text-base-content/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                            </svg>
+                            <img src="/assets/images/apple-heart.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
                           </div>
                           <h3 class="text-lg font-semibold mb-2">No favorite foods yet</h3>
                           <p class="text-base-content/70 mb-6">
@@ -725,9 +723,7 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                       <div class="text-center py-12">
                         <div class="max-w-md mx-auto">
                           <div class="mb-6">
-                            <svg class="w-16 h-16 mx-auto text-base-content/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                            </svg>
+                            <img src="/assets/images/apple-heart.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
                           </div>
                           <h3 class="text-lg font-semibold mb-2">No favorite recipes yet</h3>
                           <p class="text-base-content/70 mb-6">
