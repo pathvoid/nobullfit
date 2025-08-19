@@ -8,6 +8,16 @@ defmodule Nobullfit.Activities do
   alias Nobullfit.Activities.Activity
 
   @doc """
+  Returns the list of activities for a user.
+  """
+  def list_user_activities(user_id) do
+    Activity
+    |> where([a], a.user_id == ^user_id)
+    |> order_by([a], [desc: a.activity_date, desc: a.activity_time])
+    |> Repo.all()
+  end
+
+  @doc """
   Returns the list of activities for a user on a specific date.
   """
   def list_user_activities_by_date(user_id, date) do
@@ -81,8 +91,12 @@ defmodule Nobullfit.Activities do
   def get_user_daily_summary(user_id, date) do
     activities = list_user_activities_by_date(user_id, date)
 
-    total_calories = Enum.reduce(activities, 0, fn activity, acc -> acc + activity.calories_burned end)
-    total_duration = Enum.reduce(activities, 0, fn activity, acc -> acc + activity.duration_minutes end)
+    total_calories =
+      Enum.reduce(activities, 0, fn activity, acc -> acc + activity.calories_burned end)
+
+    total_duration =
+      Enum.reduce(activities, 0, fn activity, acc -> acc + activity.duration_minutes end)
+
     activity_count = length(activities)
 
     %{
@@ -104,18 +118,23 @@ defmodule Nobullfit.Activities do
     activities_by_date = Enum.group_by(activities, & &1.activity_date)
 
     # Calculate daily summaries
-    daily_summaries = for date <- Date.range(start_date, end_date) do
-      day_activities = Map.get(activities_by_date, date, [])
-      total_calories = Enum.reduce(day_activities, 0, fn activity, acc -> acc + activity.calories_burned end)
-      total_duration = Enum.reduce(day_activities, 0, fn activity, acc -> acc + activity.duration_minutes end)
+    daily_summaries =
+      for date <- Date.range(start_date, end_date) do
+        day_activities = Map.get(activities_by_date, date, [])
 
-      %{
-        date: date,
-        total_calories: total_calories,
-        total_duration: total_duration,
-        activity_count: length(day_activities)
-      }
-    end
+        total_calories =
+          Enum.reduce(day_activities, 0, fn activity, acc -> acc + activity.calories_burned end)
+
+        total_duration =
+          Enum.reduce(day_activities, 0, fn activity, acc -> acc + activity.duration_minutes end)
+
+        %{
+          date: date,
+          total_calories: total_calories,
+          total_duration: total_duration,
+          activity_count: length(day_activities)
+        }
+      end
 
     %{
       start_date: start_date,
