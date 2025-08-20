@@ -267,8 +267,7 @@ const DashboardChartHook = {
           markerColor: "#8b5cf6",
           markerBorderColor: "#a855f7",
           markerBorderThickness: 2
-        }],
-        backgroundColor: themeConfig.backgroundColor
+        }]
       })
 
       chart.render()
@@ -335,8 +334,7 @@ const DashboardChartHook = {
           color: "#06d6a0",
           borderColor: "#059669",
           borderThickness: 1
-        }],
-        backgroundColor: themeConfig.backgroundColor
+        }]
       })
 
       chart.render()
@@ -391,8 +389,7 @@ const DashboardChartHook = {
           startAngle: -90,
           borderThickness: 2,
           borderColor: themeConfig.lineColor
-        }],
-        backgroundColor: themeConfig.backgroundColor
+        }]
       })
 
       chart.render()
@@ -453,8 +450,7 @@ const DashboardChartHook = {
           innerRadius: "40%",
           borderThickness: 2,
           borderColor: themeConfig.lineColor
-        }],
-        backgroundColor: themeConfig.backgroundColor
+        }]
       })
 
       chart.render()
