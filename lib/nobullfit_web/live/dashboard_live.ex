@@ -136,26 +136,26 @@ defmodule NobullfitWeb.DashboardLive do
       end)
 
     {:ok,
-     assign(socket,
-       page_title: "Dashboard",
-       current_path: "/d",
-       maintenance_status: maintenance_status,
-       user_timezone: user_timezone,
-       user_local_date: local_date,
-       weight_entries: weight_entries,
-       weight_data: weight_data,
-       weight_summary: weight_summary,
-       activities: activities,
-       weekly_nutrition: weekly_nutrition,
-       weekly_nutrition_data: weekly_nutrition_data,
-       macronutrient_breakdown: macronutrient_breakdown,
-       macronutrient_data: macronutrient_data,
-       meal_distribution: meal_distribution,
-       meal_distribution_data: meal_distribution_data
-     )}
+      assign(socket,
+        page_title: "Dashboard",
+        current_path: "/d",
+        maintenance_status: maintenance_status,
+        user_timezone: user_timezone,
+        user_local_date: local_date,
+        weight_entries: weight_entries,
+        weight_data: weight_data,
+        weight_summary: weight_summary,
+        activities: activities,
+        weekly_nutrition: weekly_nutrition,
+        weekly_nutrition_data: weekly_nutrition_data,
+        macronutrient_breakdown: macronutrient_breakdown,
+        macronutrient_data: macronutrient_data,
+        meal_distribution: meal_distribution,
+        meal_distribution_data: meal_distribution_data
+      )}
   end
 
-    @impl true
+  @impl true
   def handle_event("timezone-data", %{"timezone" => timezone, "localDate" => local_date}, socket) do
     # Update the socket assigns with the timezone data
     today =
@@ -231,173 +231,173 @@ defmodule NobullfitWeb.DashboardLive do
            data-weekly-nutrition={Jason.encode!(@weekly_nutrition_data)}
            data-macronutrient-breakdown={Jason.encode!(@macronutrient_data)}
            data-meal-distribution={Jason.encode!(@meal_distribution_data)}>
-      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
+        <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
 
-      <div class="flex flex-1">
-        <.sidebar current_path={@current_path} />
+        <div class="flex flex-1">
+          <.sidebar current_path={@current_path} />
 
-        <div class="flex-1">
-          <main class="px-4 py-8 md:py-12">
-            <div class="px-4 space-y-4">
-              <!-- Header Section -->
-              <div>
-                <.header centered={true}>
-                  Dashboard
-                  <:subtitle>Welcome back, {@current_scope.user.email}</:subtitle>
-                </.header>
-              </div>
-
-              <!-- Weight Progress Section -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <div class="stat bg-base-200 rounded-lg">
-                  <div class="stat-title">Current Weight</div>
-                  {if @weight_summary.current_weight do
-                    raw(~s(<div class="stat-value text-primary">
-                      #{Nobullfit.WeightEntries.WeightEntry.format_weight(@weight_summary.current_weight, @weight_summary.unit)}
-                    </div>))
-                  else
-                    raw(~s(<div class="text-base text-base-content/70">No data</div>))
-                  end}
-                  {if @weight_summary.difference do
-                    raw(~s(<div class="stat-desc #{if Decimal.gt?(@weight_summary.difference, Decimal.new("0")), do: "text-success", else: "text-error"}">
-                      #{Nobullfit.WeightEntries.WeightEntry.format_difference(@weight_summary.difference, @weight_summary.unit)}
-                    </div>))
-                  end}
+          <div class="flex-1">
+            <main class="px-4 py-8 md:py-12">
+              <div class="px-4 space-y-4">
+                <!-- Header Section -->
+                <div>
+                  <.header centered={true}>
+                    Dashboard
+                    <:subtitle>Welcome back, {@current_scope.user.email}</:subtitle>
+                  </.header>
                 </div>
 
-                <div class="stat bg-base-200 rounded-lg">
-                  <div class="stat-title">Total Activities</div>
-                  <div class="stat-value text-secondary">
-                    {length(@activities)}
+                <!-- Weight Progress Section -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div class="stat bg-base-200 rounded-lg">
+                    <div class="stat-title">Current Weight</div>
+                    {if @weight_summary.current_weight do
+                      raw(~s(<div class="stat-value text-primary">
+                        #{Nobullfit.WeightEntries.WeightEntry.format_weight(@weight_summary.current_weight, @weight_summary.unit)}
+                      </div>))
+                    else
+                      raw(~s(<div class="text-base text-base-content/70">No data</div>))
+                    end}
+                    {if @weight_summary.difference do
+                      raw(~s(<div class="stat-desc #{if Decimal.gt?(@weight_summary.difference, Decimal.new("0")), do: "text-success", else: "text-error"}">
+                        #{Nobullfit.WeightEntries.WeightEntry.format_difference(@weight_summary.difference, @weight_summary.unit)}
+                      </div>))
+                    end}
                   </div>
-                  <div class="stat-desc">This month</div>
-                </div>
 
-                <div class="stat bg-base-200 rounded-lg">
-                  <div class="stat-title">Calories Burned</div>
-                  <div class="stat-value text-accent">
-                    {Enum.reduce(@activities, 0, fn activity, acc -> acc + (activity.calories_burned || 0) end)}
+                  <div class="stat bg-base-200 rounded-lg">
+                    <div class="stat-title">Total Activities</div>
+                    <div class="stat-value text-secondary">
+                      {length(@activities)}
+                    </div>
+                    <div class="stat-desc">This month</div>
                   </div>
-                  <div class="stat-desc">This month</div>
+
+                  <div class="stat bg-base-200 rounded-lg">
+                    <div class="stat-title">Calories Burned</div>
+                    <div class="stat-value text-accent">
+                      {Enum.reduce(@activities, 0, fn activity, acc -> acc + (activity.calories_burned || 0) end)}
+                    </div>
+                    <div class="stat-desc">This month</div>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Nutrition Charts Section -->
-              <%= if has_nutrition_data?(@weekly_nutrition, @macronutrient_breakdown, @meal_distribution) do %>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-                  <%= if has_weekly_calories_data?(@weekly_nutrition) do %>
-                    <div class="space-y-4">
-                      <.header size="md">
-                        Weekly Calories
-                        <:subtitle>Last 7 days calorie intake</:subtitle>
-                      </.header>
+                <!-- Nutrition Charts Section -->
+                <%= if has_nutrition_data?(@weekly_nutrition, @macronutrient_breakdown, @meal_distribution) do %>
+                  <div class="flex flex-wrap gap-6 mt-8">
+                    <%= if has_weekly_calories_data?(@weekly_nutrition) do %>
+                      <div class="space-y-4 flex-1 min-w-[300px]">
+                        <.header size="md">
+                          Weekly Calories
+                          <:subtitle>Last 7 days calorie intake</:subtitle>
+                        </.header>
 
-                      <div class="card bg-base-200 shadow-sm">
-                        <div class="card-body">
-                          <div id="weeklyCaloriesChart" style="height: 300px; width: 100%;"></div>
-                        </div>
-                      </div>
-                    </div>
-                  <% end %>
-
-                  <%= if has_macronutrient_data?(@macronutrient_breakdown) do %>
-                    <div class="space-y-4">
-                      <.header size="md">
-                        Today's Macros
-                        <:subtitle>Protein, carbs, and fat breakdown</:subtitle>
-                      </.header>
-
-                      <div class="card bg-base-200 shadow-sm">
-                        <div class="card-body">
-                          <div id="macronutrientChart" style="height: 300px; width: 100%;"></div>
-                        </div>
-                      </div>
-                    </div>
-                  <% end %>
-
-                  <%= if has_meal_distribution_data?(@meal_distribution) do %>
-                    <div class="space-y-4">
-                      <.header size="md">
-                        Today's Meals
-                        <:subtitle>Calorie distribution by meal</:subtitle>
-                      </.header>
-
-                      <div class="card bg-base-200 shadow-sm">
-                        <div class="card-body">
-                          <div id="mealDistributionChart" style="height: 300px; width: 100%;"></div>
-                        </div>
-                      </div>
-                    </div>
-                  <% end %>
-                </div>
-              <% end %>
-
-              <!-- Weight Progression and Recent Activities Row -->
-              <%= if has_activity_or_weight_data?(@weight_entries, @activities) do %>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-                  <%= if length(@weight_entries) > 0 do %>
-                    <div class="space-y-4">
-                      <.header size="md">
-                        Weight Progression
-                        <:subtitle>Track your weight changes over time</:subtitle>
-                      </.header>
-
-                      <div class="card bg-base-200 shadow-sm">
-                        <div class="card-body">
-                          <div id="weightChart" style="height: 400px; width: 100%;"></div>
-                        </div>
-                      </div>
-                    </div>
-                  <% end %>
-
-                  <%= if length(@activities) > 0 do %>
-                    <div class="space-y-4">
-                      <.header size="md">
-                        Recent Activities
-                        <:subtitle>Your latest workout sessions</:subtitle>
-                      </.header>
-
-                      <div class="card bg-base-200 shadow-sm">
-                        <div class="card-body">
-                          <div class="space-y-3">
-                            <%= for activity <- Enum.take(@activities, 5) do %>
-                              <div class="flex items-center justify-between p-3 bg-base-100 rounded-lg">
-                                <div class="flex items-center space-x-3">
-                                  <span class="text-2xl"><%= Nobullfit.Activities.Activity.exercise_type_icon(activity.exercise_type) %></span>
-                                  <div>
-                                    <div class="font-semibold"><%= activity.exercise_type %></div>
-                                    <div class="text-sm text-base-content/70"><%= Date.to_string(activity.activity_date) %></div>
-                                  </div>
-                                </div>
-                                <div class="text-right">
-                                  <div class="font-semibold"><%= activity.duration_minutes %> min</div>
-                                  <div class="text-sm text-base-content/70"><%= activity.calories_burned %> cal</div>
-                                </div>
-                              </div>
-                            <% end %>
+                        <div class="card bg-base-200 shadow-sm">
+                          <div class="card-body">
+                            <div id="weeklyCaloriesChart" style="height: 300px; width: 100%;"></div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  <% end %>
-                </div>
-              <% end %>
+                    <% end %>
 
-              <!-- No Data Message -->
-              <%= if not has_any_data?(@weekly_nutrition, @macronutrient_breakdown, @meal_distribution, @weight_entries, @activities) do %>
-                <div class="text-center py-12 mt-8">
-                  <img src="/assets/images/orange-waiting.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
-                  <h3 class="text-lg font-semibold mt-4 mb-2">No data to display yet</h3>
-                  <p class="text-base-content/70">Start tracking your meals, activities, and weight to see your progress insights and charts!</p>
-                </div>
-              <% end %>
-            </div>
-          </main>
+                    <%= if has_macronutrient_data?(@macronutrient_breakdown) do %>
+                      <div class="space-y-4 flex-1 min-w-[300px]">
+                        <.header size="md">
+                          Today's Macros
+                          <:subtitle>Protein, carbs, and fat breakdown</:subtitle>
+                        </.header>
+
+                        <div class="card bg-base-200 shadow-sm">
+                          <div class="card-body">
+                            <div id="macronutrientChart" style="height: 300px; width: 100%;"></div>
+                          </div>
+                        </div>
+                      </div>
+                    <% end %>
+
+                    <%= if has_meal_distribution_data?(@meal_distribution) do %>
+                      <div class="space-y-4 flex-1 min-w-[300px]">
+                        <.header size="md">
+                          Today's Meals
+                          <:subtitle>Calorie distribution by meal</:subtitle>
+                        </.header>
+
+                        <div class="card bg-base-200 shadow-sm">
+                          <div class="card-body">
+                            <div id="mealDistributionChart" style="height: 300px; width: 100%;"></div>
+                          </div>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+
+                <!-- Weight Progression and Recent Activities Row -->
+                <%= if has_activity_or_weight_data?(@weight_entries, @activities) do %>
+                  <div class="flex flex-wrap gap-6 mt-8">
+                    <%= if length(@weight_entries) > 0 do %>
+                      <div class="space-y-4 flex-1 min-w-[400px]">
+                        <.header size="md">
+                          Weight Progression
+                          <:subtitle>Track your weight changes over time</:subtitle>
+                        </.header>
+
+                        <div class="card bg-base-200 shadow-sm">
+                          <div class="card-body">
+                            <div id="weightChart" style="height: 400px; width: 100%;"></div>
+                          </div>
+                        </div>
+                      </div>
+                    <% end %>
+
+                    <%= if length(@activities) > 0 do %>
+                      <div class="space-y-4 flex-1 min-w-[400px]">
+                        <.header size="md">
+                          Recent Activities
+                          <:subtitle>Your latest workout sessions</:subtitle>
+                        </.header>
+
+                        <div class="card bg-base-200 shadow-sm">
+                          <div class="card-body">
+                            <div class="space-y-3">
+                              <%= for activity <- Enum.take(@activities, 5) do %>
+                                <div class="flex items-center justify-between p-3 bg-base-100 rounded-lg">
+                                  <div class="flex items-center space-x-3">
+                                    <span class="text-2xl"><%= Nobullfit.Activities.Activity.exercise_type_icon(activity.exercise_type) %></span>
+                                    <div>
+                                      <div class="font-semibold"><%= activity.exercise_type %></div>
+                                      <div class="text-sm text-base-content/70"><%= Date.to_string(activity.activity_date) %></div>
+                                    </div>
+                                  </div>
+                                  <div class="text-right">
+                                    <div class="font-semibold"><%= activity.duration_minutes %> min</div>
+                                    <div class="text-sm text-base-content/70"><%= activity.calories_burned %> cal</div>
+                                  </div>
+                                </div>
+                              <% end %>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+
+                <!-- No Data Message -->
+                <%= if not has_any_data?(@weekly_nutrition, @macronutrient_breakdown, @meal_distribution, @weight_entries, @activities) do %>
+                  <div class="text-center py-12 mt-8">
+                    <img src="/assets/images/orange-waiting.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
+                    <h3 class="text-lg font-semibold mt-4 mb-2">No data to display yet</h3>
+                    <p class="text-base-content/70">Start tracking your meals, activities, and weight to see your progress insights and charts!</p>
+                  </div>
+                <% end %>
+              </div>
+            </main>
+          </div>
         </div>
-      </div>
 
-      <.footer current_path={@current_path} />
-      <.flash_group flash={@flash} />
+        <.footer current_path={@current_path} />
+        <.flash_group flash={@flash} />
       </div>
     </div>
     """
