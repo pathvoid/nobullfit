@@ -41,7 +41,8 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         food_changeset: food_changeset,
         food_form: to_form(food_changeset),
         food_submitted: false,
-        quantity_info: ""
+        quantity_info: "",
+        has_date_from_url: true
       )
 
     {:ok, socket}
@@ -69,7 +70,8 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         max_date: (if local_date, do: local_date, else: today |> Date.to_string()),
         food_changeset: food_changeset,
         food_form: to_form(food_changeset),
-        food_submitted: false
+        food_submitted: false,
+        has_date_from_url: false
       )
 
     {:ok, socket}
@@ -109,7 +111,8 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         food_changeset: food_changeset,
         food_form: to_form(food_changeset),
         food_submitted: false,
-        quantity_info: quantity_info
+        quantity_info: quantity_info,
+        has_date_from_url: false
       )
 
     {:ok, socket}
@@ -138,7 +141,8 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         food_changeset: food_changeset,
         food_form: to_form(food_changeset),
         food_submitted: false,
-        quantity_info: ""
+        quantity_info: "",
+        has_date_from_url: false
       )
 
     {:ok, socket}
@@ -225,16 +229,26 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
     # Only update selected_date if we don't have a date from URL parameters
     # This prevents overriding the date passed from the food tracking page
     socket =
-      assign(socket,
-        user_timezone: timezone,
-        user_local_date: local_date,
-        selected_date:
-          case Date.from_iso8601(local_date) do
-            {:ok, date} -> date
-            {:error, _} -> Date.utc_today()
-          end,
-        max_date: local_date
-      )
+      if socket.assigns.has_date_from_url do
+        # If we have a date from URL, only update timezone info, not the selected date
+        assign(socket,
+          user_timezone: timezone,
+          user_local_date: local_date,
+          max_date: local_date
+        )
+      else
+        # If no date from URL, use the user's local date
+        assign(socket,
+          user_timezone: timezone,
+          user_local_date: local_date,
+          selected_date:
+            case Date.from_iso8601(local_date) do
+              {:ok, date} -> date
+              {:error, _} -> Date.utc_today()
+            end,
+          max_date: local_date
+        )
+      end
 
     {:noreply, socket}
   end
