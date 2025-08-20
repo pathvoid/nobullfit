@@ -228,6 +228,11 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
       assign(socket,
         user_timezone: timezone,
         user_local_date: local_date,
+        selected_date:
+          case Date.from_iso8601(local_date) do
+            {:ok, date} -> date
+            {:error, _} -> Date.utc_today()
+          end,
         max_date: local_date
       )
 

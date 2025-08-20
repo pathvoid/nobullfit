@@ -75,10 +75,29 @@ const WeightFormHook = {
 // Hook to send timezone data to LiveView
 const TimezoneDataHook = {
   mounted() {
-    // Send timezone data to LiveView if available
-    if (window.timezoneData) {
-      this.pushEvent("timezone-data", window.timezoneData)
+    // Send timezone data to LiveView immediately
+    this.sendTimezoneData()
+  },
+
+  sendTimezoneData() {
+    // Ensure timezone data is available
+    if (!window.timezoneData) {
+      // If not available, calculate it now
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const localDate = `${year}-${month}-${day}`;
+
+      window.timezoneData = {
+        timezone: timezone,
+        localDate: localDate
+      };
     }
+
+    // Send the data to LiveView
+    this.pushEvent("timezone-data", window.timezoneData)
   }
 }
 
@@ -98,12 +117,26 @@ const GroceryItemFormHook = {
 // Hook to initialize CanvasJS charts for dashboard
 const DashboardChartHook = {
   mounted() {
-    if (typeof CanvasJS !== 'undefined') {
-      this.initializeAllCharts()
-    }
+    // Mark that we're waiting for timezone data
+    this.timezoneDataReceived = false
+
+    // Initialize charts only after a small delay to allow timezone data to be processed
+    setTimeout(() => {
+      if (typeof CanvasJS !== 'undefined') {
+        this.initializeAllCharts()
+      }
+    }, 500)
 
     // Listen for theme changes
     this.handleEvent("theme-changed", () => {
+      if (typeof CanvasJS !== 'undefined') {
+        this.initializeAllCharts()
+      }
+    })
+
+    // Listen for dashboard data updates (triggered by timezone changes)
+    this.handleEvent("dashboard-data-updated", () => {
+      this.timezoneDataReceived = true
       if (typeof CanvasJS !== 'undefined') {
         this.initializeAllCharts()
       }
@@ -155,11 +188,16 @@ const DashboardChartHook = {
 
     try {
       const entries = JSON.parse(weightData)
-      const dataPoints = entries.map(entry => ({
-        x: new Date(entry.entry_date + 'T00:00:00'),
-        y: parseFloat(entry.weight),
-        unit: entry.unit
-      }))
+      const dataPoints = entries.map(entry => {
+        // Parse date correctly to avoid timezone issues
+        const [year, month, day] = entry.entry_date.split('-').map(Number)
+        const date = new Date(year, month - 1, day) // month is 0-based
+        return {
+          x: date,
+          y: parseFloat(entry.weight),
+          unit: entry.unit
+        }
+      })
 
       // Get the unit from the first entry (all should be the same now)
       const unit = dataPoints.length > 0 ? dataPoints[0].unit : 'kg'
@@ -235,10 +273,17 @@ const DashboardChartHook = {
 
     try {
       const data = JSON.parse(nutritionData)
-      const dataPoints = data.daily_summaries.map(summary => ({
-        x: new Date(summary.date),
-        y: parseFloat(summary.calories) || 0
-      }))
+      const dataPoints = data.daily_summaries.map(summary => {
+        // Parse date correctly to avoid timezone issues
+        // Instead of new Date("2025-08-19") which treats as UTC,
+        // create date in local timezone
+        const [year, month, day] = summary.date.split('-').map(Number)
+        const date = new Date(year, month - 1, day) // month is 0-based
+        return {
+          x: date,
+          y: parseFloat(summary.calories) || 0
+        }
+      })
 
       const themeConfig = this.getThemeConfig()
 

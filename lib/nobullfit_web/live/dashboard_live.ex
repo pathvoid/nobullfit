@@ -42,6 +42,11 @@ defmodule NobullfitWeb.DashboardLive do
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
+    # Initialize with UTC defaults - will be updated when timezone data is received from client
+    user_timezone = "UTC"
+    local_date = nil
+    today = Date.utc_today()
+
     # Get user's weight entries for the chart
     weight_entries = Nobullfit.WeightEntries.list_user_weight_entries(socket.assigns.current_scope.user.id)
     weight_summary = Nobullfit.WeightEntries.get_user_weight_summary(socket.assigns.current_scope.user.id)
@@ -89,7 +94,6 @@ defmodule NobullfitWeb.DashboardLive do
       end)
 
     # Get user's activities for current month
-    today = Date.utc_today()
     start_of_month = Date.new!(today.year, today.month, 1)
     activities = Nobullfit.Activities.list_user_activities_in_range(socket.assigns.current_scope.user.id, start_of_month, today)
 
@@ -136,6 +140,8 @@ defmodule NobullfitWeb.DashboardLive do
        page_title: "Dashboard",
        current_path: "/d",
        maintenance_status: maintenance_status,
+       user_timezone: user_timezone,
+       user_local_date: local_date,
        weight_entries: weight_entries,
        weight_data: weight_data,
        weight_summary: weight_summary,
@@ -149,14 +155,82 @@ defmodule NobullfitWeb.DashboardLive do
      )}
   end
 
+    @impl true
+  def handle_event("timezone-data", %{"timezone" => timezone, "localDate" => local_date}, socket) do
+    # Update the socket assigns with the timezone data
+    today =
+      case Date.from_iso8601(local_date) do
+        {:ok, date} -> date
+        {:error, _} -> Date.utc_today()
+      end
+
+    # Recalculate data with the correct date
+    start_of_month = Date.new!(today.year, today.month, 1)
+    activities = Nobullfit.Activities.list_user_activities_in_range(socket.assigns.current_scope.user.id, start_of_month, today)
+
+    # Get food/nutrition data
+    start_of_week = Date.add(today, -6)  # Get last 7 days
+    weekly_nutrition = Nobullfit.FoodEntries.get_user_weekly_nutrition_summary(socket.assigns.current_scope.user.id, start_of_week)
+    macronutrient_breakdown = Nobullfit.FoodEntries.get_user_macronutrient_breakdown(socket.assigns.current_scope.user.id, today)
+    meal_distribution = Nobullfit.FoodEntries.get_user_meal_distribution(socket.assigns.current_scope.user.id, today)
+
+    # Transform nutrition data for JSON encoding
+    weekly_nutrition_data = %{
+      start_date: Date.to_string(weekly_nutrition.start_date),
+      end_date: Date.to_string(weekly_nutrition.end_date),
+      daily_summaries:
+        Enum.map(weekly_nutrition.daily_summaries, fn summary ->
+          %{
+            date: Date.to_string(summary.date),
+            calories: Decimal.to_string(summary.calories),
+            protein: Decimal.to_string(summary.protein),
+            carbs: Decimal.to_string(summary.carbs),
+            food_count: summary.food_count || 0
+          }
+        end)
+    }
+
+    macronutrient_data = %{
+      protein: Decimal.to_string(macronutrient_breakdown.protein),
+      carbs: Decimal.to_string(macronutrient_breakdown.carbs),
+      fat: Decimal.to_string(macronutrient_breakdown.fat),
+      total_calories: Decimal.to_string(macronutrient_breakdown.total_calories)
+    }
+
+    meal_distribution_data =
+      Enum.map(meal_distribution, fn meal ->
+        %{
+          meal_type: meal.meal_type,
+          calories: Decimal.to_string(meal.calories),
+          food_count: meal.food_count || 0
+        }
+      end)
+
+    socket =
+      assign(socket,
+        user_timezone: timezone,
+        user_local_date: local_date,
+        activities: activities,
+        weekly_nutrition: weekly_nutrition,
+        weekly_nutrition_data: weekly_nutrition_data,
+        macronutrient_breakdown: macronutrient_breakdown,
+        macronutrient_data: macronutrient_data,
+        meal_distribution: meal_distribution,
+        meal_distribution_data: meal_distribution_data
+      )
+
+    {:noreply, push_event(socket, "dashboard-data-updated", %{})}
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-base-100 flex flex-col" phx-hook="DashboardChart" id="dashboard-chart"
-         data-weight-entries={Jason.encode!(@weight_data)}
-         data-weekly-nutrition={Jason.encode!(@weekly_nutrition_data)}
-         data-macronutrient-breakdown={Jason.encode!(@macronutrient_data)}
-         data-meal-distribution={Jason.encode!(@meal_distribution_data)}>
+    <div class="min-h-screen bg-base-100 flex flex-col" id="main-container" phx-hook="TimezoneData">
+      <div phx-hook="DashboardChart" id="dashboard-chart"
+           data-weight-entries={Jason.encode!(@weight_data)}
+           data-weekly-nutrition={Jason.encode!(@weekly_nutrition_data)}
+           data-macronutrient-breakdown={Jason.encode!(@macronutrient_data)}
+           data-meal-distribution={Jason.encode!(@meal_distribution_data)}>
       <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
 
       <div class="flex flex-1">
@@ -324,6 +398,7 @@ defmodule NobullfitWeb.DashboardLive do
 
       <.footer current_path={@current_path} />
       <.flash_group flash={@flash} />
+      </div>
     </div>
     """
   end

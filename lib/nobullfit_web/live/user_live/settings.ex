@@ -9,6 +9,7 @@ defmodule NobullfitWeb.UserLive.Settings do
 
   alias Nobullfit.Accounts
 
+  # Render the settings page with forms for email, password, and account deletion
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
@@ -149,6 +150,7 @@ defmodule NobullfitWeb.UserLive.Settings do
     """
   end
 
+  # Handle email confirmation token mount
   def mount(%{"token" => token}, _session, socket) do
     socket =
       case Accounts.update_user_email(socket.assigns.current_scope.user, token) do
@@ -162,6 +164,7 @@ defmodule NobullfitWeb.UserLive.Settings do
     {:ok, push_navigate(socket, to: ~p"/users/settings")}
   end
 
+  # Handle normal mount for settings page
   def mount(_params, session, socket) do
     user = socket.assigns.current_scope.user
     email_changeset = Accounts.change_user_email(user, %{}, validate_unique: false)
@@ -180,6 +183,7 @@ defmodule NobullfitWeb.UserLive.Settings do
     {:ok, socket}
   end
 
+  # Handle email validation event
   def handle_event("validate_email", params, socket) do
     %{"user" => user_params} = params
 
@@ -192,6 +196,7 @@ defmodule NobullfitWeb.UserLive.Settings do
     {:noreply, assign(socket, email_form: email_form)}
   end
 
+  # Handle email update event
   def handle_event("update_email", params, socket) do
     %{"user" => user_params} = params
     user = socket.assigns.current_scope.user
@@ -213,6 +218,7 @@ defmodule NobullfitWeb.UserLive.Settings do
     end
   end
 
+  # Handle password validation event
   def handle_event("validate_password", params, socket) do
     %{"user" => user_params} = params
 
@@ -225,6 +231,7 @@ defmodule NobullfitWeb.UserLive.Settings do
     {:noreply, assign(socket, password_form: password_form)}
   end
 
+  # Handle password update event
   def handle_event("update_password", params, socket) do
     %{"user" => user_params} = params
     user = socket.assigns.current_scope.user
@@ -239,19 +246,22 @@ defmodule NobullfitWeb.UserLive.Settings do
     end
   end
 
+  # Handle showing the delete account confirmation modal
   def handle_event("show_delete_confirm", _params, socket) do
     {:noreply, push_event(socket, "show_delete_modal", %{})}
   end
 
+  # Handle account deletion event
   def handle_event("delete_account", _params, socket) do
     user = socket.assigns.current_scope.user
     true = Accounts.sudo_mode?(user)
 
     case Accounts.delete_user(user) do
       {:ok, _deleted_user} ->
-        socket
-        |> put_flash(:info, "Your account has been permanently deleted.")
-        |> push_navigate(to: ~p"/")
+        {:noreply,
+         socket
+         |> put_flash(:info, "Your account has been permanently deleted.")
+         |> push_navigate(to: ~p"/")}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to delete account. Please try again.")}
