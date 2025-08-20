@@ -101,9 +101,9 @@ defmodule NobullfitWeb.HomeLive do
               </p>
               <div class="flex justify-center">
                 <%= if @current_scope do %>
-                  <a href="/dashboard" class="btn btn-primary btn-lg">Dashboard</a>
+                  <a href="/d" class="btn btn-primary btn-lg">Dashboard</a>
                 <% else %>
-                  <a href="/register" class="btn btn-primary btn-lg">Sign up now!</a>
+                  <a href="/users/register" class="btn btn-primary btn-lg">Sign up now!</a>
                 <% end %>
               </div>
             </div>
