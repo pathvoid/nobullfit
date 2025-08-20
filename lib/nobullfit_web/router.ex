@@ -66,6 +66,7 @@ defmodule NobullfitWeb.Router do
     get "/d/images/:id", ImageController, :show
 
     post "/users/update-password", UserSessionController, :update_password
+    delete "/users/delete-account", UserSessionController, :delete_account
   end
 
   scope "/", NobullfitWeb do

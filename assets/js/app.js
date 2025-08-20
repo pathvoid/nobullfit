@@ -2,6 +2,7 @@ import "phoenix_html"
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
+import DeleteAccountHook from "./delete_account_hook.js"
 
 // Hook to reset form inputs after successful submission
 const ActivityFormHook = {
@@ -415,7 +416,8 @@ const liveSocket = new LiveSocket("/live", Socket, {
     WeightForm: WeightFormHook,
     TimezoneData: TimezoneDataHook,
     GroceryItemForm: GroceryItemFormHook,
-    DashboardChart: DashboardChartHook
+    DashboardChart: DashboardChartHook,
+    DeleteAccountHook: DeleteAccountHook
   }
 })
 

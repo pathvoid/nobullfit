@@ -64,4 +64,21 @@ defmodule NobullfitWeb.UserSessionController do
     |> put_flash(:info, "Logged out successfully.")
     |> UserAuth.log_out_user()
   end
+
+  def delete_account(conn, _params) do
+    user = conn.assigns.current_scope.user
+    true = Accounts.sudo_mode?(user)
+
+    case Accounts.delete_user(user) do
+      {:ok, _deleted_user} ->
+        conn
+        |> put_flash(:info, "Your account has been permanently deleted.")
+        |> UserAuth.log_out_user()
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Failed to delete account. Please try again.")
+        |> redirect(to: ~p"/users/settings")
+    end
+  end
 end

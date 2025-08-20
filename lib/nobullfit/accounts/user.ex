@@ -11,6 +11,10 @@ defmodule Nobullfit.Accounts.User do
 
     has_many :activities, Nobullfit.Activities.Activity
     has_many :weight_entries, Nobullfit.WeightEntries.WeightEntry
+    has_many :food_entries, Nobullfit.FoodEntries.FoodEntry
+    has_many :grocery_lists, Nobullfit.GroceryLists.GroceryList
+    has_many :user_favorites, Nobullfit.UserFavorites.UserFavorite
+    has_many :user_tokens, Nobullfit.Accounts.UserToken
 
     timestamps(type: :utc_datetime)
   end

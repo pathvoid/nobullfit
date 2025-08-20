@@ -300,6 +300,45 @@ defmodule Nobullfit.Accounts do
     :ok
   end
 
+  ## User deletion
+
+  @doc """
+  Deletes a user and all associated data.
+
+  This will permanently delete the user account and all related data including:
+  - Activities
+  - Weight entries
+  - Food entries
+  - Grocery lists and items
+  - User favorites
+  - User tokens
+
+  This action cannot be undone.
+
+  ## Examples
+
+      iex> delete_user(user)
+      {:ok, %User{}}
+
+      iex> delete_user(nil)
+      {:error, :not_found}
+
+  """
+  def delete_user(%User{} = user) do
+    Repo.transact(fn ->
+      # Delete all user tokens first
+      Repo.delete_all(from(t in UserToken, where: t.user_id == ^user.id))
+
+      # Delete the user (this will cascade delete all associated data due to foreign key constraints)
+      case Repo.delete(user) do
+        {:ok, deleted_user} -> {:ok, deleted_user}
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  def delete_user(nil), do: {:error, :not_found}
+
   ## Token helper
 
   defp update_user_and_delete_all_tokens(changeset) do

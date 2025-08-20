@@ -73,6 +73,71 @@ defmodule NobullfitWeb.UserLive.Settings do
                   Save Password
                 </.button>
               </.form>
+
+              <div class="divider" />
+
+              <div class="card bg-error text-error-content">
+                <div class="card-body">
+                  <h2 class="card-title">Delete Account</h2>
+                  <p class="text-sm">
+                    This action will permanently delete your account and all associated data including:
+                  </p>
+                  <ul class="text-sm list-disc list-inside mb-4">
+                    <li>All your activities and progress</li>
+                    <li>Weight tracking data</li>
+                    <li>Food entries and nutrition history</li>
+                    <li>Grocery lists</li>
+                    <li>Favorites and saved items</li>
+                  </ul>
+                  <p class="text-sm font-semibold mb-4">
+                    This action cannot be undone. All data will be permanently lost.
+                  </p>
+                  <div class="card-actions justify-end">
+                    <button
+                      class="btn btn-error"
+                      phx-click="show_delete_confirm"
+                      phx-hook="DeleteAccountHook"
+                      id="delete-account-btn"
+                    >
+                      Delete My Account
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Delete Account Confirmation Modal -->
+              <dialog id="delete-account-modal" class="modal">
+                <div class="modal-box">
+                  <h3 class="font-bold text-lg">Confirm Account Deletion</h3>
+                  <p class="py-4">
+                    Are you absolutely sure you want to delete your account? This action will:
+                  </p>
+                  <ul class="list-disc list-inside mb-4 text-sm">
+                    <li>Permanently delete your account</li>
+                    <li>Remove all your data and progress</li>
+                    <li>Log you out immediately</li>
+                    <li>Make recovery impossible</li>
+                  </ul>
+                  <p class="font-semibold text-error mb-4">
+                    This action cannot be undone.
+                  </p>
+                  <div class="modal-action">
+                    <form method="dialog">
+                      <button class="btn">Cancel</button>
+                    </form>
+                    <button
+                      class="btn btn-error"
+                      phx-click="delete_account"
+                      phx-disable-with="Deleting..."
+                    >
+                      Yes, Delete My Account
+                    </button>
+                  </div>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                  <button>close</button>
+                </form>
+              </dialog>
             </div>
           </main>
         </div>
@@ -171,6 +236,25 @@ defmodule NobullfitWeb.UserLive.Settings do
 
       changeset ->
         {:noreply, assign(socket, password_form: to_form(changeset, action: :insert))}
+    end
+  end
+
+  def handle_event("show_delete_confirm", _params, socket) do
+    {:noreply, push_event(socket, "show_delete_modal", %{})}
+  end
+
+  def handle_event("delete_account", _params, socket) do
+    user = socket.assigns.current_scope.user
+    true = Accounts.sudo_mode?(user)
+
+    case Accounts.delete_user(user) do
+      {:ok, _deleted_user} ->
+        socket
+        |> put_flash(:info, "Your account has been permanently deleted.")
+        |> push_navigate(to: ~p"/")
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to delete account. Please try again.")}
     end
   end
 end
