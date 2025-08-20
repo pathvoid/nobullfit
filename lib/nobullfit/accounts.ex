@@ -7,6 +7,7 @@ defmodule Nobullfit.Accounts do
   alias Nobullfit.Repo
 
   alias Nobullfit.Accounts.{User, UserToken, UserNotifier}
+  alias Nobullfit.GroceryLists
 
   ## Database getters
 
@@ -75,9 +76,27 @@ defmodule Nobullfit.Accounts do
 
   """
   def register_user(attrs) do
-    %User{}
-    |> User.email_changeset(attrs)
-    |> Repo.insert()
+    Repo.transact(fn ->
+      case %User{}
+           |> User.email_changeset(attrs)
+           |> Repo.insert() do
+        {:ok, user} ->
+          # Create a default grocery list for the new user
+          case GroceryLists.create_grocery_list(%{
+                 name: "Shopping List",
+                 user_id: user.id
+               }) do
+            {:ok, _grocery_list} ->
+              {:ok, user}
+
+            {:error, _changeset} ->
+              Repo.rollback("Failed to create grocery list")
+          end
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
   end
 
   ## Settings

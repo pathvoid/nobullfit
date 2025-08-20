@@ -107,26 +107,26 @@ defmodule NobullfitWeb.DashboardLive do
         Enum.map(weekly_nutrition.daily_summaries, fn summary ->
           %{
             date: Date.to_string(summary.date),
-            calories: Decimal.to_string(summary.calories || Decimal.new("0")),
-            protein: Decimal.to_string(summary.protein || Decimal.new("0")),
-            carbs: Decimal.to_string(summary.carbs || Decimal.new("0")),
+            calories: Decimal.to_string(summary.calories),
+            protein: Decimal.to_string(summary.protein),
+            carbs: Decimal.to_string(summary.carbs),
             food_count: summary.food_count || 0
           }
         end)
     }
 
     macronutrient_data = %{
-      protein: Decimal.to_string(macronutrient_breakdown.protein || Decimal.new("0")),
-      carbs: Decimal.to_string(macronutrient_breakdown.carbs || Decimal.new("0")),
-      fat: Decimal.to_string(macronutrient_breakdown.fat || Decimal.new("0")),
-      total_calories: Decimal.to_string(macronutrient_breakdown.total_calories || Decimal.new("0"))
+      protein: Decimal.to_string(macronutrient_breakdown.protein),
+      carbs: Decimal.to_string(macronutrient_breakdown.carbs),
+      fat: Decimal.to_string(macronutrient_breakdown.fat),
+      total_calories: Decimal.to_string(macronutrient_breakdown.total_calories)
     }
 
     meal_distribution_data =
       Enum.map(meal_distribution, fn meal ->
         %{
           meal_type: meal.meal_type,
-          calories: Decimal.to_string(meal.calories || Decimal.new("0")),
+          calories: Decimal.to_string(meal.calories),
           food_count: meal.food_count || 0
         }
       end)
