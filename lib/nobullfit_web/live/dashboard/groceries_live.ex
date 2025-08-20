@@ -417,14 +417,14 @@ defmodule NobullfitWeb.Dashboard.GroceriesLive do
                 <:subtitle>Manage your grocery lists</:subtitle>
                 <:actions>
                   <div class="hidden md:flex items-center gap-2">
-                    <button class="btn btn-sm btn-primary" phx-click="new_list" phx-value-date={@max_date}>New List</button>
+                    <button class="btn btn-sm btn-info" phx-click="new_list" phx-value-date={@max_date}>New List</button>
                   </div>
                 </:actions>
               </.header>
               <!-- Mobile Date Picker -->
               <div class="md:hidden mt-4">
                 <div class="flex items-center gap-2 justify-center">
-                  <button class="btn btn-sm btn-primary" phx-click="new_list" phx-value-date={@max_date}>New List</button>
+                  <button class="btn btn-sm btn-info" phx-click="new_list" phx-value-date={@max_date}>New List</button>
                 </div>
               </div>
 

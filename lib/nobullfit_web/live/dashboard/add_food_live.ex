@@ -279,7 +279,7 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
                         phx-hook="DatePicker"
                       />
                       <button
-                        class="btn btn-sm btn-ghost"
+                        class="btn btn-sm btn-info"
                         phx-click="change_date"
                         phx-value-date={@max_date}
                       >
@@ -300,7 +300,7 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
                       phx-hook="DatePicker"
                     />
                     <button
-                      class="btn btn-sm btn-ghost"
+                      class="btn btn-sm btn-info"
                       phx-click="change_date"
                       phx-value-date={@max_date}
                     >
@@ -415,13 +415,20 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
                     </div>
 
                     <!-- Submit Button -->
-                    <div class="flex justify-end gap-4 mt-8">
-                      <.link navigate={~p"/d/food"} class="btn btn-ghost">
-                        Cancel
-                      </.link>
-                      <button type="submit" class="btn btn-primary">
-                        Add Food
-                      </button>
+                    <div class="flex justify-between items-center mt-8">
+                      <div class="flex gap-2">
+                        <.link navigate={~p"/d/favorites"} class="btn btn-accent">
+                          View Favorites
+                        </.link>
+                      </div>
+                      <div class="flex gap-4">
+                        <.link navigate={~p"/d/food"} class="btn btn-ghost">
+                          Cancel
+                        </.link>
+                        <button type="submit" class="btn btn-primary">
+                          Add Food
+                        </button>
+                      </div>
                     </div>
                   </.form>
                 </div>

@@ -314,7 +314,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                   <:actions>
                     <div class="hidden md:flex items-center gap-2">
                       <input type="date" class="input input-sm input-bordered" value={@selected_date |> Date.to_string()} max={@max_date} id="desktop-date-picker" phx-hook="DatePicker" />
-                      <button class="btn btn-sm btn-primary" phx-click="change_date" phx-value-date={@max_date}>Today</button>
+                      <button class="btn btn-sm btn-info" phx-click="change_date" phx-value-date={@max_date}>Today</button>
                     </div>
                   </:actions>
                 </.header>
@@ -322,7 +322,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                 <div class="md:hidden mt-4">
                   <div class="flex items-center gap-2 justify-center">
                     <input type="date" class="input input-sm input-bordered" value={@selected_date |> Date.to_string()} max={@max_date} id="mobile-date-picker" phx-hook="DatePicker" />
-                    <button class="btn btn-sm btn-primary" phx-click="change_date" phx-value-date={@max_date}>Today</button>
+                    <button class="btn btn-sm btn-info" phx-click="change_date" phx-value-date={@max_date}>Today</button>
                   </div>
                 </div>
               </div>
