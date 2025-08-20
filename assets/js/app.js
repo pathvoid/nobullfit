@@ -120,16 +120,17 @@ const DashboardChartHook = {
     // Mark that we're waiting for timezone data
     this.timezoneDataReceived = false
 
-    // Initialize charts only after a small delay to allow timezone data to be processed
-    setTimeout(() => {
-      if (typeof CanvasJS !== 'undefined') {
+    // Fallback: initialize charts after 2 seconds if timezone data hasn't been received
+    this.timeoutId = setTimeout(() => {
+      if (!this.timezoneDataReceived && typeof CanvasJS !== 'undefined') {
+        this.timezoneDataReceived = true
         this.initializeAllCharts()
       }
-    }, 500)
+    }, 2000)
 
     // Listen for theme changes
     this.handleEvent("theme-changed", () => {
-      if (typeof CanvasJS !== 'undefined') {
+      if (typeof CanvasJS !== 'undefined' && this.timezoneDataReceived) {
         this.initializeAllCharts()
       }
     })
@@ -137,15 +138,27 @@ const DashboardChartHook = {
     // Listen for dashboard data updates (triggered by timezone changes)
     this.handleEvent("dashboard-data-updated", () => {
       this.timezoneDataReceived = true
+      if (this.timeoutId) {
+        clearTimeout(this.timeoutId)
+        this.timeoutId = null
+      }
       if (typeof CanvasJS !== 'undefined') {
         this.initializeAllCharts()
       }
     })
   },
 
+  destroyed() {
+    // Clean up timeout if it exists
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId)
+      this.timeoutId = null
+    }
+  },
+
   updated() {
-    // Reinitialize charts when data updates
-    if (typeof CanvasJS !== 'undefined') {
+    // Reinitialize charts when data updates, but only if timezone data has been received
+    if (typeof CanvasJS !== 'undefined' && this.timezoneDataReceived) {
       this.initializeAllCharts()
     }
   },
