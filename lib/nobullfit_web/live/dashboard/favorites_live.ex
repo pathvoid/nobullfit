@@ -14,28 +14,6 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
     Decimal.round(value, 2) |> Decimal.to_string()
   end
 
-  defp format_decimal(value) when is_number(value), do: "#{value}"
-  defp format_decimal(value) when is_binary(value), do: value
-  defp format_decimal(_), do: nil
-
-  # Helper function to round nutrient values to max 2 decimals
-  defp round_nutrient_value(value) when is_number(value) do
-    Float.round(value, 2)
-  end
-
-  defp round_nutrient_value(value) when is_binary(value) do
-    case Float.parse(value) do
-      {float_value, _} -> Float.round(float_value, 2)
-      :error -> value
-    end
-  end
-
-  defp round_nutrient_value(value) when is_struct(value, Decimal) do
-    Decimal.to_float(value) |> Float.round(2)
-  end
-
-  defp round_nutrient_value(value), do: value
-
   # Helper function to calculate nutrition per 100g reference for foods
   defp calculate_per_100g_nutrition(food) do
     # Convert nutrition values to per 100g for comparison
@@ -43,10 +21,10 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
     proportion = 100.0 / food.quantity
 
     %{
-      calories: if(food.calories, do: round_nutrient_value(food.calories * proportion), else: nil),
-      protein: if(food.protein, do: round_nutrient_value(Decimal.to_float(food.protein) * proportion), else: nil),
-      carbs: if(food.carbs, do: round_nutrient_value(Decimal.to_float(food.carbs) * proportion), else: nil),
-      fat: if(food.fat, do: round_nutrient_value(Decimal.to_float(food.fat) * proportion), else: nil)
+      calories: if(food.calories, do: Float.round(food.calories * proportion, 2), else: nil),
+      protein: if(food.protein, do: Float.round(Decimal.to_float(food.protein) * proportion, 2), else: nil),
+      carbs: if(food.carbs, do: Float.round(Decimal.to_float(food.carbs) * proportion, 2), else: nil),
+      fat: if(food.fat, do: Float.round(Decimal.to_float(food.fat) * proportion, 2), else: nil)
     }
   end
 
