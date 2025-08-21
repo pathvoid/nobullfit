@@ -29,6 +29,29 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
     end
   end
 
+  defp round_nutrient_value(value) when is_binary(value) do
+    case Float.parse(value) do
+      {float_value, _} ->
+        rounded = Float.round(float_value, 1)
+        if rounded == Float.round(float_value, 0) do
+          "#{trunc(float_value)}"
+        else
+          "#{rounded}"
+        end
+      :error -> "#{value}"
+    end
+  end
+
+  defp round_nutrient_value(value) when is_struct(value, Decimal) do
+    float_value = Decimal.to_float(value)
+    rounded = Float.round(float_value, 1)
+    if rounded == Float.round(float_value, 0) do
+      "#{trunc(float_value)}"
+    else
+      "#{rounded}"
+    end
+  end
+
   defp round_nutrient_value(value), do: "#{value}"
 
   # Helper function to format decimal values for query parameters

@@ -15,6 +15,7 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
   end
 
   defp format_decimal(value) when is_number(value), do: "#{value}"
+  defp format_decimal(value) when is_binary(value), do: value
   defp format_decimal(_), do: nil
 
   # Helper function to round nutrient values to max 2 decimals
@@ -27,6 +28,10 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
       {float_value, _} -> Float.round(float_value, 2)
       :error -> value
     end
+  end
+
+  defp round_nutrient_value(value) when is_struct(value, Decimal) do
+    Decimal.to_float(value) |> Float.round(2)
   end
 
   defp round_nutrient_value(value), do: value

@@ -328,5 +328,9 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
     end
   end
 
+  defp round_nutrient_value(value) when is_struct(value, Decimal) do
+    Decimal.to_float(value) |> Float.round(2)
+  end
+
   defp round_nutrient_value(value), do: value
 end
