@@ -17,6 +17,47 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
   defp format_decimal(value) when is_number(value), do: "#{value}"
   defp format_decimal(_), do: nil
 
+  # Helper function to calculate per-serving nutrition values for recipes
+  defp calculate_per_serving_nutrition(recipe) do
+    # Get the yield (number of servings) - default to 1 if not provided
+    yield = recipe.yield || 1
+
+    # The calories in favorites are already stored per serving, so no need to divide
+    calories_per_serving = recipe.calories || 0
+
+    # Calculate per-serving nutrients if available
+    # Note: The totalNutrients in recipe_data are total values for the entire recipe,
+    # so we need to divide by yield to get per-serving values
+    nutrients_per_serving =
+      if recipe.recipe_data && recipe.recipe_data["recipe"] && recipe.recipe_data["recipe"]["totalNutrients"] && yield > 0 do
+        recipe.recipe_data["recipe"]["totalNutrients"]
+        |> Enum.map(fn {key, nutrient} ->
+          quantity =
+            case nutrient["quantity"] do
+              nil -> nil
+              value when is_number(value) ->
+                # Round to 2 decimal places
+                Float.round(value / yield, 2)
+              value ->
+                case Float.parse("#{value}") do
+                  {parsed_value, _} -> Float.round(parsed_value / yield, 2)
+                  :error -> nil
+                end
+            end
+
+          {key, %{nutrient | "quantity" => quantity}}
+        end)
+        |> Enum.into(%{})
+      else
+        %{}
+      end
+
+    %{
+      calories: calories_per_serving,
+      nutrients: nutrients_per_serving
+    }
+  end
+
   @impl true
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
@@ -743,13 +784,15 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                             <thead>
                               <tr>
                                 <th>Recipe Name</th>
-                                <th class="hidden md:table-cell">Calories</th>
+                                <th class="hidden md:table-cell">Per Serving</th>
+                                <th class="hidden lg:table-cell">Nutrition</th>
                                 <th class="hidden md:table-cell">Diet Labels</th>
                                 <th></th>
                               </tr>
                             </thead>
                             <tbody>
                               <%= for {recipe, index} <- Enum.with_index(@favorite_recipes) do %>
+                                <% per_serving = calculate_per_serving_nutrition(recipe) %>
                                 <tr id={"favorite-recipe-row-#{index}"}>
                                   <td>
                                     <div class="flex items-center gap-3">
@@ -777,26 +820,40 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                                           <% end %>
                                         </div>
                                         <div class="text-sm opacity-50">
-                                          <%= if recipe.yield do %>
-                                            <%= recipe.yield %> serving<%= if recipe.yield == 1, do: "", else: "s" %>
+                                          <%= if recipe.recipe_data && recipe.recipe_data["recipe"] && recipe.recipe_data["recipe"]["source"] do %>
+                                            <%= recipe.recipe_data["recipe"]["source"] %>
                                           <% else %>
                                             Recipe
                                           <% end %>
-                                          <%= if recipe.recipe_data && recipe.recipe_data["recipe"] && recipe.recipe_data["recipe"]["source"] do %>
-                                            • <%= recipe.recipe_data["recipe"]["source"] %>
+                                        </div>
+                                        <div class="text-xs opacity-70">
+                                          <%= if recipe.yield do %>
+                                            <%= recipe.yield %> servings
+                                          <% else %>
+                                            1 serving
                                           <% end %>
                                         </div>
                                       </div>
                                     </div>
                                   </td>
                                   <td class="hidden md:table-cell">
-                                    <%= if recipe.calories do %>
-                                      <div class="text-sm font-medium">
-                                        <%= recipe.calories %> kcal
-                                      </div>
-                                    <% else %>
-                                      <span class="text-base-content/50 text-sm">-</span>
-                                    <% end %>
+                                    <div class="text-sm font-medium">
+                                      <%= per_serving.calories %> kcal
+                                    </div>
+                                    <div class="text-xs opacity-70">per serving</div>
+                                  </td>
+                                  <td class="hidden lg:table-cell">
+                                    <div class="text-xs space-y-1">
+                                      <%= if per_serving.nutrients["PROCNT"] && per_serving.nutrients["PROCNT"]["quantity"] do %>
+                                        <div>Protein: <span class="font-medium"><%= per_serving.nutrients["PROCNT"]["quantity"] %>g</span></div>
+                                      <% end %>
+                                      <%= if per_serving.nutrients["CHOCDF"] && per_serving.nutrients["CHOCDF"]["quantity"] do %>
+                                        <div>Carbs: <span class="font-medium"><%= per_serving.nutrients["CHOCDF"]["quantity"] %>g</span></div>
+                                      <% end %>
+                                      <%= if per_serving.nutrients["FAT"] && per_serving.nutrients["FAT"]["quantity"] do %>
+                                        <div>Fat: <span class="font-medium"><%= per_serving.nutrients["FAT"]["quantity"] %>g</span></div>
+                                      <% end %>
+                                    </div>
                                   </td>
                                   <td class="hidden md:table-cell">
                                     <%= if recipe.diet_labels && length(recipe.diet_labels) > 0 do %>

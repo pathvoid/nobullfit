@@ -51,43 +51,83 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
     end
   end
 
+  # Helper function to calculate per-serving nutrition values
+  defp calculate_per_serving_nutrition(recipe) do
+    # Get the yield (number of servings) - default to 1 if not provided
+    yield = recipe["yield"] || 1
+
+    # Calculate per-serving calories
+    calories_per_serving =
+      if yield > 0, do: trunc((recipe["calories"] || 0) / yield), else: (recipe["calories"] || 0)
+
+    # Calculate per-serving nutrients if available
+    nutrients_per_serving =
+      if recipe["totalNutrients"] && yield > 0 do
+        recipe["totalNutrients"]
+        |> Enum.map(fn {key, nutrient} ->
+          quantity =
+            case nutrient["quantity"] do
+              nil -> nil
+              value when is_number(value) ->
+                # Round to 2 decimal places
+                Float.round(value / yield, 2)
+              value ->
+                case Float.parse("#{value}") do
+                  {parsed_value, _} -> Float.round(parsed_value / yield, 2)
+                  :error -> nil
+                end
+            end
+
+          {key, %{nutrient | "quantity" => quantity}}
+        end)
+        |> Enum.into(%{})
+      else
+        %{}
+      end
+
+    %{
+      calories: calories_per_serving,
+      nutrients: nutrients_per_serving
+    }
+  end
+
   @impl true
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
 
     {:ok,
-     assign(socket,
-       page_title: "Recipe Database",
-       current_path: "/d/recipe-database",
-       maintenance_status: maintenance_status,
-       search_query: "",
-       search_results: [],
-       loading: false,
-       error: nil,
-       current_page: 1,
-       total_count: 0,
-       from: 0,
-       to: 0,
-       next_url: nil,
-       prev_url: nil,
-       page_history: [],
-       selected_diet_labels: [],
-       selected_meal_types: [],
-       selected_dish_types: [],
-       calories_min: "",
-       calories_max: "",
-       filters_visible: false,
-       search_performed: false,
-       grocery_lists: [],
-       show_grocery_menu: false,
-       selected_recipe_index: nil,
-       favorited_recipes: MapSet.new(),
-       show_quantity_modal: false,
-       selected_item_for_quantity: nil,
-       quantity_value: "1",
-       quantity_type: "servings",
-       adjusted_nutrition: %{calories: nil, protein: nil, carbs: nil, fat: nil}
-     )}
+      assign(socket,
+        page_title: "Recipe Database",
+        current_path: "/d/recipe-database",
+        maintenance_status: maintenance_status,
+        search_query: "",
+        search_results: [],
+        loading: false,
+        error: nil,
+        current_page: 1,
+        total_count: 0,
+        from: 0,
+        to: 0,
+        next_url: nil,
+        prev_url: nil,
+        page_history: [],
+        selected_diet_labels: [],
+        selected_meal_types: [],
+        selected_dish_types: [],
+        calories_min: "",
+        calories_max: "",
+        filters_visible: false,
+        search_performed: false,
+        grocery_lists: [],
+        show_grocery_menu: false,
+        selected_recipe_index: nil,
+        favorited_recipes: MapSet.new(),
+        show_quantity_modal: false,
+        selected_item_for_quantity: nil,
+        quantity_value: "1",
+        quantity_type: "servings",
+        adjusted_nutrition: %{calories: nil, protein: nil, carbs: nil, fat: nil}
+      )}
   end
 
   @impl true
@@ -103,16 +143,16 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
       )
 
       {:noreply,
-       assign(socket,
-         search_query: query,
-         calories_min: calories_min,
-         calories_max: calories_max,
-         loading: true,
-         error: nil,
-         current_page: 1,
-         search_performed: true,
-         filters_visible: false
-       )}
+        assign(socket,
+          search_query: query,
+          calories_min: calories_min,
+          calories_max: calories_max,
+          loading: true,
+          error: nil,
+          current_page: 1,
+          search_performed: true,
+          filters_visible: false
+        )}
     else
       {:noreply, assign(socket, search_query: query, search_results: [])}
     end
@@ -147,11 +187,11 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
       send(self(), {:perform_search_url, socket.assigns.next_url, socket.assigns.current_page + 1})
 
       {:noreply,
-       assign(socket,
-         loading: true,
-         error: nil,
-         current_page: socket.assigns.current_page + 1
-       )}
+        assign(socket,
+          loading: true,
+          error: nil,
+          current_page: socket.assigns.current_page + 1
+        )}
     else
       {:noreply, socket}
     end
@@ -172,11 +212,11 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
           send(self(), {:perform_search_url, socket.assigns.prev_url, socket.assigns.current_page - 1})
 
           {:noreply,
-           assign(socket,
-             loading: true,
-             error: nil,
-             current_page: socket.assigns.current_page - 1
-           )}
+            assign(socket,
+              loading: true,
+              error: nil,
+              current_page: socket.assigns.current_page - 1
+            )}
       end
     else
       {:noreply, socket}
@@ -186,25 +226,25 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
   @impl true
   def handle_event("clear_search", _params, socket) do
     {:noreply,
-     assign(socket,
-       search_query: "",
-       search_results: [],
-       error: nil,
-       current_page: 1,
-       total_count: 0,
-       from: 0,
-       to: 0,
-       next_url: nil,
-       prev_url: nil,
-       page_history: [],
-       selected_diet_labels: [],
-       selected_meal_types: [],
-       selected_dish_types: [],
-       calories_min: "",
-       calories_max: "",
-       filters_visible: false,
-       search_performed: false
-     )}
+      assign(socket,
+        search_query: "",
+        search_results: [],
+        error: nil,
+        current_page: 1,
+        total_count: 0,
+        from: 0,
+        to: 0,
+        next_url: nil,
+        prev_url: nil,
+        page_history: [],
+        selected_diet_labels: [],
+        selected_meal_types: [],
+        selected_dish_types: [],
+        calories_min: "",
+        calories_max: "",
+        filters_visible: false,
+        search_performed: false
+      )}
   end
 
   @impl true
@@ -273,34 +313,6 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
   end
 
   @impl true
-  def handle_event("print_ingredients", %{"recipe-index" => recipe_index}, socket) do
-    index = String.to_integer(recipe_index)
-
-    if index < length(socket.assigns.search_results) do
-      recipe = Enum.at(socket.assigns.search_results, index)["recipe"]
-
-      IO.puts("\n=== Ingredients for: #{recipe["label"]} ===")
-
-      if recipe["ingredients"] && length(recipe["ingredients"]) > 0 do
-        Enum.each(recipe["ingredients"], fn ingredient ->
-          IO.puts("• #{ingredient["text"]}")
-          IO.puts("  Quantity: #{ingredient["quantity"]} #{ingredient["measure"]}")
-          IO.puts("  Food: #{ingredient["food"]}")
-          IO.puts("  Weight: #{ingredient["weight"]}g")
-          IO.puts("  Food ID: #{ingredient["foodId"]}")
-          IO.puts("")
-        end)
-      else
-        IO.puts("No ingredients data available for this recipe.")
-      end
-
-      IO.puts("=")
-    end
-
-    {:noreply, socket}
-  end
-
-  @impl true
   def handle_event("load_grocery_lists", %{"recipe-index" => recipe_index}, socket) do
     # Load user's grocery lists when dropdown is opened
     user_id = socket.assigns.current_scope.user.id
@@ -308,15 +320,15 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
 
     if length(grocery_lists) > 0 do
       {:noreply,
-       assign(socket,
-         show_grocery_menu: true,
-         selected_recipe_index: String.to_integer(recipe_index),
-         grocery_lists: grocery_lists
-       )}
+        assign(socket,
+          show_grocery_menu: true,
+          selected_recipe_index: String.to_integer(recipe_index),
+          grocery_lists: grocery_lists
+        )}
     else
       {:noreply,
-       socket
-       |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
+        socket
+        |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
       }
     end
   end
@@ -329,15 +341,15 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
 
     if length(grocery_lists) > 0 do
       {:noreply,
-       assign(socket,
-         show_grocery_menu: true,
-         selected_recipe_index: String.to_integer(recipe_index),
-         grocery_lists: grocery_lists
-       )}
+        assign(socket,
+          show_grocery_menu: true,
+          selected_recipe_index: String.to_integer(recipe_index),
+          grocery_lists: grocery_lists
+        )}
     else
       {:noreply,
-       socket
-       |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
+        socket
+        |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
       }
     end
   end
@@ -356,23 +368,23 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
         case Nobullfit.GroceryLists.add_recipe_ingredients_to_list(String.to_integer(list_id), recipe["ingredients"]) do
           {:ok, _result} ->
             {:noreply,
-             socket
-             |> assign(show_grocery_menu: false, selected_recipe_index: nil)
-             |> put_flash(:info, "Ingredients added to grocery list successfully!")
+              socket
+              |> assign(show_grocery_menu: false, selected_recipe_index: nil)
+              |> put_flash(:info, "Ingredients added to grocery list successfully!")
             }
 
           {:error, _error} ->
             {:noreply,
-             socket
-             |> assign(show_grocery_menu: false, selected_recipe_index: nil)
-             |> put_flash(:error, "Failed to add ingredients to grocery list.")
+              socket
+              |> assign(show_grocery_menu: false, selected_recipe_index: nil)
+              |> put_flash(:error, "Failed to add ingredients to grocery list.")
             }
         end
       else
         {:noreply,
-         socket
-         |> assign(show_grocery_menu: false, selected_recipe_index: nil)
-         |> put_flash(:error, "No ingredients found for this recipe.")
+          socket
+          |> assign(show_grocery_menu: false, selected_recipe_index: nil)
+          |> put_flash(:error, "No ingredients found for this recipe.")
         }
       end
     else
@@ -391,13 +403,13 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
 
       # Show quantity modal for recipe
       {:noreply,
-       assign(socket,
-         show_quantity_modal: true,
-         selected_item_for_quantity: %{type: "recipe", index: recipe_index_int, item: recipe},
-         quantity_value: "1",
-         quantity_type: "servings",
-         adjusted_nutrition: initial_nutrition
-       )}
+        assign(socket,
+          show_quantity_modal: true,
+          selected_item_for_quantity: %{type: "recipe", index: recipe_index_int, item: recipe},
+          quantity_value: "1",
+          quantity_type: "servings",
+          adjusted_nutrition: initial_nutrition
+        )}
     else
       {:noreply, socket}
     end
@@ -406,13 +418,13 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
   @impl true
   def handle_event("hide_quantity_modal", _params, socket) do
     {:noreply,
-     assign(socket,
-       show_quantity_modal: false,
-       selected_item_for_quantity: nil,
-       quantity_value: "1",
-       quantity_type: "servings",
-       adjusted_nutrition: %{calories: nil, protein: nil, carbs: nil, fat: nil}
-     )}
+      assign(socket,
+        show_quantity_modal: false,
+        selected_item_for_quantity: nil,
+        quantity_value: "1",
+        quantity_type: "servings",
+        adjusted_nutrition: %{calories: nil, protein: nil, carbs: nil, fat: nil}
+      )}
   end
 
   @impl true
@@ -425,11 +437,11 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
     adjusted_nutrition = calculate_adjusted_nutrition(socket.assigns.selected_item_for_quantity, quantity_type, quantity_value)
 
     {:noreply,
-     assign(socket,
-       quantity_type: quantity_type,
-       quantity_value: quantity_value,
-       adjusted_nutrition: adjusted_nutrition
-     )}
+      assign(socket,
+        quantity_type: quantity_type,
+        quantity_value: quantity_value,
+        adjusted_nutrition: adjusted_nutrition
+      )}
   end
 
   @impl true
@@ -483,15 +495,15 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
 
         # Redirect to the add food page with adjusted data
         {:noreply,
-         socket
-         |> assign(
-           show_quantity_modal: false,
-           selected_item_for_quantity: nil,
-           quantity_value: "1",
-           quantity_type: "servings",
-           adjusted_nutrition: %{calories: nil, protein: nil, carbs: nil, fat: nil}
-         )
-         |> push_navigate(to: "/d/add-food?#{query_string}", replace: false)
+          socket
+          |> assign(
+            show_quantity_modal: false,
+            selected_item_for_quantity: nil,
+            quantity_value: "1",
+            quantity_type: "servings",
+            adjusted_nutrition: %{calories: nil, protein: nil, carbs: nil, fat: nil}
+          )
+          |> push_navigate(to: "/d/add-food?#{query_string}", replace: false)
         }
 
       _ ->
@@ -512,9 +524,9 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
         case UserFavorites.delete_user_favorite_by_external_id(user_id, "recipe", recipe["uri"], recipe["label"]) do
           {:ok, _} ->
             {:noreply,
-             socket
-             |> assign(favorited_recipes: MapSet.delete(socket.assigns.favorited_recipes, recipe["uri"]))
-             |> put_flash(:info, "Removed from favorites")}
+              socket
+              |> assign(favorited_recipes: MapSet.delete(socket.assigns.favorited_recipes, recipe["uri"]))
+              |> put_flash(:info, "Removed from favorites")}
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to remove from favorites")}
@@ -524,9 +536,9 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
         case UserFavorites.create_recipe_favorite(user_id, %{"recipe" => recipe}) do
           {:ok, _favorite} ->
             {:noreply,
-             socket
-             |> assign(favorited_recipes: MapSet.put(socket.assigns.favorited_recipes, recipe["uri"]))
-             |> put_flash(:info, "Added to favorites")}
+              socket
+              |> assign(favorited_recipes: MapSet.put(socket.assigns.favorited_recipes, recipe["uri"]))
+              |> put_flash(:info, "Added to favorites")}
 
           {:error, _changeset} ->
             {:noreply, put_flash(socket, :error, "Failed to add to favorites")}
@@ -618,18 +630,18 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
           |> MapSet.new()
 
         {:noreply,
-         assign(socket,
-           search_results: filtered_results,
-           loading: false,
-           total_count: data["count"] || 0,
-           from: data["from"] || 0,
-           to: data["to"] || 0,
-           current_page: 1,
-           next_url: next_url,
-           prev_url: nil,
-           page_history: [],
-           favorited_recipes: favorited_recipes
-         )}
+          assign(socket,
+            search_results: filtered_results,
+            loading: false,
+            total_count: data["count"] || 0,
+            from: data["from"] || 0,
+            to: data["to"] || 0,
+            current_page: 1,
+            next_url: next_url,
+            prev_url: nil,
+            page_history: [],
+            favorited_recipes: favorited_recipes
+          )}
 
       {:error, error} ->
         error_message =
@@ -640,10 +652,10 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
           end
 
         {:noreply,
-         assign(socket,
-           error: error_message,
-           loading: false
-         )}
+          assign(socket,
+            error: error_message,
+            loading: false
+          )}
     end
   end
 
@@ -676,25 +688,25 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
           |> MapSet.new()
 
         {:noreply,
-         assign(socket,
-           search_results: filtered_results,
-           loading: false,
-           total_count: data["count"] || 0,
-           from: data["from"] || 0,
-           to: data["to"] || 0,
-           current_page: page,
-           next_url: next_url,
-           prev_url: prev_url,
-           page_history: [],
-           favorited_recipes: favorited_recipes
-         )}
+          assign(socket,
+            search_results: filtered_results,
+            loading: false,
+            total_count: data["count"] || 0,
+            from: data["from"] || 0,
+            to: data["to"] || 0,
+            current_page: page,
+            next_url: next_url,
+            prev_url: prev_url,
+            page_history: [],
+            favorited_recipes: favorited_recipes
+          )}
 
       {:error, error} ->
         {:noreply,
-         assign(socket,
-           error: "Failed to load next page: #{error}",
-           loading: false
-         )}
+          assign(socket,
+            error: "Failed to load next page: #{error}",
+            loading: false
+          )}
     end
   end
 
@@ -760,18 +772,18 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
           |> MapSet.new()
 
         {:noreply,
-         assign(socket,
-           search_results: filtered_results,
-           loading: false,
-           total_count: data["count"] || 0,
-           from: data["from"] || 0,
-           to: data["to"] || 0,
-           current_page: 1,
-           next_url: next_url,
-           prev_url: nil,
-           page_history: [],
-           favorited_recipes: favorited_recipes
-         )}
+          assign(socket,
+            search_results: filtered_results,
+            loading: false,
+            total_count: data["count"] || 0,
+            from: data["from"] || 0,
+            to: data["to"] || 0,
+            current_page: 1,
+            next_url: next_url,
+            prev_url: nil,
+            page_history: [],
+            favorited_recipes: favorited_recipes
+          )}
 
       {:error, error} ->
         error_message =
@@ -782,10 +794,10 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
           end
 
         {:noreply,
-         assign(socket,
-           error: error_message,
-           loading: false
-         )}
+          assign(socket,
+            error: error_message,
+            loading: false
+          )}
     end
   end
 
@@ -964,7 +976,8 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                         <thead>
                           <tr>
                             <th>Recipe Name</th>
-                            <th class="hidden md:table-cell">Calories</th>
+                            <th class="hidden md:table-cell">Per Serving</th>
+                            <th class="hidden lg:table-cell">Nutrition</th>
                             <th class="hidden md:table-cell">Diet Labels</th>
                             <th></th>
                           </tr>
@@ -972,7 +985,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                         <tbody>
                           <%= if @loading do %>
                             <tr>
-                              <td colspan="4" class="text-center py-8">
+                              <td colspan="5" class="text-center py-8">
                                 <div class="flex items-center justify-center">
                                   <span class="loading loading-spinner loading-md"></span>
                                   <span class="ml-2">Loading recipes...</span>
@@ -981,6 +994,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                             </tr>
                           <% else %>
                             <%= for {result, index} <- Enum.with_index(@search_results) do %>
+                              <% per_serving = calculate_per_serving_nutrition(result["recipe"]) %>
                               <tr id={"recipe-row-#{@current_page}-#{index}"}>
                                 <td>
                                   <div class="flex items-center gap-3">
@@ -1006,12 +1020,33 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                                           Recipe
                                         <% end %>
                                       </div>
+                                      <div class="text-xs opacity-70">
+                                        <%= if result["recipe"]["yield"] do %>
+                                          <%= result["recipe"]["yield"] %> servings
+                                        <% else %>
+                                          1 serving
+                                        <% end %>
+                                      </div>
                                     </div>
                                   </div>
                                 </td>
                                 <td class="hidden md:table-cell">
                                   <div class="text-sm font-medium">
-                                    <%= result["recipe"]["calories"] |> round() %> kcal
+                                    <%= per_serving.calories %> kcal
+                                  </div>
+                                  <div class="text-xs opacity-70">per serving</div>
+                                </td>
+                                <td class="hidden lg:table-cell">
+                                  <div class="text-xs space-y-1">
+                                    <%= if per_serving.nutrients["PROCNT"] && per_serving.nutrients["PROCNT"]["quantity"] do %>
+                                      <div>Protein: <span class="font-medium"><%= per_serving.nutrients["PROCNT"]["quantity"] %>g</span></div>
+                                    <% end %>
+                                    <%= if per_serving.nutrients["CHOCDF"] && per_serving.nutrients["CHOCDF"]["quantity"] do %>
+                                      <div>Carbs: <span class="font-medium"><%= per_serving.nutrients["CHOCDF"]["quantity"] %>g</span></div>
+                                    <% end %>
+                                    <%= if per_serving.nutrients["FAT"] && per_serving.nutrients["FAT"]["quantity"] do %>
+                                      <div>Fat: <span class="font-medium"><%= per_serving.nutrients["FAT"]["quantity"] %>g</span></div>
+                                    <% end %>
                                   </div>
                                 </td>
                                 <td class="hidden md:table-cell">
