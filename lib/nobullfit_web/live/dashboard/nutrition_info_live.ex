@@ -64,33 +64,23 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
           {:noreply, put_flash(socket, :error, "Failed to remove from favorites")}
       end
     else
-      # Add to favorites - get complete nutrition data including servingSizes
-      ingredients = [
-        %{
-          foodId: food_id,
-          measureURI: measure_uri,
-          quantity: 100.0  # Use 100g as base for serving sizes
-        }
-      ]
+      # Add to favorites - use the current nutrition data and serving size
+      # Get the actual serving size from the current nutrition data
+      actual_quantity = socket.assigns.nutrition_data["totalWeight"] || 100.0
+      # Convert to integer as expected by the schema
+      quantity_int = trunc(actual_quantity)
+      # Get available measures from nutrition data
+      available_measures = socket.assigns.nutrition_data["available_measures"] || socket.assigns.nutrition_data["servingSizes"] || []
 
-      case NoBullFit.FoodAPI.get_nutrients(ingredients) do
-        {:ok, complete_nutrition_data} ->
-          # Add the food label to the nutrition data
-          complete_nutrition_data = Map.put(complete_nutrition_data, "food_label", food_label)
+      case UserFavorites.create_food_favorite(user_id, food_id, food_label, socket.assigns.nutrition_data, measure_uri, quantity_int, available_measures) do
+        {:ok, _favorite} ->
+          {:noreply,
+           socket
+           |> assign(is_favorited: true)
+           |> put_flash(:info, "Added to favorites")}
 
-          case UserFavorites.create_food_favorite(user_id, food_id, food_label, complete_nutrition_data, measure_uri, 100) do
-            {:ok, _favorite} ->
-              {:noreply,
-               socket
-               |> assign(is_favorited: true)
-               |> put_flash(:info, "Added to favorites")}
-
-            {:error, _changeset} ->
-              {:noreply, put_flash(socket, :error, "Failed to add to favorites")}
-          end
-
-        {:error, error} ->
-          {:noreply, put_flash(socket, :error, "Failed to get nutrition data: #{error}")}
+        {:error, _changeset} ->
+          {:noreply, put_flash(socket, :error, "Failed to add to favorites")}
       end
     end
   end
@@ -105,11 +95,21 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
       protein: if(socket.assigns.nutrition_data["totalNutrients"]["PROCNT"], do: Decimal.new("#{socket.assigns.nutrition_data["totalNutrients"]["PROCNT"]["quantity"]}"), else: nil),
       carbs: if(socket.assigns.nutrition_data["totalNutrients"]["CHOCDF"], do: Decimal.new("#{socket.assigns.nutrition_data["totalNutrients"]["CHOCDF"]["quantity"]}"), else: nil),
       fat: if(socket.assigns.nutrition_data["totalNutrients"]["FAT"], do: Decimal.new("#{socket.assigns.nutrition_data["totalNutrients"]["FAT"]["quantity"]}"), else: nil),
-      measures: socket.assigns.nutrition_data["servingSizes"] || []
+      measures: socket.assigns.nutrition_data["available_measures"] || socket.assigns.nutrition_data["servingSizes"] || []
     }
 
-    # Calculate initial adjusted nutrition for 1 gram
-    initial_nutrition = calculate_adjusted_nutrition(%{type: "food", item: food_item}, "grams", "1")
+    # Get the default serving size from measures if available
+    default_serving =
+      if length(food_item.measures) > 0 do
+        first_measure = List.first(food_item.measures)
+        "#{first_measure["weight"]}_#{first_measure["label"]}"
+      else
+        # If no measures available, use servings instead of grams
+        "servings"
+      end
+
+    # Calculate initial adjusted nutrition for 1 serving
+    initial_nutrition = calculate_adjusted_nutrition(%{type: "food", item: food_item}, default_serving, "1")
 
     # Show quantity modal for food
     {:noreply,
@@ -117,7 +117,7 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
        show_quantity_modal: true,
        selected_item_for_quantity: %{type: "food", item: food_item},
        quantity_value: "1",
-       quantity_type: "grams",
+       quantity_type: default_serving,
        adjusted_nutrition: initial_nutrition
      )}
   end
@@ -138,25 +138,27 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
     case socket.assigns.selected_item_for_quantity do
       %{type: "food", item: food} ->
         # Calculate adjusted nutrition values based on quantity
-        quantity = case Float.parse(socket.assigns.quantity_value) do
-          {value, _} -> value
-          :error -> 1.0
-        end
+        quantity =
+          case Float.parse(socket.assigns.quantity_value) do
+            {value, _} -> value
+            :error -> 1.0
+          end
 
         # Parse the quantity type to get the base measurement and display text
-        {base_quantity, display_text} = case socket.assigns.quantity_type do
-          "grams" -> {1, "g"}  # For grams, use 1 as base since quantity is already in grams
-          "servings" -> {food.quantity, "Servings (#{food.quantity}g)"}
-          type_string ->
-            case String.split(type_string, "_", parts: 2) do
-              [qty_str, unit] ->
-                case Float.parse(qty_str) do
-                  {qty, _} -> {qty, "#{unit} (#{qty_str}g)"}
-                  :error -> {food.quantity, "g"}
-                end
-              _ -> {food.quantity, "g"}
-            end
-        end
+        {base_quantity, display_text} =
+          case socket.assigns.quantity_type do
+            "grams" -> {1, "g"}  # For grams, use 1 as base since quantity is already in grams
+            "servings" -> {food.quantity, "Servings (#{food.quantity}g)"}
+            type_string ->
+              case String.split(type_string, "_", parts: 2) do
+                [qty_str, unit] ->
+                  case Float.parse(qty_str) do
+                    {qty, _} -> {qty, "#{unit} (#{qty_str}g)"}
+                    :error -> {food.quantity, "g"}
+                  end
+                _ -> {food.quantity, "g"}
+              end
+          end
 
         # Calculate the total quantity in the selected unit
         adjusted_quantity = quantity * base_quantity
@@ -202,11 +204,12 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
     # Calculate adjusted nutrition values in real-time
     adjusted_nutrition = calculate_adjusted_nutrition(socket.assigns.selected_item_for_quantity, quantity_type, quantity_value)
 
-    {:noreply, assign(socket,
-      quantity_type: quantity_type,
-      quantity_value: quantity_value,
-      adjusted_nutrition: adjusted_nutrition
-    )}
+    {:noreply,
+     assign(socket,
+       quantity_type: quantity_type,
+       quantity_value: quantity_value,
+       adjusted_nutrition: adjusted_nutrition
+     )}
   end
 
   # Helper function to calculate adjusted nutrition values
@@ -214,31 +217,34 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
     case selected_item do
       %{type: "food", item: food} ->
         # Parse quantity value
-        quantity = case Float.parse(quantity_value) do
-          {value, _} -> value
-          :error -> 1.0
-        end
+        quantity =
+          case Float.parse(quantity_value) do
+            {value, _} -> value
+            :error -> 1.0
+          end
 
         # Parse the quantity type to get the base measurement
-        {base_quantity, _display_text} = case quantity_type do
-          "grams" -> {1, "g"}  # For grams, use 1 as base since quantity is already in grams
-          "servings" -> {food.quantity, "Servings (#{food.quantity}g)"}
-          type_string ->
-            case String.split(type_string, "_", parts: 2) do
-              [qty_str, unit] ->
-                case Float.parse(qty_str) do
-                  {qty, _} -> {qty, "#{unit} (#{qty_str}g)"}
-                  :error -> {food.quantity, "g"}
-                end
-              _ -> {food.quantity, "g"}
-            end
-        end
+        {base_quantity, _display_text} =
+          case quantity_type do
+            "grams" -> {1, "g"}  # For grams, use 1 as base since quantity is already in grams
+            "servings" -> {food.quantity, "Servings (#{food.quantity}g)"}
+            type_string ->
+              case String.split(type_string, "_", parts: 2) do
+                [qty_str, unit] ->
+                  case Float.parse(qty_str) do
+                    {qty, _} -> {qty, "#{unit} (#{qty_str}g)"}
+                    :error -> {food.quantity, "g"}
+                  end
+                _ -> {food.quantity, "g"}
+              end
+          end
 
-        # Calculate the total quantity in the selected unit
-        adjusted_quantity = quantity * base_quantity
+        # Calculate the total quantity in grams
+        total_grams = quantity * base_quantity
 
         # Calculate proportion for nutrition values (always based on grams)
-        proportion = adjusted_quantity / food.quantity
+        # food.quantity is the total weight from the nutrition data
+        proportion = total_grams / food.quantity
 
         # Return adjusted nutrition values
         %{
@@ -260,19 +266,48 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
         socket
       ) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
+
     measure_uri =
-      Map.get(params, "measure_uri", "http://www.edamam.com/ontologies/edamam.owl#Measure_gram")
+      case Map.get(params, "measure_uri") do
+        nil -> "http://www.edamam.com/ontologies/edamam.owl#Measure_gram"
+        uri ->
+          # Properly decode the URI using the same encoding function
+          URI.decode(uri)
+      end
+
+    # Parse the quantity from URL (this is the weight in grams)
+    quantity_in_grams =
+      case Float.parse(quantity) do
+        {float_value, _} -> float_value
+        :error ->
+          case Integer.parse(quantity) do
+            {int_value, _} -> int_value * 1.0
+            :error -> 100.0
+          end
+      end
+
+    # For the API, we need to calculate how many units of the selected measure
+    # For example, if we want 250g and the serving is 84g, we need 250/84 = ~2.98 servings
+    api_quantity =
+      if measure_uri == "http://www.edamam.com/ontologies/edamam.owl#Measure_gram" do
+        # For grams, quantity is direct
+        quantity_in_grams
+      else
+        # For other measures, we'll use 1 unit and adjust later if needed
+        # This is safer than trying to calculate without knowing the exact measure weight
+        1.0
+      end
 
     ingredients = [
       %{
         foodId: food_id,
         measureURI: measure_uri,
-        quantity: String.to_integer(quantity) * 1.0
+        quantity: api_quantity
       }
     ]
 
     # Start fetching nutrition data immediately
-    send(self(), {:get_nutrition, ingredients, food_label})
+    send(self(), {:get_nutrition, ingredients, food_label, food_id})
 
     {:ok,
      assign(socket,
@@ -296,16 +331,80 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
   end
 
   @impl true
-  def handle_info({:get_nutrition, ingredients, food_label}, socket) do
+  def handle_info({:get_nutrition, ingredients, food_label, food_id}, socket) do
+    # First get the nutrition data
     case NoBullFit.FoodAPI.get_nutrients(ingredients) do
       {:ok, data} ->
         # Add the food label to the nutrition data
         nutrition_data_with_label = Map.put(data, "food_label", food_label)
 
-        # Check if this food is already favorited
-        is_favorited = UserFavorites.is_favorited?(socket.assigns.current_scope.user.id, "food", socket.assigns.food_id, food_label)
+        # Now try to get measures data by searching for the food
+        # Extract just the food name from the label for a cleaner search
+        search_query = String.split(food_label, ",") |> List.first() |> String.trim()
 
-        {:noreply, assign(socket, nutrition_data: nutrition_data_with_label, loading: false, is_favorited: is_favorited)}
+        # Try to get measures from a fresh search
+        case NoBullFit.FoodAPI.search_foods(search_query) do
+          {:ok, search_data} ->
+            # Look for the same food in the search results
+            all_results = (search_data["parsed"] || []) ++ (search_data["hints"] || [])
+
+            # First try to find exact match by foodId
+            matching_food = Enum.find(all_results, fn item ->
+              item["food"]["foodId"] == food_id
+            end)
+
+            # If no exact match, try to find by name similarity
+            matching_food =
+              if matching_food do
+                matching_food
+              else
+                Enum.find(all_results, fn item ->
+                  String.downcase(item["food"]["label"]) == String.downcase(food_label)
+                end)
+              end
+
+            available_measures =
+              if matching_food do
+                measures = matching_food["measures"] || [matching_food["measure"]]
+                # Filter out nil measures and ensure we have at least one measure
+                filtered_measures = Enum.filter(measures, &(&1 != nil))
+                if length(filtered_measures) > 0 do
+                  filtered_measures
+                else
+                  # If no measures found, create a default serving measure based on totalWeight
+                  [%{
+                    "label" => "Serving",
+                    "weight" => data["totalWeight"] || 100.0,
+                    "uri" => "http://www.edamam.com/ontologies/edamam.owl#Measure_serving"
+                  }]
+                end
+              else
+                # If no matching food found, create a default serving measure
+                [%{
+                  "label" => "Serving",
+                  "weight" => data["totalWeight"] || 100.0,
+                  "uri" => "http://www.edamam.com/ontologies/edamam.owl#Measure_serving"
+                }]
+              end
+
+            nutrition_data_with_measures = Map.put(nutrition_data_with_label, "available_measures", available_measures)
+
+            # Check if this food is already favorited
+            is_favorited = UserFavorites.is_favorited?(socket.assigns.current_scope.user.id, "food", socket.assigns.food_id, food_label)
+
+            {:noreply, assign(socket, nutrition_data: nutrition_data_with_measures, loading: false, is_favorited: is_favorited)}
+
+          {:error, _} ->
+            # If search fails, create a default serving measure based on totalWeight
+            default_measures = [%{
+              "label" => "Serving",
+              "weight" => data["totalWeight"] || 100.0,
+              "uri" => "http://www.edamam.com/ontologies/edamam.owl#Measure_serving"
+            }]
+            nutrition_data_with_measures = Map.put(nutrition_data_with_label, "available_measures", default_measures)
+            is_favorited = UserFavorites.is_favorited?(socket.assigns.current_scope.user.id, "food", socket.assigns.food_id, food_label)
+            {:noreply, assign(socket, nutrition_data: nutrition_data_with_measures, loading: false, is_favorited: is_favorited)}
+        end
 
       {:error, error} ->
         {:noreply,
@@ -314,6 +413,14 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
            loading: false
          )}
     end
+  end
+
+  # Fallback for backwards compatibility
+  @impl true
+  def handle_info({:get_nutrition, ingredients, food_label}, socket) do
+    # For backwards compatibility, use food_label as a fallback food_id
+    send(self(), {:get_nutrition, ingredients, food_label, "unknown"})
+    {:noreply, socket}
   end
 
   @impl true
@@ -487,8 +594,8 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
                       </option>
                     <% end %>
                   <% else %>
-                    <option value="grams" selected={@quantity_type == "grams"}>Grams</option>
                     <option value="servings" selected={@quantity_type == "servings"}>Servings (<%= @selected_item_for_quantity.item.quantity %>g each)</option>
+                    <option value="grams" selected={@quantity_type == "grams"}>Grams</option>
                   <% end %>
                 </select>
               </fieldset>
@@ -505,19 +612,6 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
                   placeholder="1.0"
                 />
               </fieldset>
-
-              <div class="text-sm text-base-content/70">
-                <%= if @selected_item_for_quantity.item.measures && length(@selected_item_for_quantity.item.measures) > 0 do %>
-                  <p>Available measurements:</p>
-                  <ul class="list-disc list-inside ml-2">
-                    <%= for measure <- @selected_item_for_quantity.item.measures do %>
-                      <li><%= measure["label"] %> (<%= measure["weight"] %>g)</li>
-                    <% end %>
-                  </ul>
-                <% else %>
-                  <p>Original serving size: <%= @selected_item_for_quantity.item.quantity %>g</p>
-                <% end %>
-              </div>
 
               <!-- Real-time Nutrition Preview -->
               <%= if @adjusted_nutrition do %>

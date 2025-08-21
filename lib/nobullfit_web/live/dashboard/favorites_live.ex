@@ -17,6 +17,34 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
   defp format_decimal(value) when is_number(value), do: "#{value}"
   defp format_decimal(_), do: nil
 
+  # Helper function to round nutrient values to max 2 decimals
+  defp round_nutrient_value(value) when is_number(value) do
+    Float.round(value, 2)
+  end
+
+  defp round_nutrient_value(value) when is_binary(value) do
+    case Float.parse(value) do
+      {float_value, _} -> Float.round(float_value, 2)
+      :error -> value
+    end
+  end
+
+  defp round_nutrient_value(value), do: value
+
+  # Helper function to calculate nutrition per 100g reference for foods
+  defp calculate_per_100g_nutrition(food) do
+    # Convert nutrition values to per 100g for comparison
+    # food.quantity contains the serving size in grams
+    proportion = 100.0 / food.quantity
+
+    %{
+      calories: if(food.calories, do: round_nutrient_value(food.calories * proportion), else: nil),
+      protein: if(food.protein, do: round_nutrient_value(Decimal.to_float(food.protein) * proportion), else: nil),
+      carbs: if(food.carbs, do: round_nutrient_value(Decimal.to_float(food.carbs) * proportion), else: nil),
+      fat: if(food.fat, do: round_nutrient_value(Decimal.to_float(food.fat) * proportion), else: nil)
+    }
+  end
+
   # Helper function to calculate per-serving nutrition values for recipes
   defp calculate_per_serving_nutrition(recipe) do
     # Get the yield (number of servings) - default to 1 if not provided
@@ -68,26 +96,26 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
     favorite_recipes = UserFavorites.list_user_favorites(user_id, "recipe")
 
     {:ok,
-     assign(socket,
-       page_title: "Favorites",
-       current_path: "/d/favorites",
-       maintenance_status: maintenance_status,
-       favorite_foods: favorite_foods,
-       favorite_recipes: favorite_recipes,
-       active_tab: "foods", # "foods" or "recipes"
-       loading: false,
-       show_delete_confirm: false,
-       item_to_delete: nil,
-       grocery_lists: [],
-       show_grocery_menu: false,
-       selected_recipe_index: nil,
-       selected_food_index: nil,
-       show_quantity_modal: false,
-       selected_item_for_quantity: nil,
-       quantity_value: "1",
-       quantity_type: "servings",
-       adjusted_nutrition: %{calories: nil, protein: nil, carbs: nil, fat: nil}
-     )}
+      assign(socket,
+        page_title: "Favorites",
+        current_path: "/d/favorites",
+        maintenance_status: maintenance_status,
+        favorite_foods: favorite_foods,
+        favorite_recipes: favorite_recipes,
+        active_tab: "foods", # "foods" or "recipes"
+        loading: false,
+        show_delete_confirm: false,
+        item_to_delete: nil,
+        grocery_lists: [],
+        show_grocery_menu: false,
+        selected_recipe_index: nil,
+        selected_food_index: nil,
+        show_quantity_modal: false,
+        selected_item_for_quantity: nil,
+        quantity_value: "1",
+        quantity_type: "servings",
+        adjusted_nutrition: %{calories: nil, protein: nil, carbs: nil, fat: nil}
+      )}
   end
 
   @impl true
@@ -123,20 +151,20 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
         favorite_recipes = UserFavorites.list_user_favorites(user_id, "recipe")
 
         {:noreply,
-         socket
-         |> assign(
-           favorite_foods: favorite_foods,
-           favorite_recipes: favorite_recipes,
-           show_delete_confirm: false,
-           item_to_delete: nil
-         )
-         |> put_flash(:info, "Removed from favorites")}
+          socket
+          |> assign(
+            favorite_foods: favorite_foods,
+            favorite_recipes: favorite_recipes,
+            show_delete_confirm: false,
+            item_to_delete: nil
+          )
+          |> put_flash(:info, "Removed from favorites")}
 
       {:error, _} ->
         {:noreply,
-         socket
-         |> assign(show_delete_confirm: false, item_to_delete: nil)
-         |> put_flash(:error, "Failed to remove from favorites")}
+          socket
+          |> assign(show_delete_confirm: false, item_to_delete: nil)
+          |> put_flash(:error, "Failed to remove from favorites")}
     end
   end
 
@@ -148,15 +176,15 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
 
     if length(grocery_lists) > 0 do
       {:noreply,
-       assign(socket,
-         show_grocery_menu: true,
-         selected_recipe_index: String.to_integer(recipe_index),
-         grocery_lists: grocery_lists
-       )}
+        assign(socket,
+          show_grocery_menu: true,
+          selected_recipe_index: String.to_integer(recipe_index),
+          grocery_lists: grocery_lists
+        )}
     else
       {:noreply,
-       socket
-       |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
+        socket
+        |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
       }
     end
   end
@@ -169,15 +197,15 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
 
     if length(grocery_lists) > 0 do
       {:noreply,
-       assign(socket,
-         show_grocery_menu: true,
-         selected_food_index: String.to_integer(food_index),
-         grocery_lists: grocery_lists
-       )}
+        assign(socket,
+          show_grocery_menu: true,
+          selected_food_index: String.to_integer(food_index),
+          grocery_lists: grocery_lists
+        )}
     else
       {:noreply,
-       socket
-       |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
+        socket
+        |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
       }
     end
   end
@@ -190,15 +218,15 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
 
     if length(grocery_lists) > 0 do
       {:noreply,
-       assign(socket,
-         show_grocery_menu: true,
-         selected_recipe_index: String.to_integer(recipe_index),
-         grocery_lists: grocery_lists
-       )}
+        assign(socket,
+          show_grocery_menu: true,
+          selected_recipe_index: String.to_integer(recipe_index),
+          grocery_lists: grocery_lists
+        )}
     else
       {:noreply,
-       socket
-       |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
+        socket
+        |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
       }
     end
   end
@@ -211,15 +239,15 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
 
     if length(grocery_lists) > 0 do
       {:noreply,
-       assign(socket,
-         show_grocery_menu: true,
-         selected_food_index: String.to_integer(food_index),
-         grocery_lists: grocery_lists
-       )}
+        assign(socket,
+          show_grocery_menu: true,
+          selected_food_index: String.to_integer(food_index),
+          grocery_lists: grocery_lists
+        )}
     else
       {:noreply,
-       socket
-       |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
+        socket
+        |> put_flash(:error, "You need to create a grocery list first. Go to the Groceries page to create one.")
       }
     end
   end
@@ -243,27 +271,27 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
           case Nobullfit.GroceryLists.add_recipe_ingredients_to_list(String.to_integer(list_id), ingredients) do
             {:ok, _result} ->
               {:noreply,
-               socket
-               |> assign(show_grocery_menu: false, selected_recipe_index: nil)
-               |> put_flash(:info, "Ingredients added to grocery list successfully!")}
+                socket
+                |> assign(show_grocery_menu: false, selected_recipe_index: nil)
+                |> put_flash(:info, "Ingredients added to grocery list successfully!")}
 
             {:error, _error} ->
               {:noreply,
-               socket
-               |> assign(show_grocery_menu: false, selected_recipe_index: nil)
-               |> put_flash(:error, "Failed to add ingredients to grocery list.")}
+                socket
+                |> assign(show_grocery_menu: false, selected_recipe_index: nil)
+                |> put_flash(:error, "Failed to add ingredients to grocery list.")}
           end
         else
           {:noreply,
-           socket
-           |> assign(show_grocery_menu: false, selected_recipe_index: nil)
-           |> put_flash(:error, "No ingredients found for this recipe.")}
+            socket
+            |> assign(show_grocery_menu: false, selected_recipe_index: nil)
+            |> put_flash(:error, "No ingredients found for this recipe.")}
         end
       else
         {:noreply,
-         socket
-         |> assign(show_grocery_menu: false, selected_recipe_index: nil)
-         |> put_flash(:error, "Recipe ingredients not available. This favorite was saved before ingredients were stored. Please re-add the recipe to favorites from the Recipe Database.")}
+          socket
+          |> assign(show_grocery_menu: false, selected_recipe_index: nil)
+          |> put_flash(:error, "Recipe ingredients not available. This favorite was saved before ingredients were stored. Please re-add the recipe to favorites from the Recipe Database.")}
       end
     else
       {:noreply, assign(socket, show_grocery_menu: false, selected_recipe_index: nil)}
@@ -285,15 +313,15 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
       case Nobullfit.GroceryLists.add_item_to_list(String.to_integer(list_id), item_params) do
         {:ok, _grocery_item} ->
           {:noreply,
-           socket
-           |> assign(show_grocery_menu: false, selected_food_index: nil)
-           |> put_flash(:info, "#{food.name} added to grocery list successfully!")}
+            socket
+            |> assign(show_grocery_menu: false, selected_food_index: nil)
+            |> put_flash(:info, "#{food.name} added to grocery list successfully!")}
 
         {:error, _changeset} ->
           {:noreply,
-           socket
-           |> assign(show_grocery_menu: false, selected_food_index: nil)
-           |> put_flash(:error, "Failed to add #{food.name} to grocery list.")}
+            socket
+            |> assign(show_grocery_menu: false, selected_food_index: nil)
+            |> put_flash(:error, "Failed to add #{food.name} to grocery list.")}
       end
     else
       {:noreply, assign(socket, show_grocery_menu: false, selected_food_index: nil)}
@@ -306,18 +334,27 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
     if food_index_int < length(socket.assigns.favorite_foods) do
       food = Enum.at(socket.assigns.favorite_foods, food_index_int)
 
-      # Calculate initial adjusted nutrition for 1 gram
-      initial_nutrition = calculate_adjusted_nutrition(%{type: "food", item: food}, "grams", "1")
+      # Get the default serving size from measures if available, otherwise use servings
+      default_serving =
+        if food.measures && length(food.measures) > 0 do
+          first_measure = List.first(food.measures)
+          "#{first_measure["weight"]}_#{first_measure["label"]}"
+        else
+          "servings"
+        end
+
+      # Calculate initial adjusted nutrition for 1 serving
+      initial_nutrition = calculate_adjusted_nutrition(%{type: "food", item: food}, default_serving, "1")
 
       # Show quantity modal for food
       {:noreply,
-       assign(socket,
-         show_quantity_modal: true,
-         selected_item_for_quantity: %{type: "food", index: food_index_int, item: food},
-         quantity_value: "1",
-         quantity_type: "grams",
-         adjusted_nutrition: initial_nutrition
-       )}
+        assign(socket,
+          show_quantity_modal: true,
+          selected_item_for_quantity: %{type: "food", index: food_index_int, item: food},
+          quantity_value: "1",
+          quantity_type: default_serving,
+          adjusted_nutrition: initial_nutrition
+        )}
     else
       {:noreply, socket}
     end
@@ -334,13 +371,13 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
 
       # Show quantity modal for recipe
       {:noreply,
-       assign(socket,
-         show_quantity_modal: true,
-         selected_item_for_quantity: %{type: "recipe", index: recipe_index_int, item: recipe},
-         quantity_value: "1",
-         quantity_type: "servings",
-         adjusted_nutrition: initial_nutrition
-       )}
+        assign(socket,
+          show_quantity_modal: true,
+          selected_item_for_quantity: %{type: "recipe", index: recipe_index_int, item: recipe},
+          quantity_value: "1",
+          quantity_type: "servings",
+          adjusted_nutrition: initial_nutrition
+        )}
     else
       {:noreply, socket}
     end
@@ -349,12 +386,12 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
   @impl true
   def handle_event("hide_quantity_modal", _params, socket) do
     {:noreply,
-     assign(socket,
-       show_quantity_modal: false,
-       selected_item_for_quantity: nil,
-       quantity_value: "1",
-       quantity_type: "servings"
-     )}
+      assign(socket,
+        show_quantity_modal: false,
+        selected_item_for_quantity: nil,
+        quantity_value: "1",
+        quantity_type: "servings"
+      )}
   end
 
   @impl true
@@ -404,14 +441,14 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
 
         # Redirect to the add food page with adjusted data
         {:noreply,
-         socket
-         |> assign(
-           show_quantity_modal: false,
-           selected_item_for_quantity: nil,
-           quantity_value: "1",
-           quantity_type: "servings"
-         )
-         |> push_navigate(to: "/d/add-food?#{query_string}", replace: false)
+          socket
+          |> assign(
+            show_quantity_modal: false,
+            selected_item_for_quantity: nil,
+            quantity_value: "1",
+            quantity_type: "servings"
+          )
+          |> push_navigate(to: "/d/add-food?#{query_string}", replace: false)
         }
 
       %{type: "recipe", item: recipe} ->
@@ -439,14 +476,14 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
 
         # Redirect to the add food page with adjusted data
         {:noreply,
-         socket
-         |> assign(
-           show_quantity_modal: false,
-           selected_item_for_quantity: nil,
-           quantity_value: "1",
-           quantity_type: "servings"
-         )
-         |> push_navigate(to: "/d/add-food?#{query_string}", replace: false)
+          socket
+          |> assign(
+            show_quantity_modal: false,
+            selected_item_for_quantity: nil,
+            quantity_value: "1",
+            quantity_type: "servings"
+          )
+          |> push_navigate(to: "/d/add-food?#{query_string}", replace: false)
         }
 
       _ ->
@@ -469,11 +506,11 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
     adjusted_nutrition = calculate_adjusted_nutrition(socket.assigns.selected_item_for_quantity, quantity_type, quantity_value)
 
     {:noreply,
-     assign(socket,
-       quantity_type: quantity_type,
-       quantity_value: quantity_value,
-       adjusted_nutrition: adjusted_nutrition
-     )}
+      assign(socket,
+        quantity_type: quantity_type,
+        quantity_value: quantity_value,
+        adjusted_nutrition: adjusted_nutrition
+      )}
   end
 
   # Helper function to calculate adjusted nutrition values
@@ -611,15 +648,14 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                             <thead>
                               <tr>
                                 <th>Food Name</th>
-                                <th class="hidden md:table-cell">Calories</th>
-                                <th class="hidden md:table-cell">Protein</th>
-                                <th class="hidden md:table-cell">Carbs</th>
-                                <th class="hidden md:table-cell">Fat</th>
+                                <th class="hidden md:table-cell">Default Serving</th>
+                                <th class="hidden lg:table-cell">Nutrition (per 100g reference)</th>
                                 <th></th>
                               </tr>
                             </thead>
                             <tbody>
                               <%= for {food, index} <- Enum.with_index(@favorite_foods) do %>
+                                <% per_100g = calculate_per_100g_nutrition(food) %>
                                 <tr id={"favorite-food-row-#{index}"}>
                                   <td>
                                     <div class="flex items-center gap-3">
@@ -630,46 +666,32 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                                           </a>
                                         </div>
                                         <div class="text-sm opacity-50">
-                                          <%= food.quantity %>g serving
+                                          Favorite food
                                         </div>
                                       </div>
                                     </div>
                                   </td>
                                   <td class="hidden md:table-cell">
-                                    <%= if food.calories do %>
-                                      <div class="text-sm font-medium">
-                                        <%= food.calories %> kcal
-                                      </div>
-                                    <% else %>
-                                      <span class="text-base-content/50 text-sm">-</span>
-                                    <% end %>
+                                    <div class="text-sm font-medium">
+                                      <%= food.quantity %>g
+                                    </div>
+                                    <div class="text-xs opacity-70">default</div>
                                   </td>
-                                  <td class="hidden md:table-cell">
-                                    <%= if food.protein do %>
-                                      <div class="text-sm font-medium">
-                                        <%= format_decimal(food.protein) %>g
-                                      </div>
-                                    <% else %>
-                                      <span class="text-base-content/50 text-sm">-</span>
-                                    <% end %>
-                                  </td>
-                                  <td class="hidden md:table-cell">
-                                    <%= if food.carbs do %>
-                                      <div class="text-sm font-medium">
-                                        <%= format_decimal(food.carbs) %>g
-                                      </div>
-                                    <% else %>
-                                      <span class="text-base-content/50 text-sm">-</span>
-                                    <% end %>
-                                  </td>
-                                  <td class="hidden md:table-cell">
-                                    <%= if food.fat do %>
-                                      <div class="text-sm font-medium">
-                                        <%= format_decimal(food.fat) %>g
-                                      </div>
-                                    <% else %>
-                                      <span class="text-base-content/50 text-sm">-</span>
-                                    <% end %>
+                                  <td class="hidden lg:table-cell">
+                                    <div class="text-xs space-y-1">
+                                      <%= if per_100g.calories do %>
+                                        <div>Calories: <span class="font-medium"><%= per_100g.calories %> kcal</span></div>
+                                      <% end %>
+                                      <%= if per_100g.protein do %>
+                                        <div>Protein: <span class="font-medium"><%= per_100g.protein %>g</span></div>
+                                      <% end %>
+                                      <%= if per_100g.carbs do %>
+                                        <div>Carbs: <span class="font-medium"><%= per_100g.carbs %>g</span></div>
+                                      <% end %>
+                                      <%= if per_100g.fat do %>
+                                        <div>Fat: <span class="font-medium"><%= per_100g.fat %>g</span></div>
+                                      <% end %>
+                                    </div>
                                   </td>
                                   <th>
                                     <div class="flex justify-end gap-2">
@@ -1019,23 +1041,6 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                   placeholder="1.0"
                 />
               </fieldset>
-
-              <div class="text-sm text-base-content/70">
-                <%= if @selected_item_for_quantity.type == "food" do %>
-                  <%= if @selected_item_for_quantity.item.measures && length(@selected_item_for_quantity.item.measures) > 0 do %>
-                    <p>Available measurements:</p>
-                    <ul class="list-disc list-inside ml-2">
-                      <%= for measure <- @selected_item_for_quantity.item.measures do %>
-                        <li><%= measure["label"] %> (<%= measure["weight"] %>g)</li>
-                      <% end %>
-                    </ul>
-                  <% else %>
-                    <p>Original serving size: <%= @selected_item_for_quantity.item.quantity %>g</p>
-                  <% end %>
-                <% else %>
-                  <p>Recipe serving size: <%= if @selected_item_for_quantity.item.yield, do: "#{@selected_item_for_quantity.item.yield} servings", else: "1 serving" %></p>
-                <% end %>
-              </div>
 
               <!-- Real-time Nutrition Preview -->
               <%= if @adjusted_nutrition do %>
