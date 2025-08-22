@@ -79,14 +79,16 @@ defmodule Nobullfit.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind nobullfit", "esbuild nobullfit", "copy.themes"],
+      "assets.build": ["tailwind nobullfit", "esbuild nobullfit", "copy.themes", "copy.canvasjs"],
       "assets.deploy": [
         "tailwind nobullfit --minify",
         "esbuild nobullfit --minify",
         "copy.themes",
+        "copy.canvasjs",
         "phx.digest"
       ],
-      "copy.themes": ["run priv/scripts/copy_themes.exs"]
+      "copy.themes": ["run priv/scripts/copy_themes.exs"],
+      "copy.canvasjs": ["run priv/scripts/copy_canvasjs.exs"]
     ]
   end
 end
