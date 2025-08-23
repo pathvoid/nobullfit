@@ -46,7 +46,7 @@ NoBullFit is source-available, meaning the source code is publicly accessible fo
 
 ## Status
 
-🚧 **Under Development** - This project is currently under development and not publicly accessible yet.
+🚧 **Under Development** - NoBullFit is currently in active development. Some features may be missing or incomplete.
 
 ## License
 
