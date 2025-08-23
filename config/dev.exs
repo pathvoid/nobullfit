@@ -50,6 +50,9 @@ config :phoenix_live_view,
   debug_heex_annotations: true,
   enable_expensive_runtime_checks: true
 
+# Development websocket configuration for better connection stability
+config :phoenix, :json_library, Jason
+
 # Disable Swoosh API client for development
 config :swoosh, :api_client, false
 

@@ -464,6 +464,12 @@ const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
+  heartbeatIntervalMs: 60000, // Increase heartbeat interval to 60 seconds
+  timeout: 60000, // Increase timeout to 60 seconds
+  reconnectAfterMs: (tries) => {
+    // More gradual reconnection strategy
+    return [1000, 2000, 5000, 10000, 15000, 30000][tries - 1] || 60000
+  },
   hooks: {
     ActivityForm: ActivityFormHook,
     DatePicker: DatePickerHook,

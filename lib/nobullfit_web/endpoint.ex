@@ -10,8 +10,14 @@ defmodule NobullfitWeb.Endpoint do
   ]
 
   socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [session: @session_options]],
-    longpoll: [connect_info: [session: @session_options]]
+    websocket: [
+      connect_info: [session: @session_options],
+      timeout: 60_000,
+      max_frame_size: 16_777_216
+    ],
+    longpoll: [
+      connect_info: [session: @session_options]
+    ]
 
   # Static file serving from priv/static directory
   plug Plug.Static,
