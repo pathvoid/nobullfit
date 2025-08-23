@@ -866,7 +866,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                     <div class={"filter-section #{if @filters_visible, do: "", else: "hidden"}"}>
                       <fieldset class="fieldset">
                         <legend class="fieldset-legend">Diet Filters</legend>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
                           <%= for diet_label <- ["balanced", "high-fiber", "high-protein", "low-carb", "low-fat", "low-sodium"] do %>
                             <label class="flex items-center space-x-2 cursor-pointer">
                               <input
@@ -876,7 +876,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                                 phx-click="toggle_diet_label"
                                 phx-value-label={diet_label}
                               />
-                              <span class="text-sm font-medium">
+                              <span class="text-xs sm:text-sm font-medium">
                                 <%= format_diet_label(diet_label) %>
                               </span>
                             </label>
@@ -886,7 +886,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
 
                       <fieldset class="fieldset mt-2">
                         <legend class="fieldset-legend">Meal Type Filters</legend>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
                           <%= for meal_type <- ["Breakfast", "Lunch", "Dinner", "Snack", "Teatime"] do %>
                             <label class="flex items-center space-x-2 cursor-pointer">
                               <input
@@ -896,7 +896,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                                 phx-click="toggle_meal_type"
                                 phx-value-meal_type={meal_type}
                               />
-                              <span class="text-sm font-medium">
+                              <span class="text-xs sm:text-sm font-medium">
                                 <%= meal_type %>
                               </span>
                             </label>
@@ -906,7 +906,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
 
                       <fieldset class="fieldset mt-2">
                         <legend class="fieldset-legend">Dish Type Filters</legend>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
                           <%= for dish_type <- ["Biscuits and cookies", "Bread", "Cereals", "Condiments and sauces", "Desserts", "Drinks", "Main course", "Pancake", "Preps", "Preserve", "Salad", "Sandwiches", "Side dish", "Soup", "Starter", "Sweets"] do %>
                             <label class="flex items-center space-x-2 cursor-pointer">
                               <input
@@ -916,7 +916,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                                 phx-click="toggle_dish_type"
                                 phx-value-dish_type={dish_type}
                               />
-                              <span class="text-sm font-medium">
+                              <span class="text-xs sm:text-sm font-medium truncate">
                                 <%= dish_type %>
                               </span>
                             </label>
@@ -926,15 +926,15 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
 
                       <fieldset class="fieldset mt-2">
                         <legend class="fieldset-legend">Calorie Range</legend>
-                        <div class="grid grid-cols-2 gap-4 mt-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                           <input
                             type="number"
                             name="calories_min"
                             min="0"
                             step="1"
                             value={@calories_min}
-                            placeholder="Minimum calories (e.g., 100)"
-                            class="input input-bordered w-full"
+                            placeholder="Min calories"
+                            class="input input-bordered w-full text-sm"
                             phx-change="update_calories_min"
                             phx-debounce="300"
                           />
@@ -944,13 +944,13 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                             min="0"
                             step="1"
                             value={@calories_max}
-                            placeholder="Maximum calories (e.g., 500)"
-                            class="input input-bordered w-full"
+                            placeholder="Max calories"
+                            class="input input-bordered w-full text-sm"
                             phx-change="update_calories_max"
                             phx-debounce="300"
                           />
                         </div>
-                        <p class="label mt-3">Leave empty for no limit. Use both for a range (e.g., 100-500), or one for minimum/maximum only.</p>
+                        <p class="text-xs text-base-content/70 mt-2">Leave empty for no limit. Use both for a range, or one for min/max only.</p>
                       </fieldset>
                     </div>
                   </form>
