@@ -77,31 +77,42 @@ defmodule NobullfitWeb.UserLive.Settings do
 
               <div class="divider" />
 
-              <div class="card bg-error text-error-content">
+              <div>
+                <button
+                  class="btn btn-error"
+                  phx-click="show_delete_confirm"
+                  phx-hook="DeleteAccountHook"
+                  id="delete-account-btn"
+                >
+                  Delete My Account
+                </button>
+              </div>
+
+              <div class="card bg-info text-info-content">
                 <div class="card-body">
-                  <h2 class="card-title">Delete Account</h2>
+                  <h2 class="card-title">Export Your Data</h2>
                   <p class="text-sm">
-                    This action will permanently delete your account and all associated data including:
+                    Download all your data as CSV files in a ZIP archive. This includes:
                   </p>
                   <ul class="text-sm list-disc list-inside mb-4">
-                    <li>All your activities and progress</li>
-                    <li>Weight tracking data</li>
-                    <li>Food entries and nutrition history</li>
-                    <li>Grocery lists</li>
-                    <li>Favorites and saved items</li>
+                    <li>Your profile information</li>
+                    <li>All activities and workouts</li>
+                    <li>Weight tracking history</li>
+                    <li>Food entries and nutrition data</li>
+                    <li>Grocery lists and items</li>
+                    <li>Saved favorites (foods and recipes)</li>
                   </ul>
                   <p class="text-sm font-semibold mb-4">
-                    This action cannot be undone. All data will be permanently lost.
+                    Your data will be exported excluding sensitive information like passwords.
                   </p>
                   <div class="card-actions justify-end">
-                    <button
-                      class="btn btn-error"
-                      phx-click="show_delete_confirm"
-                      phx-hook="DeleteAccountHook"
-                      id="delete-account-btn"
+                    <a
+                      href={~p"/users/export-data"}
+                      class="btn btn-info"
+                      download
                     >
-                      Delete My Account
-                    </button>
+                      Download My Data
+                    </a>
                   </div>
                 </div>
               </div>

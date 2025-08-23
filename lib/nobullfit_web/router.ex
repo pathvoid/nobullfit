@@ -67,6 +67,7 @@ defmodule NobullfitWeb.Router do
 
     post "/users/update-password", UserSessionController, :update_password
     delete "/users/delete-account", UserSessionController, :delete_account
+    get "/users/export-data", DataExportController, :export_data
   end
 
   scope "/", NobullfitWeb do
