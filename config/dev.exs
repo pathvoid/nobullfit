@@ -25,7 +25,7 @@ config :nobullfit, NobullfitWeb.Endpoint,
 # Live reload configuration for development
 config :nobullfit, NobullfitWeb.Endpoint,
   live_reload: [
-    web_console_logger: true,
+    web_console_logger: false,
     patterns: [
       ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
@@ -48,10 +48,17 @@ config :phoenix, :plug_init_mode, :runtime
 # Development LiveView configuration
 config :phoenix_live_view,
   debug_heex_annotations: true,
-  enable_expensive_runtime_checks: true
+  enable_expensive_runtime_checks: true,
+  signing_salt: "cJzzn89C"
 
 # Development websocket configuration for better connection stability
 config :phoenix, :json_library, Jason
+
+# Websocket configuration for development stability
+config :phoenix_live_view,
+  signing_salt: "cJzzn89C",
+  max_restarts: 3,
+  max_seconds: 5
 
 # Disable Swoosh API client for development
 config :swoosh, :api_client, false

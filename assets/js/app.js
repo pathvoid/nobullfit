@@ -461,14 +461,16 @@ const DashboardChartHook = {
 }
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+
+// Create a more robust LiveSocket configuration
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
-  heartbeatIntervalMs: 60000, // Increase heartbeat interval to 60 seconds
-  timeout: 60000, // Increase timeout to 60 seconds
+  heartbeatIntervalMs: 60000, // 60 seconds heartbeat
+  timeout: 120000, // 2 minutes timeout
   reconnectAfterMs: (tries) => {
-    // More gradual reconnection strategy
-    return [1000, 2000, 5000, 10000, 15000, 30000][tries - 1] || 60000
+    // Very conservative reconnection strategy
+    return [1000, 2000, 5000, 10000, 30000, 60000][tries - 1] || 60000
   },
   hooks: {
     ActivityForm: ActivityFormHook,
@@ -489,7 +491,7 @@ window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 // Connect to LiveView socket
 liveSocket.connect()
 
-// Expose liveSocket globally for debugging and latency simulation
+// Expose liveSocket globally for debugging
 window.liveSocket = liveSocket
 
 // Development features for Phoenix LiveReload

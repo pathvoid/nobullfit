@@ -12,7 +12,7 @@ defmodule NobullfitWeb.Endpoint do
   socket "/live", Phoenix.LiveView.Socket,
     websocket: [
       connect_info: [session: @session_options],
-      timeout: 60_000,
+      timeout: 120_000,
       max_frame_size: 16_777_216
     ],
     longpoll: [
