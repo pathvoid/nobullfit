@@ -1175,6 +1175,12 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                       <% end %>
                     </div>
                   </div>
+                  <!-- Edamam Attribution -->
+                  <div class="mt-8 flex justify-end">
+                    <a href="https://www.edamam.com" title="Powered by Edamam" target="_blank">
+                      <img alt="Powered by Edamam" src="https://developer.edamam.com/images/transparent.png" height="40" width="200" />
+                    </a>
+                  </div>
                 <% end %>
 
                 <!-- No Results Found Message -->

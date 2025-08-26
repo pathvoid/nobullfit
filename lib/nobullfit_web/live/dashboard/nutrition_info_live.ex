@@ -488,7 +488,7 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
                       <div class="flex flex-col sm:flex-row gap-2">
                         <button
                           phx-click="add_to_food_log"
-                          class="btn btn-sm btn-primary"
+                          class="btn btn-sm btn-info"
                           title="Add to food log"
                         >
                           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

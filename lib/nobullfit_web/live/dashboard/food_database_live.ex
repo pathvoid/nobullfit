@@ -151,7 +151,7 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
                   <div class="flex justify-between items-center mb-6">
                     <.header>
                       Search Foods
-                      <:subtitle>Enter a food name, brand, or UPC code to find nutrition information</:subtitle>
+                      <:subtitle>Enter a food name or brand to find nutrition information</:subtitle>
                     </.header>
                     <button phx-click="clear_search" class="btn btn-sm btn-ghost hidden md:inline-flex">Clear</button>
                   </div>

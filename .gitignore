@@ -41,3 +41,6 @@ npm-debug.log
 *.lock
 
 /.elixir_ls/
+
+# Markdown files
+*.mdc
