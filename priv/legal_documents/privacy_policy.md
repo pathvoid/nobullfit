@@ -1,6 +1,6 @@
 # Privacy Policy
 
-#### Effective Date: 2025-08-05
+#### Effective Date: 2025-08-26
 
 At **NoBullFit**, your privacy is our top priority. As a *privacy-first* platform, we believe your data belongs to you — and we will **never** sell it. Ever.
 
@@ -35,7 +35,7 @@ We implement robust technical and organizational measures to protect your data f
 
 ### Your Rights
 
-You have the right to access, correct, or delete your personal data at any time. You can also request the deletion or deactivation of your account with no questions asked.
+You have the right to access, correct, or delete your personal data at any time. You can also request the deletion of your account with no questions asked in your settings.
 
 ## Contact Information
 
