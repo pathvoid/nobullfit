@@ -15,6 +15,8 @@ defmodule Nobullfit.Application do
       {DNSCluster, query: Application.get_env(:nobullfit, :dns_cluster_query) || :ignore},
       # PubSub for real-time communication
       {Phoenix.PubSub, name: Nobullfit.PubSub},
+      # Legal documents monitor
+      Nobullfit.LegalDocuments.Monitor,
       # Web endpoint to serve requests
       NobullfitWeb.Endpoint
     ]

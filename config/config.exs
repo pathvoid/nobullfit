@@ -58,5 +58,10 @@ config :logger, :default_formatter,
 # JSON library for Phoenix
 config :phoenix, :json_library, Jason
 
+# Legal documents monitor configuration
+config :nobullfit, :legal_documents_monitor,
+  enabled: true,
+  check_interval: 60_000 # Check every minute
+
 # Import environment-specific configuration
 import_config "#{config_env()}.exs"

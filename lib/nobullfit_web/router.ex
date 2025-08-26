@@ -28,7 +28,11 @@ defmodule NobullfitWeb.Router do
     live "/guides", GuidesLive
     live "/about", AboutLive
     live "/privacy", PrivacyLive
+    live "/privacy-policy", PrivacyLive
+    live "/privacy_policy", PrivacyLive
     live "/terms", TermsLive
+    live "/terms-of-service", TermsLive
+    live "/terms_of_service", TermsLive
     get "/maintenance", MaintenanceController, :show
   end
 
