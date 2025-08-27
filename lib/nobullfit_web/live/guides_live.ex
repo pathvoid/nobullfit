@@ -22,7 +22,7 @@ defmodule NobullfitWeb.GuidesLive do
             </p>
           </div>
 
-          <img src="/assets/images/professor-pear.png" alt="NoBullFit" class="w-50 h-auto mx-auto" />
+          <img src="https://cdn.nobull.fit/professor-pear.png" alt="NoBullFit" class="w-50 h-auto mx-auto" />
 
           <div class="space-y-24">
             <div class="space-y-6">

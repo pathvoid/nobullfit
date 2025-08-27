@@ -493,7 +493,7 @@ defmodule NobullfitWeb.Dashboard.ProgressLive do
                 <div class="space-y-3">
                   <%= if Enum.empty?(@daily_summary.activities) do %>
                     <div class="text-center py-8 text-base-content/70">
-                      <img src="/assets/images/apple.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
+                      <img src="https://cdn.nobull.fit/apple.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
                       <h3 class="text-lg font-semibold mb-2">No activities yet</h3>
                       <p class="text-sm">Add your first activity above to get started!</p>
                     </div>

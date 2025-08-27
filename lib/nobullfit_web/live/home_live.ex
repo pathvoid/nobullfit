@@ -30,7 +30,7 @@ defmodule NobullfitWeb.HomeLive do
             </p>
           </div>
 
-          <img src="/assets/images/avocado.png" alt="NoBullFit" class="w-30 h-auto mx-auto parachuting-avocado" />
+          <img src="https://cdn.nobull.fit/avocado.png" alt="NoBullFit" class="w-30 h-auto mx-auto parachuting-avocado" />
 
           <div class="space-y-24">
             <div class="space-y-12">

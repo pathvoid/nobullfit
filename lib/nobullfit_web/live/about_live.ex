@@ -25,7 +25,7 @@ defmodule NobullfitWeb.AboutLive do
             </p>
           </div>
 
-          <img src="/assets/images/campfire.png" alt="NoBullFit" class="w-60 h-auto mx-auto" />
+          <img src="https://cdn.nobull.fit/campfire.png" alt="NoBullFit" class="w-60 h-auto mx-auto" />
 
           <div class="space-y-24">
             <div class="space-y-6">

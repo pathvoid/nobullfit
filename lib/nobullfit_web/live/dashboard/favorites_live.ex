@@ -611,7 +611,7 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                       <div class="text-center py-12">
                         <div class="max-w-md mx-auto">
                           <div class="mb-6">
-                            <img src="/assets/images/apple-heart.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
+                            <img src="https://cdn.nobull.fit/apple-heart.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
                           </div>
                           <h3 class="text-lg font-semibold mb-2">No favorite foods yet</h3>
                           <p class="text-base-content/70 mb-6">
@@ -769,7 +769,7 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                       <div class="text-center py-12">
                         <div class="max-w-md mx-auto">
                           <div class="mb-6">
-                            <img src="/assets/images/apple-heart.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
+                            <img src="https://cdn.nobull.fit/apple-heart.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
                           </div>
                           <h3 class="text-lg font-semibold mb-2">No favorite recipes yet</h3>
                           <p class="text-base-content/70 mb-6">

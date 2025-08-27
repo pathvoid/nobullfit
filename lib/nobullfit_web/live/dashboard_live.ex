@@ -386,7 +386,7 @@ defmodule NobullfitWeb.DashboardLive do
                 <!-- No Data Message -->
                 <%= if not has_any_data?(@weekly_nutrition, @macronutrient_breakdown, @meal_distribution, @weight_entries, @activities) do %>
                   <div class="text-center py-12 mt-8">
-                    <img src="/assets/images/orange-waiting.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
+                    <img src="https://cdn.nobull.fit/orange-waiting.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
                     <h3 class="text-lg font-semibold mt-4 mb-2">No data to display yet</h3>
                     <p class="text-base-content/70">Start tracking your meals, activities, and weight to see your progress insights and charts!</p>
                   </div>

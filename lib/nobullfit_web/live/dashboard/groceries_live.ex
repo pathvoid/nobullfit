@@ -472,7 +472,7 @@ defmodule NobullfitWeb.Dashboard.GroceriesLive do
                           <% end %>
                         <% end %>
                         <div class="hidden md:block text-center py-8">
-                          <img src="/assets/images/shopping.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
+                          <img src="https://cdn.nobull.fit/shopping.png" alt="NoBullFit" class="w-45 h-auto mx-auto" />
                         </div>
                       </div>
                     </div>
