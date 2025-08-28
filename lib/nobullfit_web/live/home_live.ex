@@ -33,6 +33,18 @@ defmodule NobullfitWeb.HomeLive do
           <img src="https://cdn.nobull.fit/avocado.png" alt="NoBullFit" class="w-30 h-auto mx-auto parachuting-avocado" />
 
           <div class="space-y-24">
+            <div class="space-y-8">
+              <h2 class="text-3xl font-bold text-center">Open & Transparent</h2>
+              <p class="text-base-content/70 leading-relaxed text-center max-w-2xl mx-auto">
+                NoBullFit is <strong>source-available</strong>, meaning our code is publicly accessible for transparency and trust. You can view our source code to understand how we handle your data and build our platform.
+              </p>
+              <div class="text-center">
+                <a href="https://github.com/pathvoid/nobullfit" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                  View on GitHub
+                </a>
+              </div>
+            </div>
+
             <div class="space-y-12">
               <h2 class="text-3xl font-bold text-center">What You Can Do</h2>
               <div class="grid md:grid-cols-2 gap-12">
@@ -84,13 +96,6 @@ defmodule NobullfitWeb.HomeLive do
               <h2 class="text-3xl font-bold text-center">Built with Privacy in Mind</h2>
               <p class="text-base-content/70 leading-relaxed text-center max-w-2xl mx-auto">
                 Unlike many health apps, we don't collect unnecessary data and we <strong>never</strong> sell your personal information. NoBullFit is and always will be a <em>privacy-first</em> platform.
-              </p>
-            </div>
-
-            <div class="space-y-8">
-              <h2 class="text-3xl font-bold text-center">Early Access Notice</h2>
-              <p class="text-base-content/70 leading-relaxed text-center max-w-2xl mx-auto">
-                Please note that NoBullFit is still in early development. Some features may be incomplete or subject to change. We're actively improving the platform and welcome your feedback.
               </p>
             </div>
 
