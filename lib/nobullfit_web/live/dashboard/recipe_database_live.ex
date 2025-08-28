@@ -1003,7 +1003,7 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
                                         <%= if result["recipe"]["image"] && result["recipe"]["image"] != "" do %>
                                           <img src={result["recipe"]["image"]} alt={"#{result["recipe"]["label"]} recipe"} class="rounded-lg" />
                                         <% else %>
-                                          <img src="/assets/images/no-image-300x300.jpg" alt={"#{result["recipe"]["label"]} recipe"} class="rounded-lg" />
+                                          <img src="https://cdn.nobull.fit/no-image-300x300.jpg" alt={"#{result["recipe"]["label"]} recipe"} class="rounded-lg" />
                                         <% end %>
                                       </div>
                                     </div>

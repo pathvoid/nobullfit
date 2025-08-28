@@ -809,7 +809,7 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
                                             <%= if recipe.image_url do %>
                                               <img src={recipe.image_url} alt={"#{recipe.name} recipe"} class="rounded-lg" />
                                             <% else %>
-                                              <img src="/assets/images/no-image-300x300.jpg" alt={"#{recipe.name} recipe"} class="rounded-lg" />
+                                              <img src="https://cdn.nobull.fit/no-image-300x300.jpg" alt={"#{recipe.name} recipe"} class="rounded-lg" />
                                             <% end %>
                                           <% end %>
                                         </div>
