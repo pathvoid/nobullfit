@@ -2,6 +2,23 @@ defmodule NobullfitWeb.Components.ArticleContent do
   use Phoenix.Component
   import Phoenix.HTML
 
+  # Process article content to add responsive image styles
+  defp process_article_content(content) do
+    content
+    |> String.replace(~r/<img([^>]*?)>/i, fn match ->
+      # Remove any existing width, height, and style attributes
+      cleaned_attrs = match
+      |> String.replace(~r/\s*width\s*=\s*["'][^"']*["']/, "")
+      |> String.replace(~r/\s*height\s*=\s*["'][^"']*["']/, "")
+      |> String.replace(~r/\s*style\s*=\s*["'][^"']*["']/, "")
+      |> String.replace(~r/\s*class\s*=\s*["'][^"']*["']/, "")
+
+      # Add our responsive styles with more restrictive sizing
+      cleaned_attrs
+      |> String.replace(">", " style=\"max-width: 100%; max-height: 200px; width: auto; height: auto; border-radius: 0.5rem; margin: 1rem auto; display: block; object-fit: contain;\">")
+    end)
+  end
+
   # Renders the content of an article, including excerpt, main content, and a key takeaway alert.
   def render_content(assigns) do
     ~H"""
@@ -12,8 +29,8 @@ defmodule NobullfitWeb.Components.ArticleContent do
         </p>
       <% end %>
 
-      <div class="space-y-8">
-        <%= raw(@article.content) %>
+      <div class="space-y-8 article-content">
+        <%= raw(process_article_content(@article.content)) %>
       </div>
 
       <div class="alert alert-info">
