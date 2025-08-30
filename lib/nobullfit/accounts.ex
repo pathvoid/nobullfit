@@ -339,6 +339,42 @@ defmodule Nobullfit.Accounts do
 
   def delete_user(nil), do: {:error, :not_found}
 
+  @doc """
+  Resets user progression by deleting all activities, weight entries, and food entries.
+
+  This will permanently delete the user's progression data including:
+  - All activities and workouts
+  - All weight tracking entries
+  - All food entries and nutrition data
+
+  This action cannot be undone. User favorites and grocery lists are preserved.
+
+  ## Examples
+
+      iex> reset_user_progression(user)
+      {:ok, %User{}}
+
+      iex> reset_user_progression(nil)
+      {:error, :not_found}
+
+  """
+  def reset_user_progression(%User{} = user) do
+    Repo.transact(fn ->
+      # Delete all user activities
+      Repo.delete_all(from(a in Nobullfit.Activities.Activity, where: a.user_id == ^user.id))
+
+      # Delete all user weight entries
+      Repo.delete_all(from(w in Nobullfit.WeightEntries.WeightEntry, where: w.user_id == ^user.id))
+
+      # Delete all user food entries
+      Repo.delete_all(from(f in Nobullfit.FoodEntries.FoodEntry, where: f.user_id == ^user.id))
+
+      {:ok, user}
+    end)
+  end
+
+  def reset_user_progression(nil), do: {:error, :not_found}
+
   ## Token helper
 
   defp update_user_and_delete_all_tokens(changeset) do

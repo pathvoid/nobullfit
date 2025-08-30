@@ -77,7 +77,15 @@ defmodule NobullfitWeb.UserLive.Settings do
 
               <div class="divider" />
 
-              <div>
+              <div class="flex gap-4">
+                <button
+                  class="btn btn-warning"
+                  phx-click="show_reset_confirm"
+                  phx-hook="ResetProgressionHook"
+                  id="reset-progression-btn"
+                >
+                  Reset Progression
+                </button>
                 <button
                   class="btn btn-error"
                   phx-click="show_delete_confirm"
@@ -116,6 +124,43 @@ defmodule NobullfitWeb.UserLive.Settings do
                   </div>
                 </div>
               </div>
+
+              <!-- Reset Progression Confirmation Modal -->
+              <dialog id="reset-progression-modal" class="modal">
+                <div class="modal-box">
+                  <h3 class="font-bold text-lg">Confirm Progression Reset</h3>
+                  <p class="py-4">
+                    Are you sure you want to reset your progression? This action will:
+                  </p>
+                  <ul class="list-disc list-inside mb-4 text-sm">
+                    <li>Delete all your activities and workouts</li>
+                    <li>Remove all weight tracking entries</li>
+                    <li>Clear all food entries and nutrition data</li>
+                    <li>Reset your progress history</li>
+                  </ul>
+                  <p class="text-sm mb-4">
+                    <strong>Note:</strong> Your favorites and grocery lists will be preserved.
+                  </p>
+                  <p class="font-semibold text-warning mb-4">
+                    This action cannot be undone.
+                  </p>
+                  <div class="modal-action">
+                    <form method="dialog">
+                      <button class="btn">Cancel</button>
+                    </form>
+                    <button
+                      class="btn btn-warning"
+                      phx-click="reset_progression"
+                      phx-disable-with="Resetting..."
+                    >
+                      Yes, Reset My Progression
+                    </button>
+                  </div>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                  <button>close</button>
+                </form>
+              </dialog>
 
               <!-- Delete Account Confirmation Modal -->
               <dialog id="delete-account-modal" class="modal">
@@ -254,6 +299,28 @@ defmodule NobullfitWeb.UserLive.Settings do
 
       changeset ->
         {:noreply, assign(socket, password_form: to_form(changeset, action: :insert))}
+    end
+  end
+
+  # Handle showing the reset progression confirmation modal
+  def handle_event("show_reset_confirm", _params, socket) do
+    {:noreply, push_event(socket, "show_reset_modal", %{})}
+  end
+
+  # Handle progression reset event
+  def handle_event("reset_progression", _params, socket) do
+    user = socket.assigns.current_scope.user
+    true = Accounts.sudo_mode?(user)
+
+    case Accounts.reset_user_progression(user) do
+      {:ok, _user} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Your progression has been reset successfully. All activities, weight entries, and food entries have been deleted.")
+         |> push_navigate(to: ~p"/users/settings")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to reset progression. Please try again.")}
     end
   end
 
