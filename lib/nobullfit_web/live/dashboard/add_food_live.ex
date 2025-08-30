@@ -415,17 +415,17 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
                     </div>
 
                     <!-- Submit Button -->
-                    <div class="flex justify-between items-center mt-8">
-                      <div class="flex gap-2">
-                        <.link navigate={~p"/d/favorites"} class="btn btn-accent">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
+                      <div class="flex gap-2 w-full sm:w-auto">
+                        <.link navigate={~p"/d/favorites"} class="btn btn-accent w-full sm:w-auto">
                           View Favorites
                         </.link>
                       </div>
-                      <div class="flex gap-4">
-                        <.link navigate={~p"/d/food"} class="btn btn-ghost">
+                      <div class="flex gap-4 w-full sm:w-auto">
+                        <.link navigate={~p"/d/food"} class="btn btn-ghost flex-1 sm:flex-none">
                           Cancel
                         </.link>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary flex-1 sm:flex-none">
                           Add Food
                         </button>
                       </div>

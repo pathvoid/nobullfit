@@ -163,7 +163,7 @@ defmodule NobullfitWeb.Dashboard.FoodDatabaseLive do
                         type="text"
                         name="query"
                         value={@search_query}
-                        placeholder="Enter food name, brand, or UPC..."
+                        placeholder="Enter food name or brand..."
                         class="input input-bordered w-full"
                         autocomplete="off"
                       />
