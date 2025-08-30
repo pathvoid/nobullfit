@@ -7,8 +7,10 @@ defmodule NobullfitWeb.Components.Sidebar do
     cond do
       # Overview link is active only when exactly on /d
       href == "/d" -> current_path == "/d"
-      # Food Tracking link is active only when exactly on /d/food
-      href == "/d/food" -> current_path == "/d/food"
+      # Food Tracking link is active when on /d/food or /d/add-food
+      href == "/d/food" -> current_path == "/d/food" or current_path == "/d/add-food"
+      # Food Database link is active when on /d/food-database or /d/nutrition-info
+      href == "/d/food-database" -> current_path == "/d/food-database" or current_path == "/d/nutrition-info"
       # Other links are active when current_path starts with href
       true -> String.starts_with?(current_path || "", href)
     end
@@ -35,7 +37,7 @@ defmodule NobullfitWeb.Components.Sidebar do
               <.sidebar_link href={~p"/d"} current_path={@current_path} icon="home">
                 Overview
               </.sidebar_link>
-              <details class="group" open={is_parent_open?(@current_path, ["/d/food-database", "/d/recipe-database", "/d/favorites"])}>
+              <details class="group" open={is_parent_open?(@current_path, ["/d/food-database", "/d/recipe-database", "/d/nutrition-info"])}>
                 <summary class="flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors hover:bg-base-300">
                   <span class="mr-3 flex-shrink-0 h-5 w-5">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,11 +57,6 @@ defmodule NobullfitWeb.Components.Sidebar do
                       Recipe Database
                     </.sidebar_link>
                   </li>
-                  <li>
-                    <.sidebar_link href={~p"/d/favorites"} current_path={@current_path} icon="heart">
-                      Favorites
-                    </.sidebar_link>
-                  </li>
                 </ul>
               </details>
               <.sidebar_link href={~p"/d/food"} current_path={@current_path} icon="utensils">
@@ -70,6 +67,9 @@ defmodule NobullfitWeb.Components.Sidebar do
               </.sidebar_link>
               <.sidebar_link href={~p"/d/groceries"} current_path={@current_path} icon="shopping-cart">
                 Groceries
+              </.sidebar_link>
+              <.sidebar_link href={~p"/d/favorites"} current_path={@current_path} icon="heart">
+                Favorites
               </.sidebar_link>
             </div>
           </div>

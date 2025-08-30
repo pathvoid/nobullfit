@@ -94,20 +94,20 @@ defmodule NobullfitWeb.Components.Navigation do
               <%= if String.starts_with?(@current_path || "", "/d") or String.starts_with?(@current_path || "", "/users/settings") do %>
                 <li><a href="/d" class="text-lg">Overview</a></li>
                 <li>
-                  <details class="group" open={String.starts_with?(@current_path || "", "/d/food-database") or String.starts_with?(@current_path || "", "/d/recipe-database") or String.starts_with?(@current_path || "", "/d/favorites")}>
+                  <details class="group" open={String.starts_with?(@current_path || "", "/d/food-database") or String.starts_with?(@current_path || "", "/d/recipe-database")}>
                     <summary class="text-lg cursor-pointer">
                       Database
                     </summary>
                     <ul class="pl-4 space-y-1">
                       <li><a href="/d/food-database" class="text-lg">Food Database</a></li>
                       <li><a href="/d/recipe-database" class="text-lg">Recipe Database</a></li>
-                      <li><a href="/d/favorites" class="text-lg">Favorites</a></li>
                     </ul>
                   </details>
                 </li>
                 <li><a href="/d/food" class="text-lg">Food Tracking</a></li>
                 <li><a href="/d/progress" class="text-lg">Progress</a></li>
                 <li><a href="/d/groceries" class="text-lg">Groceries</a></li>
+                <li><a href="/d/favorites" class="text-lg">Favorites</a></li>
               <% end %>
               <%= if @current_scope && @current_scope.user do %>
                 <li class="menu-title mt-4">
