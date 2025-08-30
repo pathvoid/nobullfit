@@ -289,7 +289,7 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
       # Create a grocery item from the food favorite
       item_params = %{
         "name" => food.name,
-        "quantity" => "#{food.quantity}g",
+        "quantity" => "1",
         "grocery_list_id" => String.to_integer(list_id)
       }
 

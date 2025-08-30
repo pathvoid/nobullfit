@@ -125,9 +125,47 @@ defmodule Nobullfit.GroceryLists do
   end
 
   @doc """
-  Adds an item to a grocery list.
+  Adds an item to a grocery list, checking for existing items and combining quantities.
   """
   def add_item_to_list(list_id, item_attrs) do
+    # Check if an item with the same name already exists in the list (case-insensitive)
+    existing_items =
+      Repo.all(
+        from item in GroceryItem,
+          where:
+            item.grocery_list_id == ^list_id and
+              fragment("LOWER(?)", item.name) == ^String.downcase(item_attrs["name"])
+      )
+
+    if length(existing_items) > 0 do
+      # Find the best matching item based on units
+      new_quantity = item_attrs["quantity"] || "1"
+      new_measure = extract_measure(new_quantity)
+
+      best_match = find_best_matching_item(existing_items, parse_quantity_value(new_quantity), new_measure)
+
+      case best_match do
+        {:match, item} ->
+          # Found a matching item, combine quantities
+          final_quantity = combine_quantities(item.quantity, parse_quantity_value(new_quantity), new_measure)
+
+          # Update the existing item with combined quantity
+          item
+          |> GroceryItem.changeset(%{quantity: final_quantity})
+          |> Repo.update()
+
+        {:combine, _items} ->
+          # No matching units found, create a new separate item
+          create_new_item(list_id, item_attrs)
+      end
+    else
+      # No existing items with this name, create a new one
+      create_new_item(list_id, item_attrs)
+    end
+  end
+
+  # Helper function to create a new grocery item
+  defp create_new_item(list_id, item_attrs) do
     # Get the current max sort_order for this list
     max_order =
       GroceryItem
@@ -144,6 +182,47 @@ defmodule Nobullfit.GroceryLists do
     |> GroceryItem.changeset(item_attrs)
     |> Repo.insert()
   end
+
+  # Helper function to extract measure from quantity string
+  defp extract_measure(quantity_str) when is_binary(quantity_str) do
+    # Handle "As needed" case
+    if quantity_str == "As needed" do
+      "As needed"
+    else
+      # Check if it's just a plain number (no unit) - treat as "<unit>"
+      case Regex.run(~r/^(\d+(?:\.\d+)?)$/, quantity_str) do
+        [_, _amount_str] -> "<unit>"
+        nil ->
+          # Try to extract unit from strings like "2 cups", "1.5 tablespoon"
+          case Regex.run(~r/^(\d+(?:\.\d+)?)\s+(.+)$/, quantity_str) do
+            [_, _amount_str, unit] -> unit
+            nil -> "<unit>"
+          end
+      end
+    end
+  end
+
+  defp extract_measure(_), do: "<unit>"
+
+  # Helper function to parse quantity value from string
+  defp parse_quantity_value(quantity_str) when is_binary(quantity_str) do
+    # Handle "As needed" case
+    if quantity_str == "As needed" do
+      0.0
+    else
+      # Extract just the number part
+      case Regex.run(~r/^(\d+(?:\.\d+)?)/, quantity_str) do
+        [_, amount_str] ->
+          case Float.parse(amount_str) do
+            {amount, _} -> amount
+            :error -> 1.0
+          end
+        nil -> 1.0
+      end
+    end
+  end
+
+  defp parse_quantity_value(_), do: 1.0
 
   @doc """
   Adds recipe ingredients to a grocery list, checking for existing items and combining quantities.
