@@ -81,27 +81,27 @@ const commonImages = [
 const pageImages = {
   '/': ['https://cdn.nobull.fit/avocado.png'],
   '/about': ['https://cdn.nobull.fit/campfire.png'],
-  '/dashboard': [
+  '/d': [
     'https://cdn.nobull.fit/orange-waiting.png',
     'https://cdn.nobull.fit/apple-heart.png',
     'https://cdn.nobull.fit/apple.png'
   ],
-  '/dashboard/food-database': [
+  '/d/food-database': [
     'https://cdn.nobull.fit/pantry.png',
     'https://cdn.nobull.fit/no-image-300x300.jpg'
   ],
-  '/dashboard/recipe-database': [
+  '/d/recipe-database': [
     'https://cdn.nobull.fit/cooking-pot.png',
     'https://cdn.nobull.fit/no-image-300x300.jpg'
   ],
-  '/dashboard/favorites': [
+  '/d/favorites': [
     'https://cdn.nobull.fit/apple-heart.png',
     'https://cdn.nobull.fit/no-image-300x300.jpg'
   ],
-  '/dashboard/groceries': [
+  '/d/groceries': [
     'https://cdn.nobull.fit/shopping.png'
   ],
-  '/dashboard/progress': [
+  '/d/progress': [
     'https://cdn.nobull.fit/apple.png'
   ]
 };
@@ -125,14 +125,14 @@ function preloadPageImages(pagePath) {
 // Function to preload images for related pages (navigation prediction)
 function preloadRelatedPageImages(currentPage) {
   const relatedPages = {
-    '/': ['/about', '/dashboard'],
-    '/about': ['/', '/dashboard'],
-    '/dashboard': ['/dashboard/food-database', '/dashboard/recipe-database', '/dashboard/favorites'],
-    '/dashboard/food-database': ['/dashboard/recipe-database', '/dashboard/favorites'],
-    '/dashboard/recipe-database': ['/dashboard/food-database', '/dashboard/favorites'],
-    '/dashboard/favorites': ['/dashboard/food-database', '/dashboard/recipe-database'],
-    '/dashboard/groceries': ['/dashboard/food-database', '/dashboard/recipe-database'],
-    '/dashboard/progress': ['/dashboard/favorites']
+    '/': ['/about', '/d'],
+    '/about': ['/', '/d'],
+    '/d': ['/d/food-database', '/d/recipe-database', '/d/favorites'],
+    '/d/food-database': ['/d/recipe-database', '/d/favorites'],
+    '/d/recipe-database': ['/d/food-database', '/d/favorites'],
+    '/d/favorites': ['/d/food-database', '/d/recipe-database'],
+    '/d/groceries': ['/d/food-database', '/d/recipe-database'],
+    '/d/progress': ['/d/favorites']
   };
   
   const related = relatedPages[currentPage] || [];
