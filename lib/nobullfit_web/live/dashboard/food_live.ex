@@ -13,6 +13,7 @@ defmodule NobullfitWeb.Dashboard.FoodLive do
   @impl true
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
+    user_agent = Map.get(session, "user_agent", "") || Map.get(session, :user_agent, "")
 
     # Initialize with UTC defaults - will be updated when timezone data is received from client
     user_timezone = "UTC"
@@ -31,6 +32,7 @@ defmodule NobullfitWeb.Dashboard.FoodLive do
         page_title: "Food Tracking",
         current_path: "/d/food",
         maintenance_status: maintenance_status,
+        user_agent: user_agent,
         selected_date: today,
         user_timezone: user_timezone,
         user_local_date: local_date,
@@ -167,7 +169,7 @@ defmodule NobullfitWeb.Dashboard.FoodLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col" id="main-container" phx-hook="TimezoneData">
-      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} user_agent={@user_agent} />
 
       <div class="flex flex-1">
         <.sidebar current_path={@current_path} />

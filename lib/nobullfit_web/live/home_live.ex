@@ -1,19 +1,20 @@
 defmodule NobullfitWeb.HomeLive do
   use NobullfitWeb, :live_view
   import NobullfitWeb.Components.Navigation, only: [navigation: 1, footer: 1]
+  import NobullfitWeb.Helpers.AppDetection, only: [is_nobullfit_app_from_session?: 1]
 
   on_mount {NobullfitWeb.UserAuth, :mount_current_scope}
 
   @impl true
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
+    user_agent = Map.get(session, "user_agent", "") || Map.get(session, :user_agent, "")
 
-    # Check if user agent contains "NoBullFitDesktop" and redirect to dashboard
-    user_agent = get_connect_params(socket)["user-agent"] || ""
-    if String.contains?(user_agent, "NoBullFitDesktop") do
+    # Check if user agent contains "NBFAPP" and redirect to dashboard
+    if is_nobullfit_app_from_session?(session) do
       {:ok, push_navigate(socket, to: ~p"/d")}
     else
-      {:ok, assign(socket, page_title: "Home", current_path: "/", maintenance_status: maintenance_status)}
+      {:ok, assign(socket, page_title: "Home", current_path: "/", maintenance_status: maintenance_status, user_agent: user_agent)}
     end
   end
 
@@ -21,7 +22,7 @@ defmodule NobullfitWeb.HomeLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
-      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} user_agent={@user_agent} />
 
       <main class="container mx-auto px-4 py-8 md:py-24 flex-1">
         <div class="max-w-4xl mx-auto space-y-12">

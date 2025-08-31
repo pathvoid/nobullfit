@@ -11,7 +11,7 @@ defmodule NobullfitWeb.ArticleLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
-      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} user_agent={@user_agent} />
 
       <main class="container mx-auto px-4 py-8 md:py-12 flex-1">
         <!-- Hero Section -->
@@ -129,6 +129,7 @@ defmodule NobullfitWeb.ArticleLive do
   # Handle main guides page (no slug)
   def mount(params, session, socket) when not is_map_key(params, "slug") do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
+    user_agent = Map.get(session, "user_agent", "") || Map.get(session, :user_agent, "")
 
     featured_article = Articles.get_featured_article()
     random_articles =
@@ -142,6 +143,7 @@ defmodule NobullfitWeb.ArticleLive do
      assign(socket,
        current_path: "/guides",
        maintenance_status: maintenance_status,
+       user_agent: user_agent,
        article: nil,
        featured_article: featured_article,
        random_articles: random_articles
@@ -151,6 +153,7 @@ defmodule NobullfitWeb.ArticleLive do
   # Handle individual article page (with slug)
   def mount(%{"slug" => slug}, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
+    user_agent = Map.get(session, "user_agent", "") || Map.get(session, :user_agent, "")
 
     article = Articles.get_article_by_slug(slug)
     random_articles =
@@ -164,6 +167,7 @@ defmodule NobullfitWeb.ArticleLive do
      assign(socket,
        current_path: "/guides/#{slug}",
        maintenance_status: maintenance_status,
+       user_agent: user_agent,
        article: article,
        featured_article: nil,
        random_articles: random_articles

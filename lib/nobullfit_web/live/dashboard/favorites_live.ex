@@ -566,7 +566,7 @@ defmodule NobullfitWeb.Dashboard.FavoritesLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
-      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} user_agent={@user_agent} />
 
       <div class="flex flex-1">
         <.sidebar current_path={@current_path} />

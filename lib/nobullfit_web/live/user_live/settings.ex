@@ -13,7 +13,7 @@ defmodule NobullfitWeb.UserLive.Settings do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
-      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} user_agent={@user_agent} />
 
       <div class="flex flex-1">
         <.sidebar current_path={@current_path} />
@@ -226,6 +226,7 @@ defmodule NobullfitWeb.UserLive.Settings do
     email_changeset = Accounts.change_user_email(user, %{}, validate_unique: false)
     password_changeset = Accounts.change_user_password(user, %{}, hash_password: false)
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
+    user_agent = Map.get(session, "user_agent", "") || Map.get(session, :user_agent, "")
 
     socket =
       socket
@@ -235,6 +236,7 @@ defmodule NobullfitWeb.UserLive.Settings do
       |> assign(:trigger_submit, false)
       |> assign(:current_path, "/users/settings")
       |> assign(:maintenance_status, maintenance_status)
+      |> assign(:user_agent, user_agent)
 
     {:ok, socket}
   end

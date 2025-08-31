@@ -7,14 +7,15 @@ defmodule NobullfitWeb.AboutLive do
   @impl true
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
-    {:ok, assign(socket, page_title: "About", current_path: "/about", maintenance_status: maintenance_status)}
+    user_agent = Map.get(session, "user_agent", "") || Map.get(session, :user_agent, "")
+    {:ok, assign(socket, page_title: "About", current_path: "/about", maintenance_status: maintenance_status, user_agent: user_agent)}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
-      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} user_agent={@user_agent} />
 
       <main class="container mx-auto px-4 py-8 md:py-24 flex-1">
         <div class="max-w-2xl mx-auto space-y-12">

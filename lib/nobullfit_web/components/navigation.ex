@@ -2,10 +2,13 @@ defmodule NobullfitWeb.Components.Navigation do
   use Phoenix.Component
   import NobullfitWeb.Layouts, only: [theme_toggle: 1]
   import NobullfitWeb.Components.MaintenanceBanner, only: [maintenance_banner: 1]
+  import NobullfitWeb.Helpers.AppDetection, only: [is_nobullfit_app?: 1]
 
   use NobullfitWeb, :verified_routes
 
   def navigation(assigns) do
+    assigns = assign_new(assigns, :user_agent, fn -> "" end)
+
     ~H"""
     <div phx-hook="NavigationPreload" id="navigation">
       <div class="drawer lg:hidden">
@@ -22,9 +25,10 @@ defmodule NobullfitWeb.Components.Navigation do
 
             <div class="navbar-center hidden lg:flex">
               <%= unless String.starts_with?(@current_path || "", "/d") or
-                    (String.starts_with?(@current_path || "", "/users") and
-                      not String.starts_with?(@current_path || "", "/users/log-in") and
-                      not String.starts_with?(@current_path || "", "/users/register")) do %>
+                      (String.starts_with?(@current_path || "", "/users") and
+                        not String.starts_with?(@current_path || "", "/users/log-in") and
+                        not String.starts_with?(@current_path || "", "/users/register")) or
+                      is_nobullfit_app?(@user_agent) do %>
                 <ul class="menu menu-horizontal gap-2">
                   <li><a href="/" class="btn btn-ghost btn-sm">Home</a></li>
                   <li><a href="/guides" class="btn btn-ghost btn-sm">Guides</a></li>
@@ -84,9 +88,10 @@ defmodule NobullfitWeb.Components.Navigation do
                 <span>NoBullFit</span>
               </li>
               <%= unless String.starts_with?(@current_path || "", "/d") or
-                    (String.starts_with?(@current_path || "", "/users") and
-                      not String.starts_with?(@current_path || "", "/users/log-in") and
-                      not String.starts_with?(@current_path || "", "/users/register")) do %>
+                      (String.starts_with?(@current_path || "", "/users") and
+                        not String.starts_with?(@current_path || "", "/users/log-in") and
+                        not String.starts_with?(@current_path || "", "/users/register")) or
+                      is_nobullfit_app?(@user_agent) do %>
                 <li><a href="/" class="text-lg">Home</a></li>
                 <li><a href="/guides" class="text-lg">Guides</a></li>
                 <li><a href="/about" class="text-lg">About</a></li>
@@ -132,18 +137,19 @@ defmodule NobullfitWeb.Components.Navigation do
       <nav class="navbar bg-base-200/50 backdrop-blur-sm border-b border-base-200 hidden lg:flex">
         <div class="navbar-start">
           <%= if String.starts_with?(@current_path || "", "/d") or
-                (String.starts_with?(@current_path || "", "/users") and
-                  not String.starts_with?(@current_path || "", "/users/log-in") and
-                  not String.starts_with?(@current_path || "", "/users/register")) do %>
+                  (String.starts_with?(@current_path || "", "/users") and
+                    not String.starts_with?(@current_path || "", "/users/log-in") and
+                    not String.starts_with?(@current_path || "", "/users/register")) do %>
             <a href="/d" class="text-xl font-bold text-primary ml-2">NoBullFit</a>
           <% end %>
         </div>
 
         <div class="navbar-center">
           <%= unless String.starts_with?(@current_path || "", "/d") or
-                (String.starts_with?(@current_path || "", "/users") and
-                  not String.starts_with?(@current_path || "", "/users/log-in") and
-                  not String.starts_with?(@current_path || "", "/users/register")) do %>
+                  (String.starts_with?(@current_path || "", "/users") and
+                    not String.starts_with?(@current_path || "", "/users/log-in") and
+                    not String.starts_with?(@current_path || "", "/users/register")) or
+                  is_nobullfit_app?(@user_agent) do %>
             <ul class="menu menu-horizontal gap-2">
               <li><a href="/" class="btn btn-ghost btn-sm">Home</a></li>
               <li><a href="/guides" class="btn btn-ghost btn-sm">Guides</a></li>

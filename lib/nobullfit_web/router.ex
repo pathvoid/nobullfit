@@ -15,6 +15,7 @@ defmodule NobullfitWeb.Router do
     plug :fetch_maintenance_status
     plug :check_maintenance_restrictions
     plug NobullfitWeb.Plugs.TimezonePlug
+    plug NobullfitWeb.Plugs.UserAgentPlug
   end
 
   pipeline :api do

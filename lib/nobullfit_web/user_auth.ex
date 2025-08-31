@@ -246,13 +246,17 @@ defmodule NobullfitWeb.UserAuth do
   end
 
   defp mount_current_scope(socket, session) do
-    Phoenix.Component.assign_new(socket, :current_scope, fn ->
+    socket
+    |> Phoenix.Component.assign_new(:current_scope, fn ->
       {user, _} =
         if user_token = session["user_token"] do
           Accounts.get_user_by_session_token(user_token)
         end || {nil, nil}
 
       Scope.for_user(user)
+    end)
+    |> Phoenix.Component.assign_new(:user_agent, fn ->
+      Map.get(session, "user_agent", "") || Map.get(session, :user_agent, "")
     end)
   end
 

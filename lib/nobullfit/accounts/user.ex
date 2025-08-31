@@ -36,6 +36,28 @@ defmodule Nobullfit.Accounts.User do
     |> validate_email(opts)
   end
 
+  @doc """
+  A user changeset for registration that can include both email and password.
+
+  This is used when registering from the app where users can set a password
+  during registration instead of using magic links.
+
+  ## Options
+
+    * `:validate_unique` - Set to false if you don't want to validate the
+      uniqueness of the email, useful when displaying live validations.
+      Defaults to `true`.
+    * `:hash_password` - Set to false if you don't want to hash the password
+      during validation (useful for LiveView form validation).
+      Defaults to `true`.
+  """
+  def registration_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:email, :password])
+    |> validate_email(opts)
+    |> validate_password(opts)
+  end
+
   defp validate_email(changeset, opts) do
     changeset =
       changeset

@@ -9,7 +9,7 @@ defmodule NobullfitWeb.UserLive.Confirmation do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 flex flex-col">
-      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
+      <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} user_agent={@user_agent} />
 
       <main class="container mx-auto px-4 py-8 md:py-24 flex-1">
         <div class="mx-auto max-w-sm">
@@ -84,6 +84,7 @@ defmodule NobullfitWeb.UserLive.Confirmation do
 
   def mount(%{"token" => token}, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
+    user_agent = Map.get(session, "user_agent", "") || Map.get(session, :user_agent, "")
 
     # Check if maintenance mode is enabled and login is blocked
     if maintenance_status.enabled && maintenance_status.prevent_login do
@@ -92,7 +93,7 @@ defmodule NobullfitWeb.UserLive.Confirmation do
       if user = Accounts.get_user_by_magic_link_token(token) do
         form = to_form(%{"token" => token}, as: "user")
 
-        {:ok, assign(socket, user: user, form: form, trigger_submit: false, current_path: "/users/log-in/#{token}", maintenance_status: maintenance_status),
+        {:ok, assign(socket, user: user, form: form, trigger_submit: false, current_path: "/users/log-in/#{token}", maintenance_status: maintenance_status, user_agent: user_agent),
          temporary_assigns: [form: nil]}
       else
         {:ok,

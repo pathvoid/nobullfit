@@ -99,6 +99,56 @@ defmodule Nobullfit.Accounts do
     end)
   end
 
+  @doc """
+  Registers a user with password support.
+
+  This function can handle both email-only registration (for web users)
+  and email+password registration (for app users).
+
+  ## Examples
+
+      iex> register_user_with_password(%{email: "user@example.com"})
+      {:ok, %User{}}
+
+      iex> register_user_with_password(%{email: "user@example.com", password: "password123"})
+      {:ok, %User{}}
+
+      iex> register_user_with_password(%{email: "invalid"})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def register_user_with_password(attrs) do
+    Repo.transact(fn ->
+      # Determine which changeset to use based on whether password is provided
+      changeset =
+        if Map.has_key?(attrs, "password") and attrs["password"] != "" do
+          %User{}
+          |> User.registration_changeset(attrs)
+        else
+          %User{}
+          |> User.email_changeset(attrs)
+        end
+
+      case changeset |> Repo.insert() do
+        {:ok, user} ->
+          # Create a default grocery list for the new user
+          case GroceryLists.create_grocery_list(%{
+                 name: "Shopping List",
+                 user_id: user.id
+               }) do
+            {:ok, _grocery_list} ->
+              {:ok, user}
+
+            {:error, _changeset} ->
+              Repo.rollback("Failed to create grocery list")
+          end
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
   ## Settings
 
   @doc """
@@ -128,6 +178,26 @@ defmodule Nobullfit.Accounts do
   """
   def change_user_email(user, attrs \\ %{}, opts \\ []) do
     User.email_changeset(user, attrs, opts)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for user registration with password support.
+
+  This can be used for both email-only registration (web) and email+password registration (app).
+
+  ## Examples
+
+      iex> change_user_registration(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user_registration(user, attrs \\ %{}, opts \\ []) do
+    # Determine which changeset to use based on whether password is provided
+    if Map.has_key?(attrs, "password") and attrs["password"] != "" do
+      User.registration_changeset(user, attrs, opts)
+    else
+      User.email_changeset(user, attrs, opts)
+    end
   end
 
   @doc """

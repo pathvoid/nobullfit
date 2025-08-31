@@ -41,6 +41,7 @@ defmodule NobullfitWeb.DashboardLive do
   @impl true
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
+    user_agent = Map.get(session, "user_agent", "") || Map.get(session, :user_agent, "")
 
     # Initialize with UTC defaults - will be updated when timezone data is received from client
     user_timezone = "UTC"
@@ -140,6 +141,7 @@ defmodule NobullfitWeb.DashboardLive do
         page_title: "Dashboard",
         current_path: "/d",
         maintenance_status: maintenance_status,
+        user_agent: user_agent,
         user_timezone: user_timezone,
         user_local_date: local_date,
         weight_entries: weight_entries,
@@ -231,7 +233,7 @@ defmodule NobullfitWeb.DashboardLive do
            data-weekly-nutrition={Jason.encode!(@weekly_nutrition_data)}
            data-macronutrient-breakdown={Jason.encode!(@macronutrient_data)}
            data-meal-distribution={Jason.encode!(@meal_distribution_data)}>
-        <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} />
+        <.navigation current_scope={@current_scope} current_path={@current_path} maintenance_status={@maintenance_status} user_agent={@user_agent} />
 
         <div class="flex flex-1">
           <.sidebar current_path={@current_path} />
