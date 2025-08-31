@@ -7,7 +7,14 @@ defmodule NobullfitWeb.HomeLive do
   @impl true
   def mount(_params, session, socket) do
     maintenance_status = Map.get(session, "maintenance_status", %{enabled: false})
-    {:ok, assign(socket, page_title: "Home", current_path: "/", maintenance_status: maintenance_status)}
+
+    # Check if user agent contains "NoBullFitDesktop" and redirect to dashboard
+    user_agent = get_connect_params(socket)["user-agent"] || ""
+    if String.contains?(user_agent, "NoBullFitDesktop") do
+      {:ok, push_navigate(socket, to: ~p"/d")}
+    else
+      {:ok, assign(socket, page_title: "Home", current_path: "/", maintenance_status: maintenance_status)}
+    end
   end
 
   @impl true
