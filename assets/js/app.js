@@ -115,6 +115,30 @@ const GroceryItemFormHook = {
   }
 }
 
+// Hook to preload images on navigation link hover
+const NavigationPreloadHook = {
+  mounted() {
+    // Add hover event listeners to navigation links
+    const links = this.el.querySelectorAll('a[href]')
+    links.forEach(link => {
+      link.addEventListener('mouseenter', (e) => {
+        const href = link.getAttribute('href')
+        if (href && href.startsWith('/') && window.ImagePreloader) {
+          // Preload images for the target page
+          const targetPage = href
+          const pageImages = window.ImagePreloader.pageImages[targetPage] || []
+          if (pageImages.length > 0) {
+            console.log(`Preloading images for hovered link: ${targetPage}`)
+            window.ImagePreloader.preloadImages(pageImages, () => {
+              console.log(`Hover preload completed for: ${targetPage}`)
+            })
+          }
+        }
+      })
+    })
+  }
+}
+
 // Hook to initialize CanvasJS charts for dashboard
 const DashboardChartHook = {
   mounted() {
@@ -507,6 +531,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
     WeightForm: WeightFormHook,
     TimezoneData: TimezoneDataHook,
     GroceryItemForm: GroceryItemFormHook,
+    NavigationPreload: NavigationPreloadHook,
     DashboardChart: DashboardChartHook,
     DeleteAccountHook: DeleteAccountHook,
     ResetProgressionHook: ResetProgressionHook

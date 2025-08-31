@@ -34,7 +34,7 @@ config :esbuild,
   version: "0.17.11",
   nobullfit: [
     args:
-      ~w(js/app.js js/theme_init.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/*),
+      ~w(js/app.js js/theme_init.js js/image_preloader.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]

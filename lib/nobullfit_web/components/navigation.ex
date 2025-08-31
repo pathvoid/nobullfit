@@ -7,7 +7,7 @@ defmodule NobullfitWeb.Components.Navigation do
 
   def navigation(assigns) do
     ~H"""
-    <div>
+    <div phx-hook="NavigationPreload" id="navigation">
       <div class="drawer lg:hidden">
         <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />
         <div class="drawer-content">
