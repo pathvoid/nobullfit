@@ -4,7 +4,7 @@
   
   if (savedTheme === "system") {
     const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    document.documentElement.setAttribute("data-theme", isDark ? "mocha" : "frappe");
+    document.documentElement.setAttribute("data-theme", isDark ? "mocha" : "latte");
   } else {
     document.documentElement.setAttribute("data-theme", savedTheme);
   }
@@ -54,7 +54,7 @@ function setInitialIndicatorPosition(theme) {
     // Set position using inline styles to avoid class-based transitions
     if (theme === "system") {
       indicator.style.transform = "translateX(0%)";
-    } else if (theme === "frappe") {
+    } else if (theme === "latte") {
       indicator.style.transform = "translateX(100%)";
     } else if (theme === "mocha") {
       indicator.style.transform = "translateX(200%)";
@@ -71,7 +71,7 @@ function setTheme(theme) {
   let actualTheme = theme;
   if (theme === "system") {
     const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    actualTheme = isDark ? "mocha" : "frappe";
+    actualTheme = isDark ? "mocha" : "latte";
   }
   document.documentElement.setAttribute("data-theme", actualTheme);
   // Move the indicator WITH animation
@@ -98,7 +98,7 @@ function moveIndicator(theme, animate) {
       // Set the correct position using classes
       if (theme === "system") {
         indicator.classList.add("translate-x-0");
-      } else if (theme === "frappe") {
+      } else if (theme === "latte") {
         indicator.classList.add("translate-x-full");
       } else if (theme === "mocha") {
         indicator.classList.add("translate-x-[200%]");
@@ -109,7 +109,7 @@ function moveIndicator(theme, animate) {
       
       if (theme === "system") {
         indicator.style.transform = "translateX(0%)";
-      } else if (theme === "frappe") {
+      } else if (theme === "latte") {
         indicator.style.transform = "translateX(100%)";
       } else if (theme === "mocha") {
         indicator.style.transform = "translateX(200%)";

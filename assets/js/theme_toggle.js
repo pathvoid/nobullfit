@@ -16,7 +16,7 @@ const ThemeToggle = {
     // Store user's theme preference
     localStorage.setItem("phx:theme", theme);
 
-    // Determine actual theme to apply (system theme resolves to frappe/mocha)
+    // Determine actual theme to apply (system theme resolves to latte/mocha)
     let actualTheme = theme;
     if (theme === "system") {
       actualTheme = this.getSystemTheme();
@@ -30,7 +30,7 @@ const ThemeToggle = {
   // Detect system color scheme preference
   getSystemTheme() {
     const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    return isDark ? "mocha" : "frappe";
+    return isDark ? "mocha" : "latte";
   },
 
   // Get the user's saved theme preference
@@ -55,7 +55,7 @@ const ThemeToggle = {
     setTimeout(() => {
       if (theme === "system") {
         indicator.classList.add("translate-x-0");
-      } else if (theme === "frappe") {
+      } else if (theme === "latte") {
         indicator.classList.add("translate-x-full");
       } else if (theme === "mocha") {
         indicator.classList.add("translate-x-[200%]");

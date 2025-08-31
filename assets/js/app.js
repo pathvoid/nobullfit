@@ -132,7 +132,10 @@ const DashboardChartHook = {
     // Listen for theme changes
     this.handleEvent("theme-changed", () => {
       if (typeof CanvasJS !== 'undefined' && this.timezoneDataReceived) {
-        this.initializeAllCharts()
+        // Add a small delay to ensure the data-theme attribute is updated
+        setTimeout(() => {
+          this.initializeAllCharts()
+        }, 50)
       }
     })
 
@@ -147,6 +150,24 @@ const DashboardChartHook = {
         this.initializeAllCharts()
       }
     })
+
+    // Watch for changes to the data-theme attribute
+    this.themeObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+          if (typeof CanvasJS !== 'undefined' && this.timezoneDataReceived) {
+            console.log('Theme attribute changed, updating charts')
+            this.initializeAllCharts()
+          }
+        }
+      })
+    })
+
+    // Start observing the document element for data-theme changes
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    })
   },
 
   destroyed() {
@@ -154,6 +175,12 @@ const DashboardChartHook = {
     if (this.timeoutId) {
       clearTimeout(this.timeoutId)
       this.timeoutId = null
+    }
+    
+    // Clean up theme observer if it exists
+    if (this.themeObserver) {
+      this.themeObserver.disconnect()
+      this.themeObserver = null
     }
   },
 
@@ -181,15 +208,16 @@ const DashboardChartHook = {
   },
 
   getThemeConfig() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    const isDark = currentTheme === 'mocha'
     return {
       theme: "light1", // Use light1 for better custom control
       backgroundColor: "transparent",
       titleFontColor: isDark ? "#e2e8f0" : "#1e293b",
-      labelFontColor: isDark ? "#cdd6f4" : "#cdd6f4",
-      lineColor: isDark ? "#cbd5e1" : "#475569",
+      labelFontColor: isDark ? "#858aa1" : "#4c4f69",
+      lineColor: isDark ? "#858aa1" : "#ccd0da",
       tickColor: isDark ? "#cbd5e1" : "#475569",
-      gridColor: isDark ? "#cbd5e1" : "#475569"
+      gridColor: isDark ? "#858aa1" : "#ccd0da"
     }
   },
 
