@@ -4,6 +4,11 @@
 // Cache to track which images have already been preloaded
 const preloadedImages = new Set();
 
+/**
+ * Preload a list of image URLs.
+ * @param {string[]} urls - Array of image URLs to preload.
+ * @param {function} allImagesLoadedCallback - Callback when all images are loaded.
+ */
 function preloadImages(urls, allImagesLoadedCallback) {
   var loadedCounter = 0;
   var toBeLoadedNumber = urls.length;
@@ -24,7 +29,6 @@ function preloadImages(urls, allImagesLoadedCallback) {
   imagesToLoad.forEach(function(url) {
     preloadImage(url, function() {
       loadedCounter++;
-      console.log('Number of loaded images: ' + loadedCounter);
       if (loadedCounter == imagesToLoad.length) {
         allImagesLoadedCallback();
       }
@@ -38,8 +42,6 @@ function preloadImages(urls, allImagesLoadedCallback) {
       anImageLoadedCallback();
     };
     img.onerror = function() {
-      console.warn('Failed to preload image:', url);
-      // Don't add failed images to cache, but continue
       anImageLoadedCallback();
     };
     img.src = url;
@@ -106,23 +108,29 @@ const pageImages = {
   ]
 };
 
-// Function to get current page path
+/**
+ * Get the current page path.
+ * @returns {string} The current window location pathname.
+ */
 function getCurrentPage() {
   return window.location.pathname;
 }
 
-// Function to preload images for a specific page
+/**
+ * Preload images for a specific page.
+ * @param {string} pagePath - The page path to preload images for.
+ */
 function preloadPageImages(pagePath) {
   const images = pageImages[pagePath] || [];
   if (images.length > 0) {
-    console.log(`Preloading images for page: ${pagePath}`);
-    preloadImages(images, function() {
-      console.log(`Page-specific images preloaded for: ${pagePath}`);
-    });
+    preloadImages(images, function() {});
   }
 }
 
-// Function to preload images for related pages (navigation prediction)
+/**
+ * Preload images for related pages (navigation prediction).
+ * @param {string} currentPage - The current page path.
+ */
 function preloadRelatedPageImages(currentPage) {
   const relatedPages = {
     '/': ['/about', '/d'],
@@ -147,35 +155,23 @@ function preloadRelatedPageImages(currentPage) {
   const uniqueImages = [...new Set(relatedImages)];
   
   if (uniqueImages.length > 0) {
-    console.log(`Preloading related page images for: ${currentPage}`);
-    preloadImages(uniqueImages, function() {
-      console.log(`Related page images preloaded for: ${currentPage}`);
-    });
+    preloadImages(uniqueImages, function() {});
   }
 }
 
 // Initialize image preloading when the DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Starting image preloading...');
-  
-  // Preload common images first
   preloadImages(commonImages, function() {
-    console.log('All common images were preloaded successfully');
-    
-    // Then preload page-specific images
     const currentPage = getCurrentPage();
     preloadPageImages(currentPage);
-    
-    // Finally preload related page images
     setTimeout(() => {
       preloadRelatedPageImages(currentPage);
-    }, 1000); // Small delay to prioritize current page
+    }, 1000);
   });
 });
 
 // Listen for LiveView navigation events to preload images for new pages
 document.addEventListener('phx:page-loading-start', function() {
-  // Preload images for the page being navigated to
   const currentPage = getCurrentPage();
   preloadRelatedPageImages(currentPage);
 });
