@@ -958,6 +958,8 @@ defmodule NobullfitWeb.Dashboard.RecipeDatabaseLive do
 
                 <!-- Search Results -->
                 <%= if length(@search_results) > 0 or @loading do %>
+                  <img src="https://cdn.nobull.fit/cooking-pot.png" alt="NoBullFit" class="w-32 mb-8 h-auto mx-auto" />
+
                   <div class="max-w-5xl mx-auto">
                     <div class="bg-base-200 rounded-lg p-8">
                       <.header>

@@ -9,6 +9,8 @@ secret_sauce_content = """
     Let me break down the science of fat loss—no BS, just facts.
   </p>
 
+  <img src="https://cdn.nobull.fit/dragonfruit-sauce.png" alt="NoBullFit" class="w-32 h-auto mx-auto" />
+
   <div class="space-y-8">
     <div>
       <h3 class="text-xl font-semibold mb-4 text-primary">Phase 1: The Water Weight Drop</h3>
@@ -52,7 +54,7 @@ complete_guide_content = """
     Staying healthy and losing weight doesn't have to be complicated. You don't need a perfect plan, expensive supplements, or a 90-day challenge to get started. You just need to take that first step — and keep stepping.
   </p>
 
-  <img src="https://cdn.nobull.fit/professor-pear.png" alt="NoBullFit" class="w-32 h-auto mx-auto" />
+  <img src="https://cdn.nobull.fit/pineapple-math.png" alt="NoBullFit" class="w-32 h-auto mx-auto" />
 
   <div class="space-y-8">
     <div>

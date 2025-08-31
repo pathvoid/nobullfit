@@ -11,7 +11,7 @@ defmodule NobullfitWeb.TermsLive do
     # Read terms of service from markdown file
     case Nobullfit.LegalDocuments.read_document("terms_of_service") do
       {:ok, content} ->
-        html_content = Nobullfit.LegalDocuments.markdown_to_html(content)
+        html_content = Nobullfit.LegalDocuments.markdown_to_html(content, "terms_of_service")
         {:ok, assign(socket,
           page_title: "Terms of Service",
           current_path: "/terms",

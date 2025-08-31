@@ -11,7 +11,7 @@ defmodule NobullfitWeb.PrivacyLive do
     # Read privacy policy from markdown file
     case Nobullfit.LegalDocuments.read_document("privacy_policy") do
       {:ok, content} ->
-        html_content = Nobullfit.LegalDocuments.markdown_to_html(content)
+        html_content = Nobullfit.LegalDocuments.markdown_to_html(content, "privacy_policy")
         {:ok, assign(socket,
           page_title: "Privacy Policy",
           current_path: "/privacy",

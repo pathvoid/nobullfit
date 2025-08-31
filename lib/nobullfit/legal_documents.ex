@@ -297,9 +297,9 @@ defmodule Nobullfit.LegalDocuments do
   @doc """
   Converts markdown content to HTML for display with proper spacing.
   """
-  def markdown_to_html(markdown) do
+  def markdown_to_html(markdown, document_type \\ nil) do
     # Simple markdown to HTML conversion with improved spacing
-    markdown
+    html_content = markdown
     |> String.replace(~r/^#### (.+)$/m, "<h4 class=\"text-lg font-semibold mt-6 mb-4\">\\1</h4>")
     |> String.replace(~r/^### (.+)$/m, "<h3 class=\"text-xl font-medium mt-8 mb-3\">\\1</h3>")
     |> String.replace(
@@ -333,5 +333,43 @@ defmodule Nobullfit.LegalDocuments do
     |> String.replace("</h2>", "</h2><div class=\"mb-3\"></div>")
     |> String.replace("</h3>", "</h3><div class=\"mb-2\"></div>")
     |> String.replace("</h4>", "</h4><div class=\"mb-2\"></div>")
+
+    # Insert image after h4 heading for specific document types
+    case document_type do
+      "privacy_policy" ->
+        insert_image_after_h4(html_content, "banana-secret-service.png")
+      "terms_of_service" ->
+        insert_image_after_h4(html_content, "kiwi-lawyer.png")
+      _ ->
+        html_content
+    end
+  end
+
+  defp insert_image_after_h4(html_content, image_name) do
+    # Find the first h4 tag and insert the image after the first paragraph that follows it
+    case String.split(html_content, "<h4", parts: 2) do
+      [before_h4, after_h4] ->
+        case String.split(after_h4, "</h4>", parts: 2) do
+          [h4_content, after_h4_end] ->
+            # Find the first paragraph after the h4 heading
+            case String.split(after_h4_end, "</p>", parts: 2) do
+              [first_paragraph, after_paragraph] ->
+                image_html = """
+                <img src="https://cdn.nobull.fit/#{image_name}" alt="NoBullFit" class="w-60 h-auto mx-auto my-8" />
+                """
+                before_h4 <> "<h4" <> h4_content <> "</h4>" <> first_paragraph <> "</p>" <> image_html <> after_paragraph
+              _ ->
+                # If no paragraph found, insert after the h4 heading
+                image_html = """
+                <img src="https://cdn.nobull.fit/#{image_name}" alt="NoBullFit" class="w-60 h-auto mx-auto my-8" />
+                """
+                before_h4 <> "<h4" <> h4_content <> "</h4>" <> image_html <> after_h4_end
+            end
+          _ ->
+            html_content
+        end
+      _ ->
+        html_content
+    end
   end
 end
