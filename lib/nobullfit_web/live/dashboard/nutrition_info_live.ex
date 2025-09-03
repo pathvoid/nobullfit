@@ -594,7 +594,7 @@ defmodule NobullfitWeb.Dashboard.NutritionInfoLive do
         </div>
       </div>
 
-      <.footer current_path={@current_path} />
+      <.footer current_path={@current_path} user_agent={@user_agent} />
       <.flash_group flash={@flash} />
 
       <!-- Quantity Selection Modal -->

@@ -189,65 +189,71 @@ defmodule NobullfitWeb.Components.Navigation do
   Renders a footer component with links and copyright information.
   """
   def footer(assigns) do
+    assigns = assign_new(assigns, :user_agent, fn -> "" end)
+
     ~H"""
-    <%= if String.starts_with?(@current_path || "", "/d") or String.starts_with?(@current_path || "", "/users/settings") do %>
-      <!-- Compact footer for dashboard pages -->
-      <footer class="bg-base-200/50 border-t border-base-200 mt-auto">
-        <div class="container mx-auto px-4 py-4">
-          <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p class="text-sm text-base-content/60">
-              © <%= DateTime.utc_now().year %> NoBullFit. All rights reserved.
-            </p>
-            <div class="flex gap-6 text-sm">
-              <a href="/privacy" class="text-base-content/70 hover:text-base-content transition-colors">
-                Privacy Policy
-              </a>
-              <a href="/terms" class="text-base-content/70 hover:text-base-content transition-colors">
-                Terms of Service
-              </a>
+    <%= if is_nobullfit_app?(@user_agent) do %>
+      <!-- No footer for app users -->
+    <% else %>
+      <%= if String.starts_with?(@current_path || "", "/d") or String.starts_with?(@current_path || "", "/users/settings") do %>
+        <!-- Compact footer for dashboard pages -->
+        <footer class="bg-base-200/50 border-t border-base-200 mt-auto">
+          <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <p class="text-sm text-base-content/60">
+                © <%= DateTime.utc_now().year %> NoBullFit. All rights reserved.
+              </p>
+              <div class="flex gap-6 text-sm">
+                <a href="/privacy" class="text-base-content/70 hover:text-base-content transition-colors">
+                  Privacy Policy
+                </a>
+                <a href="/terms" class="text-base-content/70 hover:text-base-content transition-colors">
+                  Terms of Service
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
-    <% else %>
-      <!-- Full footer for other pages -->
-      <footer class="bg-base-200/50 border-t border-base-200 mt-auto">
-        <div class="container mx-auto px-4 py-8">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Brand Section -->
-            <div class="space-y-4">
-              <h3 class="text-lg font-semibold">NoBullFit</h3>
-              <p class="text-sm text-base-content/70">
-                Free food tracking and progress monitoring with privacy first.
+        </footer>
+      <% else %>
+        <!-- Full footer for other pages -->
+        <footer class="bg-base-200/50 border-t border-base-200 mt-auto">
+          <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <!-- Brand Section -->
+              <div class="space-y-4">
+                <h3 class="text-lg font-semibold">NoBullFit</h3>
+                <p class="text-sm text-base-content/70">
+                  Free food tracking and progress monitoring with privacy first.
+                </p>
+              </div>
+
+              <!-- Contact & Legal -->
+              <div class="space-y-4">
+                <h3 class="text-lg font-semibold">Legal</h3>
+                <ul class="space-y-2">
+                  <li>
+                    <a href="/privacy" class="text-sm text-base-content/70 hover:text-base-content transition-colors">
+                      Privacy Policy
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/terms" class="text-sm text-base-content/70 hover:text-base-content transition-colors">
+                      Terms of Service
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="mt-8 pt-8 text-center">
+              <p class="text-sm text-base-content/60">
+                © <%= DateTime.utc_now().year %> NoBullFit. All rights reserved.
               </p>
             </div>
-
-            <!-- Contact & Legal -->
-            <div class="space-y-4">
-              <h3 class="text-lg font-semibold">Legal</h3>
-              <ul class="space-y-2">
-                <li>
-                  <a href="/privacy" class="text-sm text-base-content/70 hover:text-base-content transition-colors">
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a href="/terms" class="text-sm text-base-content/70 hover:text-base-content transition-colors">
-                    Terms of Service
-                  </a>
-                </li>
-              </ul>
-            </div>
           </div>
-
-          <!-- Copyright -->
-          <div class="mt-8 pt-8 text-center">
-            <p class="text-sm text-base-content/60">
-              © <%= DateTime.utc_now().year %> NoBullFit. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      <% end %>
     <% end %>
     """
   end
