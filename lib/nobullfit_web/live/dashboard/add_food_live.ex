@@ -29,6 +29,10 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
     # Create empty food changeset for the form with default meal type
     food_changeset = FoodEntries.change_food_entry(%FoodEntry{meal_type: meal_type})
 
+    # Get user's previous food entries for navigation
+    user_id = socket.assigns.current_scope.user.id
+    previous_entries = FoodEntries.get_user_food_entries_for_navigation(user_id)
+
     socket =
       assign(socket,
         page_title: "Add Food",
@@ -42,7 +46,13 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         food_form: to_form(food_changeset),
         food_submitted: false,
         quantity_info: "",
-        has_date_from_url: true
+        has_date_from_url: true,
+        previous_entries: previous_entries,
+        current_entry_index: -1,
+        is_navigating_previous: false,
+        original_form_data: nil,
+        original_quantity_info: nil,
+        original_form_params: nil
       )
 
     {:ok, socket}
@@ -59,6 +69,10 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
     # Create empty food changeset for the form with default meal type
     food_changeset = FoodEntries.change_food_entry(%FoodEntry{meal_type: meal_type})
 
+    # Get user's previous food entries for navigation
+    user_id = socket.assigns.current_scope.user.id
+    previous_entries = FoodEntries.get_user_food_entries_for_navigation(user_id)
+
     socket =
       assign(socket,
         page_title: "Add Food",
@@ -71,7 +85,13 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         food_changeset: food_changeset,
         food_form: to_form(food_changeset),
         food_submitted: false,
-        has_date_from_url: false
+        has_date_from_url: false,
+        previous_entries: previous_entries,
+        current_entry_index: -1,
+        is_navigating_previous: false,
+        original_form_data: nil,
+        original_quantity_info: nil,
+        original_form_params: nil
       )
 
     {:ok, socket}
@@ -99,6 +119,10 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
     # Get quantity information if provided
     quantity_info = Map.get(params, "quantity", "")
 
+    # Get user's previous food entries for navigation
+    user_id = socket.assigns.current_scope.user.id
+    previous_entries = FoodEntries.get_user_food_entries_for_navigation(user_id)
+
     socket =
       assign(socket,
         page_title: "Add Food",
@@ -112,7 +136,13 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         food_form: to_form(food_changeset),
         food_submitted: false,
         quantity_info: quantity_info,
-        has_date_from_url: false
+        has_date_from_url: false,
+        previous_entries: previous_entries,
+        current_entry_index: -1,
+        is_navigating_previous: false,
+        original_form_data: nil,
+        original_quantity_info: quantity_info,
+        original_form_params: nil
       )
 
     {:ok, socket}
@@ -129,6 +159,10 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
     # Create empty food changeset for the form
     food_changeset = FoodEntries.change_food_entry(%FoodEntry{})
 
+    # Get user's previous food entries for navigation
+    user_id = socket.assigns.current_scope.user.id
+    previous_entries = FoodEntries.get_user_food_entries_for_navigation(user_id)
+
     socket =
       assign(socket,
         page_title: "Add Food",
@@ -142,7 +176,13 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         food_form: to_form(food_changeset),
         food_submitted: false,
         quantity_info: "",
-        has_date_from_url: false
+        has_date_from_url: false,
+        previous_entries: previous_entries,
+        current_entry_index: -1,
+        is_navigating_previous: false,
+        original_form_data: nil,
+        original_quantity_info: nil,
+        original_form_params: nil
       )
 
     {:ok, socket}
@@ -174,11 +214,21 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         food_changeset = FoodEntries.change_food_entry(%FoodEntry{})
         food_form = to_form(food_changeset)
 
+        # Refresh the previous entries list to include the newly added entry
+        user_id = socket.assigns.current_scope.user.id
+        previous_entries = FoodEntries.get_user_food_entries_for_navigation(user_id)
+
         socket =
           assign(socket,
             food_changeset: food_changeset,
             food_form: food_form,
-            food_submitted: false
+            food_submitted: false,
+            previous_entries: previous_entries,
+            current_entry_index: -1,
+            is_navigating_previous: false,
+            original_form_data: nil,
+            original_quantity_info: nil,
+            original_form_params: nil
           )
 
         {:noreply, socket |> put_flash(:info, "Food added successfully!") |> push_navigate(to: ~p"/d/food")}
@@ -224,6 +274,20 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
     end
   end
 
+  def handle_event("validate", %{"food_entry" => food_params}, socket) do
+    # Update the changeset with the current form data
+    food_changeset = FoodEntries.change_food_entry(%FoodEntry{}, food_params)
+    food_form = to_form(food_changeset, action: :validate)
+
+    socket =
+      assign(socket,
+        food_changeset: food_changeset,
+        food_form: food_form
+      )
+
+    {:noreply, socket}
+  end
+
   def handle_event("timezone-data", %{"timezone" => timezone, "localDate" => local_date}, socket) do
     # Update the socket assigns with the timezone data
     # Only update selected_date if we don't have a date from URL parameters
@@ -249,6 +313,136 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
           max_date: local_date
         )
       end
+
+    {:noreply, socket}
+  end
+
+  def handle_event("navigate_previous", _params, socket) do
+    entries = socket.assigns.previous_entries
+    current_index = socket.assigns.current_entry_index
+
+    if current_index < length(entries) - 1 do
+      new_index = current_index + 1
+      entry = Enum.at(entries, new_index)
+
+      # Always save current form data before navigating (captures any user edits)
+      socket =
+        assign(socket,
+          original_form_data: socket.assigns.food_changeset.data,
+          original_quantity_info: socket.assigns.quantity_info,
+          original_form_params: socket.assigns.food_changeset.params
+        )
+
+      # Create a new changeset with the previous entry data but keep current date
+      entry_with_current_date = %{entry | entry_date: socket.assigns.selected_date}
+      food_changeset = FoodEntries.change_food_entry(entry_with_current_date)
+      food_form = to_form(food_changeset)
+
+      socket =
+        assign(socket,
+          food_changeset: food_changeset,
+          food_form: food_form,
+          current_entry_index: new_index,
+          is_navigating_previous: true,
+          quantity_info: ""  # Hide quantity_info when navigating to previous entries
+        )
+
+      {:noreply, socket}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("navigate_next", _params, socket) do
+    current_index = socket.assigns.current_entry_index
+
+    if current_index > 0 do
+      new_index = current_index - 1
+      entries = socket.assigns.previous_entries
+      entry = Enum.at(entries, new_index)
+
+      # Save current form data before navigating (captures any user edits)
+      socket =
+        assign(socket,
+          original_form_data: socket.assigns.food_changeset.data,
+          original_quantity_info: socket.assigns.quantity_info,
+          original_form_params: socket.assigns.food_changeset.params
+        )
+
+      # Create a new changeset with the next entry data but keep current date
+      entry_with_current_date = %{entry | entry_date: socket.assigns.selected_date}
+      food_changeset = FoodEntries.change_food_entry(entry_with_current_date)
+      food_form = to_form(food_changeset)
+
+      socket =
+        assign(socket,
+          food_changeset: food_changeset,
+          food_form: food_form,
+          current_entry_index: new_index,
+          is_navigating_previous: true,
+          quantity_info: ""  # Hide quantity_info when navigating to previous entries
+        )
+
+      {:noreply, socket}
+    else
+      # If we're at the beginning, restore original form data
+      handle_event("restore_original_form", %{}, socket)
+    end
+  end
+
+  def handle_event("restore_original_form", _params, socket) do
+    # Restore the original form data if it exists
+    original_data = socket.assigns.original_form_data
+    original_quantity_info = socket.assigns.original_quantity_info
+    original_form_params = socket.assigns.original_form_params
+
+    if original_data do
+      # Restore the original form data using params if available, otherwise use data
+      food_changeset =
+        if original_form_params do
+          FoodEntries.change_food_entry(%FoodEntry{}, original_form_params)
+        else
+          FoodEntries.change_food_entry(original_data)
+        end
+      food_form = to_form(food_changeset)
+
+      socket =
+        assign(socket,
+          food_changeset: food_changeset,
+          food_form: food_form,
+          current_entry_index: -1,
+          is_navigating_previous: false,
+          food_submitted: false,
+          quantity_info: original_quantity_info || "",
+          original_form_data: nil,
+          original_quantity_info: nil,
+          original_form_params: nil
+        )
+
+      {:noreply, socket}
+    else
+      # If no original data, just clear the form
+      handle_event("clear_form", %{}, socket)
+    end
+  end
+
+  def handle_event("clear_form", _params, socket) do
+    # Create empty food changeset for the form
+    food_changeset = FoodEntries.change_food_entry(%FoodEntry{})
+    food_form = to_form(food_changeset)
+
+    socket =
+      assign(socket,
+        food_changeset: food_changeset,
+        food_form: food_form,
+        current_entry_index: -1,
+        is_navigating_previous: false,
+        food_submitted: false,
+        quantity_info: "",
+        original_form_data: nil,
+        original_quantity_info: nil,
+        original_form_params: nil
+      )
 
     {:noreply, socket}
   end
@@ -310,6 +504,89 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
                 </div>
               </div>
 
+              <!-- Previous Entries Navigation -->
+              <%= if length(@previous_entries) > 0 do %>
+                <div class="card bg-base-200 shadow-sm">
+                  <div class="card-body">
+                    <!-- Mobile Layout -->
+                    <div class="md:hidden space-y-4">
+                      <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold">Previous Entries</h3>
+                        <%= if @is_navigating_previous do %>
+                          <span class="badge badge-info text-xs">
+                            <%= if @current_entry_index >= 0 do %>
+                              <%= @current_entry_index + 1 %>/<%= length(@previous_entries) %>
+                            <% else %>
+                              New
+                            <% end %>
+                          </span>
+                        <% end %>
+                      </div>
+                      <div class="flex gap-2 justify-center">
+                        <button
+                          type="button"
+                          class="btn btn-sm flex-1"
+                          phx-click="navigate_previous"
+                          disabled={@current_entry_index >= length(@previous_entries) - 1}
+                        >
+                          ← Previous
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-sm flex-1"
+                          phx-click="navigate_next"
+                          disabled={@current_entry_index < 0}
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Desktop Layout -->
+                    <div class="hidden md:flex items-center justify-between">
+                      <div class="flex items-center gap-4">
+                        <h3 class="text-lg font-semibold">Previous Entries</h3>
+                        <%= if @is_navigating_previous do %>
+                          <span class="badge badge-info">
+                            <%= if @current_entry_index >= 0 do %>
+                              Entry <%= @current_entry_index + 1 %> of <%= length(@previous_entries) %>
+                            <% else %>
+                              New Entry
+                            <% end %>
+                          </span>
+                        <% end %>
+                      </div>
+                      <div class="flex gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-sm"
+                          phx-click="navigate_previous"
+                          disabled={@current_entry_index >= length(@previous_entries) - 1}
+                        >
+                          ← Previous
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-sm"
+                          phx-click="navigate_next"
+                          disabled={@current_entry_index < 0}
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                    <%= if @is_navigating_previous and @current_entry_index >= 0 do %>
+                      <div class="mt-4 p-3 bg-base-100 rounded-lg">
+                        <p class="text-sm text-base-content/70">
+                          Currently viewing: <strong><%= Enum.at(@previous_entries, @current_entry_index).name %></strong>
+                          (originally added on <%= Enum.at(@previous_entries, @current_entry_index).entry_date %>)
+                        </p>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
               <!-- Food Form -->
               <div class="card bg-base-200 shadow-sm">
                 <div class="card-body">
@@ -321,7 +598,7 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
                       <span>Quantity: <strong><%= @quantity_info %></strong></span>
                     </div>
                   <% end %>
-                  <.form for={@food_form} phx-submit="save_food" id="food-form" novalidate>
+                  <.form for={@food_form} phx-submit="save_food" phx-change="validate" id="food-form" novalidate>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <!-- Basic Information -->
                       <div class="space-y-4">
@@ -422,9 +699,13 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
                         </.link>
                       </div>
                       <div class="flex gap-4 w-full sm:w-auto">
-                        <.link navigate={~p"/d/food"} class="btn btn-ghost flex-1 sm:flex-none">
-                          Cancel
-                        </.link>
+                        <button
+                          type="button"
+                          class="btn btn-ghost flex-1 sm:flex-none"
+                          phx-click="clear_form"
+                        >
+                          Clear
+                        </button>
                         <button type="submit" class="btn btn-primary flex-1 sm:flex-none">
                           Add Food
                         </button>

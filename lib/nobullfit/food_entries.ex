@@ -231,4 +231,14 @@ defmodule Nobullfit.FoodEntries do
     |> where([f], f.user_id == ^user_id and f.id == ^id)
     |> Repo.one!()
   end
+
+  @doc """
+  Gets all food entries for a user ordered by most recent first for navigation.
+  """
+  def get_user_food_entries_for_navigation(user_id) do
+    FoodEntry
+    |> where([f], f.user_id == ^user_id)
+    |> order_by([f], [desc: f.entry_date, desc: f.inserted_at])
+    |> Repo.all()
+  end
 end
