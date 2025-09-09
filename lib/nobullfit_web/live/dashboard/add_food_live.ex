@@ -85,6 +85,7 @@ defmodule NobullfitWeb.Dashboard.AddFoodLive do
         food_changeset: food_changeset,
         food_form: to_form(food_changeset),
         food_submitted: false,
+        quantity_info: "",
         has_date_from_url: false,
         previous_entries: previous_entries,
         current_entry_index: -1,
