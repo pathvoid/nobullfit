@@ -4,10 +4,15 @@ A free food tracking and progress monitoring application built with privacy as t
 
 ## Features
 
-- **Free Food Tracking** - Log meals, track calories, and monitor nutritional intake
-- **Progress Monitoring** - Track your fitness journey with detailed analytics
+- **Food Tracking** - Log meals by type (breakfast, lunch, dinner, snacks) with detailed nutrition tracking
+- **Food Database** - Search comprehensive nutrition database with multiple serving sizes and measurements
+- **Recipe Discovery** - Find recipes with advanced filtering by diet, meal type, and calorie range
+- **Favorites System** - Save favorite foods and recipes for quick access
+- **Grocery Lists** - Create and manage shopping lists with recipe ingredient integration
+- **Progress Tracking** - Log exercises, track weight, and monitor weekly activity goals
+- **Real-time Updates** - LiveView-powered interface with instant data synchronization
+- **Mobile Responsive** - Optimized experience across all devices
 - **Data Privacy First** - Your personal data stays private and secure
-- **Simple Interface** - Clean, intuitive design focused on usability
 
 ## Mission
 
