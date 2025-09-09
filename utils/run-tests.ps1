@@ -175,6 +175,7 @@ function Invoke-Tests {
     }
     
     Write-ColorOutput "Executing: $testCommand" "Cyan"
+    Write-ColorOutput "Running comprehensive test suite for NoBullFit application..." "Blue"
     
     # Execute the test command
     if ($IgnoreWarnings) {
@@ -187,7 +188,17 @@ function Invoke-Tests {
             
             # Read and filter the output
             $output = Get-Content $tempFile | Where-Object { 
-                $_ -notmatch "warning:" -and $_ -notmatch "redefining module"
+                $_ -notmatch "warning:" -and 
+                $_ -notmatch "redefining module" -and
+                $_ -notmatch "Maintenance mode enabled" -and
+                $_ -notmatch "Maintenance mode disabled" -and
+                $_ -notmatch "Message:" -and
+                $_ -notmatch "Prevent login:" -and
+                $_ -notmatch "Prevent registration:" -and
+                $_ -notmatch "Maintenance Status:" -and
+                $_ -notmatch "Enabled:" -and
+                $_ -notmatch "Latest maintenance setting:" -and
+                $_ -notmatch "No maintenance settings found"
             }
             
             # Display filtered output
@@ -214,6 +225,7 @@ function Invoke-Tests {
         Write-ColorOutput "Tests completed successfully!" "Green"
     } else {
         Write-ColorOutput "Tests failed with exit code: $testResult" "Red"
+        Write-ColorOutput "Check the output above for specific test failures" "Red"
     }
     
     return $testResult

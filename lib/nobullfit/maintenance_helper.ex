@@ -40,15 +40,9 @@ defmodule Nobullfit.MaintenanceHelper do
 
     case MaintenanceSetting.create(attrs) do
       {:ok, setting} ->
-        IO.puts("Maintenance mode enabled")
-        IO.puts("Message: #{setting.message || "Default message"}")
-        IO.puts("Prevent login: #{setting.prevent_login}")
-        IO.puts("Prevent registration: #{setting.prevent_registration}")
         {:ok, setting}
 
       {:error, changeset} ->
-        IO.puts("Failed to enable maintenance mode:")
-        IO.inspect(changeset.errors)
         {:error, changeset}
     end
   end
@@ -59,12 +53,9 @@ defmodule Nobullfit.MaintenanceHelper do
   def disable do
     case MaintenanceSetting.disable_maintenance() do
       {:ok, _setting} ->
-        IO.puts("Maintenance mode disabled")
         :ok
 
       {:error, changeset} ->
-        IO.puts("Failed to disable maintenance mode:")
-        IO.inspect(changeset.errors)
         {:error, changeset}
     end
   end
@@ -73,30 +64,13 @@ defmodule Nobullfit.MaintenanceHelper do
   Shows the current maintenance status.
   """
   def status do
-    status = MaintenanceSetting.get_maintenance_status()
-
-    IO.puts("Maintenance Status:")
-    IO.puts("Enabled: #{status.enabled}")
-    IO.puts("Message: #{status.message || "Default message"}")
-    IO.puts("Prevent login: #{status.prevent_login}")
-    IO.puts("Prevent registration: #{status.prevent_registration}")
-
-    status
+    MaintenanceSetting.get_maintenance_status()
   end
 
   @doc """
   Gets the latest maintenance setting from the database.
   """
   def latest do
-    case MaintenanceSetting.get_latest() do
-      nil ->
-        IO.puts("No maintenance settings found in database")
-        nil
-
-      setting ->
-        IO.puts("Latest maintenance setting:")
-        IO.inspect(setting)
-        setting
-    end
+    MaintenanceSetting.get_latest()
   end
 end
