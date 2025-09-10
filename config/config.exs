@@ -69,7 +69,7 @@ config :plug_content_security_policy,
   report_only: false,
   directives: %{
     default_src: ~w('self'),
-    script_src: ~w('self' 'unsafe-inline' 'unsafe-eval' https://cdn.nobull.fit),
+    script_src: ~w('self' 'unsafe-inline' 'unsafe-eval' https://cdn.nobull.fit https://static.cloudflareinsights.com),
     style_src: ~w('self' 'unsafe-inline'),
     img_src: ~w('self' data: https:),
     font_src: ~w('self' data:),
