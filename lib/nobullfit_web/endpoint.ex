@@ -49,5 +49,9 @@ defmodule NobullfitWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+
+  # Content Security Policy with manifest-src for Brave browser compatibility
+  plug PlugContentSecurityPolicy
+
   plug NobullfitWeb.Router
 end

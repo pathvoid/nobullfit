@@ -128,10 +128,7 @@ const NavigationPreloadHook = {
           const targetPage = href
           const pageImages = window.ImagePreloader.pageImages[targetPage] || []
           if (pageImages.length > 0) {
-            console.log(`Preloading images for hovered link: ${targetPage}`)
-            window.ImagePreloader.preloadImages(pageImages, () => {
-              console.log(`Hover preload completed for: ${targetPage}`)
-            })
+            window.ImagePreloader.preloadImages(pageImages, () => {})
           }
         }
       })
@@ -180,7 +177,6 @@ const DashboardChartHook = {
       mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
           if (typeof CanvasJS !== 'undefined' && this.timezoneDataReceived) {
-            console.log('Theme attribute changed, updating charts')
             this.initializeAllCharts()
           }
         }

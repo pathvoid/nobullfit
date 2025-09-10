@@ -63,5 +63,23 @@ config :nobullfit, :legal_documents_monitor,
   enabled: true,
   check_interval: 60_000 # Check every minute
 
+# Content Security Policy configuration with manifest-src for Brave browser compatibility
+config :plug_content_security_policy,
+  nonces_for: [],
+  report_only: false,
+  directives: %{
+    default_src: ~w('self'),
+    script_src: ~w('self' 'unsafe-inline' 'unsafe-eval' https://cdn.nobull.fit),
+    style_src: ~w('self' 'unsafe-inline'),
+    img_src: ~w('self' data: https:),
+    font_src: ~w('self' data:),
+    connect_src: ~w('self' wss: ws: https://api.nobull.fit),
+    manifest_src: ~w('self'),
+    object_src: ~w('none'),
+    base_uri: ~w('self'),
+    form_action: ~w('self'),
+    frame_ancestors: ~w('none')
+  }
+
 # Import environment-specific configuration
 import_config "#{config_env()}.exs"

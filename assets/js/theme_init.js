@@ -64,7 +64,6 @@ function setInitialIndicatorPosition(theme) {
 
 // Theme toggle functions
 function setTheme(theme) {
-  console.log("Setting theme:", theme);
   // Store the user's choice
   localStorage.setItem("phx:theme", theme);
   // Determine the actual theme to apply
