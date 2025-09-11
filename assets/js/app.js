@@ -541,6 +541,7 @@ window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
 // Connect to LiveView socket
 liveSocket.connect()
+liveSocket.enableDebug()
 
 // Expose liveSocket globally for debugging
 window.liveSocket = liveSocket
