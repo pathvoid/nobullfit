@@ -354,12 +354,27 @@ defmodule Nobullfit.Accounts do
 
   @doc """
   Delivers the magic link login instructions to the given user.
+
+  Only sends email if the user is confirmed. Unconfirmed users will not receive
+  any email to prevent spam attacks.
   """
   def deliver_login_instructions(%User{} = user, magic_link_url_fun)
       when is_function(magic_link_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "login")
     Repo.insert!(user_token)
     UserNotifier.deliver_login_instructions(user, magic_link_url_fun.(encoded_token))
+  end
+
+  @doc """
+  Delivers confirmation instructions to a newly registered user.
+
+  This should only be called during registration, not during login attempts.
+  """
+  def deliver_confirmation_instructions(%User{} = user, confirmation_url_fun)
+      when is_function(confirmation_url_fun, 1) do
+    {encoded_token, user_token} = UserToken.build_email_token(user, "login")
+    Repo.insert!(user_token)
+    UserNotifier.deliver_confirmation_instructions(user, confirmation_url_fun.(encoded_token))
   end
 
   @doc """

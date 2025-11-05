@@ -106,9 +106,9 @@ defmodule NobullfitWeb.UserLive.Registration do
             )
             |> push_navigate(to: ~p"/users/log-in")}
         else
-          # Send magic link for web users
+          # Send confirmation email for web users during registration
           {:ok, _} =
-            Accounts.deliver_login_instructions(
+            Accounts.deliver_confirmation_instructions(
               user,
               &url(~p"/users/log-in/#{&1}")
             )
