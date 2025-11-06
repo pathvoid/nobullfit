@@ -42,6 +42,17 @@ defmodule NobullfitWeb.UserLive.Registration do
               phx-mounted={JS.focus()}
             />
 
+            <!-- Honeypot field to catch bots -->
+            <input
+              type="text"
+              name="user[email_confirmation]"
+              id="user_email_confirmation"
+              autocomplete="off"
+              tabindex="-1"
+              aria-hidden="true"
+              style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;"
+            />
+
             <%= if is_nobullfit_app?(@user_agent) do %>
               <.input
                 field={@form[:password]}
@@ -94,7 +105,22 @@ defmodule NobullfitWeb.UserLive.Registration do
 
   # Handle registration form submission
   def handle_event("save", %{"user" => user_params}, socket) do
-    case Accounts.register_user_with_password(user_params) do
+    # Check honeypot field - if filled, it's a bot
+    honeypot_value = Map.get(user_params, "email_confirmation", "")
+
+    if honeypot_value != nil and honeypot_value != "" do
+      # Bot detected - silently reject but make it look successful
+      email = Map.get(user_params, "email", "your email")
+      {:noreply,
+        socket
+        |> put_flash(
+          :info,
+          "An email was sent to #{email}, please access it to confirm your account."
+        )
+        |> push_navigate(to: ~p"/users/log-in")}
+    else
+      # Legitimate user - proceed with registration
+      case Accounts.register_user_with_password(user_params) do
       {:ok, user} ->
         # If password was provided (app user), don't send magic link
         if Map.has_key?(user_params, "password") and user_params["password"] != "" do
@@ -124,6 +150,7 @@ defmodule NobullfitWeb.UserLive.Registration do
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset, socket.assigns.maintenance_status, socket.assigns.user_agent)}
+      end
     end
   end
 
