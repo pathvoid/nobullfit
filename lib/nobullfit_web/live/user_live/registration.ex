@@ -70,6 +70,39 @@ defmodule NobullfitWeb.UserLive.Registration do
               />
             <% end %>
 
+            <!-- Custom Captcha -->
+            <div class="fieldset mb-2">
+              <label>
+                <span class="label mb-1"><%= @captcha.question %></span>
+                <input
+                  type="text"
+                  name="captcha_answer"
+                  id="captcha_answer"
+                  value={@captcha.user_answer}
+                  class="input input-bordered w-full"
+                  placeholder="Enter your answer"
+                  required
+                />
+              </label>
+              <%= if @captcha.error do %>
+                <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
+                  <.icon name="hero-exclamation-circle" class="size-5" />
+                  <%= @captcha.error %>
+                </p>
+              <% end %>
+              <button
+                type="button"
+                phx-click="refresh_captcha"
+                class="btn btn-ghost btn-sm mt-2 mb-4 self-start"
+                title="Get a new question"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                New question
+              </button>
+            </div>
+
             <.button phx-disable-with="Creating account..." class="btn btn-primary w-full">
               Create an account
             </.button>
@@ -99,12 +132,16 @@ defmodule NobullfitWeb.UserLive.Registration do
     if maintenance_status.enabled && maintenance_status.prevent_registration do
       {:ok, redirect(socket, to: ~p"/maintenance")}
     else
-      {:ok, assign_form(socket, changeset, maintenance_status, user_agent), temporary_assigns: [form: nil]}
+      captcha = generate_captcha()
+      {:ok, assign_form(socket, changeset, maintenance_status, user_agent, captcha), temporary_assigns: [form: nil]}
     end
   end
 
   # Handle registration form submission
-  def handle_event("save", %{"user" => user_params}, socket) do
+  def handle_event("save", params, socket) do
+    user_params = Map.get(params, "user", %{})
+    captcha_answer = Map.get(params, "captcha_answer", "")
+
     # Check honeypot field - if filled, it's a bot
     honeypot_value = Map.get(user_params, "email_confirmation", "")
 
@@ -119,50 +156,104 @@ defmodule NobullfitWeb.UserLive.Registration do
         )
         |> push_navigate(to: ~p"/users/log-in")}
     else
-      # Legitimate user - proceed with registration
-      case Accounts.register_user_with_password(user_params) do
-      {:ok, user} ->
-        # If password was provided (app user), don't send magic link
-        if Map.has_key?(user_params, "password") and user_params["password"] != "" do
-          {:noreply,
-            socket
-            |> put_flash(
-              :info,
-              "Account created successfully! You can now log in with your email and password."
-            )
-            |> push_navigate(to: ~p"/users/log-in")}
-        else
-          # Send confirmation email for web users during registration
-          {:ok, _} =
-            Accounts.deliver_confirmation_instructions(
-              user,
-              &url(~p"/users/log-in/#{&1}")
-            )
+      # Validate captcha
+      captcha_valid = validate_captcha_answer(captcha_answer, socket.assigns.captcha.answer)
 
-          {:noreply,
-            socket
-            |> put_flash(
-              :info,
-              "An email was sent to #{user.email}, please access it to confirm your account."
-            )
-            |> push_navigate(to: ~p"/users/log-in")}
+      if not captcha_valid do
+        # Captcha failed - generate new one and show error
+        new_captcha = generate_captcha()
+        {:noreply,
+          socket
+          |> assign(captcha: %{new_captcha | user_answer: captcha_answer, error: "Incorrect answer. Please try again."})}
+      else
+        # Captcha passed - proceed with registration
+        case Accounts.register_user_with_password(user_params) do
+          {:ok, user} ->
+            # If password was provided (app user), don't send magic link
+            if Map.has_key?(user_params, "password") and user_params["password"] != "" do
+              {:noreply,
+                socket
+                |> put_flash(
+                  :info,
+                  "Account created successfully! You can now log in with your email and password."
+                )
+                |> push_navigate(to: ~p"/users/log-in")}
+            else
+              # Send confirmation email for web users during registration
+              {:ok, _} =
+                Accounts.deliver_confirmation_instructions(
+                  user,
+                  &url(~p"/users/log-in/#{&1}")
+                )
+
+              {:noreply,
+                socket
+                |> put_flash(
+                  :info,
+                  "An email was sent to #{user.email}, please access it to confirm your account."
+                )
+                |> push_navigate(to: ~p"/users/log-in")}
+            end
+
+          {:error, %Ecto.Changeset{} = changeset} ->
+            new_captcha = generate_captcha()
+            {:noreply, assign_form(socket, changeset, socket.assigns.maintenance_status, socket.assigns.user_agent, new_captcha)}
         end
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign_form(socket, changeset, socket.assigns.maintenance_status, socket.assigns.user_agent)}
       end
     end
+  end
+
+  # Handle captcha refresh
+  def handle_event("refresh_captcha", _params, socket) do
+    new_captcha = generate_captcha()
+    {:noreply, assign(socket, captcha: new_captcha)}
   end
 
   # Handle form validation
   def handle_event("validate", %{"user" => user_params}, socket) do
     changeset = Accounts.change_user_registration(%User{}, user_params, hash_password: false)
-    {:noreply, assign_form(socket, Map.put(changeset, :action, :validate), socket.assigns.maintenance_status, socket.assigns.user_agent)}
+    {:noreply, assign_form(socket, Map.put(changeset, :action, :validate), socket.assigns.maintenance_status, socket.assigns.user_agent, socket.assigns.captcha)}
   end
 
   # Assign form and other assigns to socket
-  defp assign_form(socket, %Ecto.Changeset{} = changeset, maintenance_status, user_agent) do
+  defp assign_form(socket, %Ecto.Changeset{} = changeset, maintenance_status, user_agent, captcha) do
     form = to_form(changeset, as: "user")
-    assign(socket, form: form, current_path: "/users/register", maintenance_status: maintenance_status, user_agent: user_agent)
+    assign(socket, form: form, current_path: "/users/register", maintenance_status: maintenance_status, user_agent: user_agent, captcha: captcha)
   end
+
+  # Generate a random math captcha
+  defp generate_captcha do
+    # Generate two random numbers between 1 and 10
+    num1 = :rand.uniform(10)
+    num2 = :rand.uniform(10)
+
+    # Randomly choose addition or subtraction
+    operation = if :rand.uniform(2) == 1, do: :add, else: :subtract
+
+    {question, answer} = case operation do
+      :add ->
+        {"What is #{num1} + #{num2}?", num1 + num2}
+      :subtract ->
+        # Ensure positive result
+        {larger, smaller} = if num1 >= num2, do: {num1, num2}, else: {num2, num1}
+        {"What is #{larger} - #{smaller}?", larger - smaller}
+    end
+
+    %{
+      question: question,
+      answer: answer,
+      user_answer: "",
+      error: nil
+    }
+  end
+
+  # Validate captcha answer
+  defp validate_captcha_answer(user_answer, correct_answer) when is_binary(user_answer) do
+    case Integer.parse(String.trim(user_answer)) do
+      {parsed_answer, _} -> parsed_answer == correct_answer
+      :error -> false
+    end
+  end
+
+  defp validate_captcha_answer(_, _), do: false
 end
