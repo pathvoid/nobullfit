@@ -165,7 +165,7 @@ export async function handleGetDashboardStats(req: Request, res: Response): Prom
 
         // Process weight data - handle mixed units
         const weightData: Array<{ date: string; weight: number; unit: string }> = [];
-        let standardUnit: string | null = null;
+        let standardUnit: string = "kg";
         
         if (weightResult.rows.length > 0) {
             // Get the last entry's unit to use as the standard
