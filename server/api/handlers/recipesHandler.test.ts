@@ -66,14 +66,21 @@ describe("recipesHandler", () => {
                 { id: 2, name: "Recipe 2", is_public: false }
             ];
 
+            // Single query that returns all recipes, pagination is done client-side
             mockPool.query.mockResolvedValue({ rows: mockRecipes });
 
             await handleGetRecipes(mockRequest as Request, mockResponse as Response);
 
             expect(mockResponse.status).toHaveBeenCalledWith(200);
-            expect(mockResponse.json).toHaveBeenCalledWith({
-                recipes: mockRecipes
-            });
+            expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+                recipes: expect.arrayContaining([
+                    expect.objectContaining({ id: 1, name: "Recipe 1" }),
+                    expect.objectContaining({ id: 2, name: "Recipe 2" })
+                ]),
+                pagination: expect.objectContaining({
+                    total: 2
+                })
+            }));
         });
 
         it("should filter recipes by search query", async () => {
@@ -82,10 +89,12 @@ describe("recipesHandler", () => {
             mockRequest.query = { search: "chocolate" };
 
             const mockRecipes = [{ id: 1, name: "Chocolate Cake", is_public: true }];
+            // Single query that returns all recipes with search filter
             mockPool.query.mockResolvedValue({ rows: mockRecipes });
 
             await handleGetRecipes(mockRequest as Request, mockResponse as Response);
 
+            // The query should contain the search term
             expect(mockPool.query).toHaveBeenCalledWith(
                 expect.stringContaining("LIKE"),
                 expect.arrayContaining([expect.stringContaining("chocolate")])

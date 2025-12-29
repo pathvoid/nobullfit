@@ -43,10 +43,10 @@ describe("Favorites", () => {
 
         render(<RouterProvider router={router} />);
 
-        // Wait for loader to complete
-        await screen.findByRole("heading", { name: /favorites/i });
+        // Wait for loader to complete - use level to be specific
+        await screen.findByRole("heading", { level: 1, name: /favorites/i });
 
-        expect(screen.getByRole("heading", { name: /favorites/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { level: 1, name: /favorites/i })).toBeInTheDocument();
         expect(screen.getByText(/your favorite items will appear here/i)).toBeInTheDocument();
     });
 });

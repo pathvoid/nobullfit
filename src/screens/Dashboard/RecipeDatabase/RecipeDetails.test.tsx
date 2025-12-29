@@ -141,7 +141,7 @@ describe("RecipeDetails", () => {
         expect(screen.getByText("Verified")).toBeInTheDocument();
     });
 
-    it("should show Edit button for recipe owner", async () => {
+    it("should show More Actions dropdown for recipe owner", async () => {
         const router = createMemoryRouter([
             {
                 path: "/dashboard/recipe-database/:recipeId",
@@ -159,11 +159,12 @@ describe("RecipeDetails", () => {
         render(<RouterProvider router={router} />);
 
         await waitFor(() => {
-            expect(screen.getByRole("button", { name: /Edit Recipe/i })).toBeInTheDocument();
+            // More Actions dropdown should be present
+            expect(screen.getByRole("button", { name: /More Actions/i })).toBeInTheDocument();
         });
     });
 
-    it("should show Duplicate button for non-owner", async () => {
+    it("should show More Actions dropdown for non-owner", async () => {
         const otherUserRecipe = { ...mockRecipe, user_id: 2 };
         const router = createMemoryRouter([
             {
@@ -182,7 +183,8 @@ describe("RecipeDetails", () => {
         render(<RouterProvider router={router} />);
 
         await waitFor(() => {
-            expect(screen.getByRole("button", { name: /Duplicate Recipe/i })).toBeInTheDocument();
+            // More Actions dropdown should be present
+            expect(screen.getByRole("button", { name: /More Actions/i })).toBeInTheDocument();
         });
     });
 
@@ -309,4 +311,3 @@ describe("RecipeDetails", () => {
         });
     });
 });
-

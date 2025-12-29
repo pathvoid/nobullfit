@@ -175,4 +175,3 @@ export async function handleCheckFavorite(req: Request, res: Response): Promise<
         res.status(500).json({ error: "Internal server error" });
     }
 }
-

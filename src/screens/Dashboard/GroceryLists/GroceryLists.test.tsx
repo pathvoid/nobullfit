@@ -43,10 +43,10 @@ describe("GroceryLists", () => {
 
         render(<RouterProvider router={router} />);
 
-        // Wait for loader to complete
-        await screen.findByRole("heading", { name: /grocery lists/i });
+        // Wait for loader to complete - use level to be specific
+        await screen.findByRole("heading", { level: 1, name: /grocery lists/i });
 
-        expect(screen.getByRole("heading", { name: /grocery lists/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { level: 1, name: /grocery lists/i })).toBeInTheDocument();
         expect(screen.getByText(/create and manage your grocery lists/i)).toBeInTheDocument();
     });
 });

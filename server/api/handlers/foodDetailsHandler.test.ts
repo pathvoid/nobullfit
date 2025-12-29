@@ -41,7 +41,8 @@ describe("foodDetailsHandler", () => {
                     foodId: "food_abc123",
                     label: "Apple",
                     nutrients: { ENERC_KCAL: 52 }
-                }
+                },
+                measures: []
             };
 
             const mockApiResponse = {
@@ -60,7 +61,15 @@ describe("foodDetailsHandler", () => {
                 expect.stringContaining("api.edamam.com/api/food-database/v2/parser"),
                 expect.any(Object)
             );
-            expect(mockResponse.json).toHaveBeenCalledWith(mockFoodMatch);
+            // Handler merges measures into food object
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                food: {
+                    foodId: "food_abc123",
+                    label: "Apple",
+                    nutrients: { ENERC_KCAL: 52 },
+                    measures: []
+                }
+            });
         });
 
         it("should handle URI-style food IDs", async () => {
@@ -70,7 +79,8 @@ describe("foodDetailsHandler", () => {
                 food: {
                     foodId: "food#recipe_abc123",
                     label: "Custom Recipe"
-                }
+                },
+                measures: []
             };
 
             const mockApiResponse = {
@@ -85,7 +95,14 @@ describe("foodDetailsHandler", () => {
 
             await handleFoodDetails(mockRequest as Request, mockResponse as Response);
 
-            expect(mockResponse.json).toHaveBeenCalledWith(mockFoodMatch);
+            // Handler merges measures into food object
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                food: {
+                    foodId: "food#recipe_abc123",
+                    label: "Custom Recipe",
+                    measures: []
+                }
+            });
         });
 
         it("should return 400 if foodId is missing", async () => {
@@ -187,7 +204,14 @@ describe("foodDetailsHandler", () => {
 
             await handleFoodDetails(mockRequest as Request, mockResponse as Response);
 
-            expect(mockResponse.json).toHaveBeenCalledWith(mockParsedFood);
+            // Handler adds measures: [] if not present
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                food: {
+                    foodId: "food_abc123",
+                    label: "Parsed Apple",
+                    measures: []
+                }
+            });
         });
     });
 });

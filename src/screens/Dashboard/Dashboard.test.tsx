@@ -34,7 +34,7 @@ describe("Dashboard", () => {
         vi.clearAllMocks();
     });
 
-    it("should render the dashboard page with lorem ipsum content", async () => {
+    it("should render the dashboard page", async () => {
         vi.spyOn(AuthContext, "useAuth").mockReturnValue({
             user: { id: 1, email: "test@example.com", full_name: "Test User" },
             isLoading: false,
@@ -67,14 +67,6 @@ describe("Dashboard", () => {
 
         // Check for welcome message
         expect(screen.getByText(/welcome back, test user!/i)).toBeInTheDocument();
-
-        // Check for lorem ipsum sections
-        expect(screen.getByRole("heading", { name: /lorem ipsum section/i })).toBeInTheDocument();
-        expect(screen.getByRole("heading", { name: /another section/i })).toBeInTheDocument();
-        expect(screen.getByRole("heading", { name: /more content/i })).toBeInTheDocument();
-
-        // Check for lorem ipsum text
-        expect(screen.getByText(/lorem ipsum dolor sit amet/i)).toBeInTheDocument();
     });
 
     it("should display logout button in navbar", async () => {

@@ -115,4 +115,3 @@ export async function handleFoodDetails(req: Request, res: Response): Promise<vo
         });
     }
 }
-

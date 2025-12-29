@@ -106,12 +106,18 @@ describe("exportDataHandler", () => {
             }
         ];
 
+        // Mock all required queries in order:
+        // 1. User, 2. Recipes, 3. Favorites, 4. Grocery Lists, 5. Grocery List Items (for each list)
+        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking
         mockPool.query
             .mockResolvedValueOnce({ rows: [mockUser] })
             .mockResolvedValueOnce({ rows: mockRecipes })
             .mockResolvedValueOnce({ rows: mockFavorites })
             .mockResolvedValueOnce({ rows: mockGroceryLists })
-            .mockResolvedValueOnce({ rows: mockGroceryListItems });
+            .mockResolvedValueOnce({ rows: mockGroceryListItems })
+            .mockResolvedValueOnce({ rows: [] }) // food_tracking
+            .mockResolvedValueOnce({ rows: [] }) // progress_tracking
+            .mockResolvedValueOnce({ rows: [] }); // weight_tracking
 
         await handleExportData(mockRequest as Request, mockResponse as Response);
 
@@ -201,12 +207,18 @@ describe("exportDataHandler", () => {
             }
         ];
 
+        // Mock all required queries in order:
+        // 1. User, 2. Recipes, 3. Favorites, 4. Grocery Lists, 5. Grocery List Items (for each list)
+        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking
         mockPool.query
             .mockResolvedValueOnce({ rows: [mockUser] })
-            .mockResolvedValueOnce({ rows: [] })
-            .mockResolvedValueOnce({ rows: [] })
+            .mockResolvedValueOnce({ rows: [] }) // recipes
+            .mockResolvedValueOnce({ rows: [] }) // favorites
             .mockResolvedValueOnce({ rows: mockGroceryLists })
-            .mockResolvedValueOnce({ rows: mockGroceryListItems });
+            .mockResolvedValueOnce({ rows: mockGroceryListItems })
+            .mockResolvedValueOnce({ rows: [] }) // food_tracking
+            .mockResolvedValueOnce({ rows: [] }) // progress_tracking
+            .mockResolvedValueOnce({ rows: [] }); // weight_tracking
 
         await handleExportData(mockRequest as Request, mockResponse as Response);
 

@@ -224,7 +224,7 @@ export async function handleUpdateProgressTracking(req: Request, res: Response):
             return;
         }
 
-        updates.push(`updated_at = CURRENT_TIMESTAMP`);
+        updates.push("updated_at = CURRENT_TIMESTAMP");
         values.push(parseInt(id), userId);
 
         const query = `
@@ -298,4 +298,3 @@ export async function handleDeleteProgressTracking(req: Request, res: Response):
         res.status(500).json({ error: "Internal server error" });
     }
 }
-

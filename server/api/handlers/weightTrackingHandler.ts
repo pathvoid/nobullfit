@@ -202,4 +202,3 @@ export async function handleDeleteWeight(req: Request, res: Response): Promise<v
         res.status(500).json({ error: "Internal server error" });
     }
 }
-
