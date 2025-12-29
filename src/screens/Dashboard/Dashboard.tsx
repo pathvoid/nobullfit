@@ -68,6 +68,16 @@ interface DashboardStats {
         unit: string;
     }>;
     weightUnit: string | null;
+    tdee: {
+        age: number;
+        gender: string;
+        height_cm: number;
+        activity_level: string;
+        bmr: number;
+        tdee: number;
+        created_at: string;
+        updated_at: string;
+    } | null;
 }
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
@@ -191,6 +201,38 @@ const Dashboard: React.FC = () => {
                         </div>
                     )}
                 </div>
+
+                {stats?.tdee && (
+                    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900">
+                        <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                                <Heading level={2} className="mb-2 text-lg font-semibold">
+                                    Your TDEE
+                                </Heading>
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <Text className="text-sm text-zinc-600 dark:text-zinc-400">BMR (Basal Metabolic Rate)</Text>
+                                        <Text className="text-xl font-bold">{Math.round(stats.tdee.bmr)} calories/day</Text>
+                                    </div>
+                                    <div>
+                                        <Text className="text-sm text-zinc-600 dark:text-zinc-400">TDEE (Total Daily Energy Expenditure)</Text>
+                                        <Text className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                                            {Math.round(stats.tdee.tdee)} calories/day
+                                        </Text>
+                                    </div>
+                                </div>
+                            </div>
+                            <Button
+                                type="button"
+                                outline
+                                onClick={() => navigate("/dashboard/tdee")}
+                                className="ml-4 shrink-0"
+                            >
+                                View Details
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
                 {isLoadingStats ? (
                     <div className="flex items-center justify-center py-12">

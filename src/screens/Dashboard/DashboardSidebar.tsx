@@ -132,7 +132,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ currentPath: propCu
 
     // Determine which section should be expanded based on current path
     const foodNutritionPaths = ["/dashboard/food-database", "/dashboard/recipe-database"];
-    const progressAnalyticsPaths = ["/dashboard/progress-tracking", "/dashboard/food-tracking"];
+    const progressAnalyticsPaths = ["/dashboard/progress-tracking", "/dashboard/food-tracking", "/dashboard/tdee"];
 
     const isFoodNutritionOpen = foodNutritionPaths.includes(currentPath);
     const isProgressAnalyticsOpen = progressAnalyticsPaths.includes(currentPath);
@@ -162,6 +162,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ currentPath: propCu
                     </SidebarItem>
                     <SidebarItem href="/dashboard/food-tracking" current={currentPath === "/dashboard/food-tracking"}>
                         <SidebarLabel>Food Tracking</SidebarLabel>
+                    </SidebarItem>
+                    <SidebarItem href="/dashboard/tdee" current={currentPath === "/dashboard/tdee"}>
+                        <SidebarLabel>TDEE Calculator</SidebarLabel>
                     </SidebarItem>
                 </CollapsibleSidebarSection>
                 <div className="mt-2">

@@ -206,3 +206,21 @@ CREATE INDEX IF NOT EXISTS idx_weight_tracking_user_id ON weight_tracking(user_i
 CREATE INDEX IF NOT EXISTS idx_weight_tracking_date ON weight_tracking(date);
 CREATE INDEX IF NOT EXISTS idx_weight_tracking_user_date ON weight_tracking(user_id, date);
 
+-- TDEE (Total Daily Energy Expenditure) table - stores user's TDEE calculation data
+CREATE TABLE IF NOT EXISTS user_tdee (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    age INTEGER NOT NULL,
+    gender VARCHAR(10) NOT NULL CHECK (gender IN ('male', 'female')),
+    height_cm DECIMAL(10, 2) NOT NULL,
+    activity_level VARCHAR(20) NOT NULL CHECK (activity_level IN ('sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extremely_active')),
+    bmr DECIMAL(10, 2) NOT NULL,
+    tdee DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id)
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_user_tdee_user_id ON user_tdee(user_id);
+

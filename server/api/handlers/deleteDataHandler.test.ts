@@ -207,7 +207,7 @@ describe("deleteDataHandler", () => {
             mockRequest.body = {
                 password: "password123",
                 timePeriod: "all",
-                dataTypes: ["recipes", "favorites", "grocery_lists", "food_tracking", "progress_tracking", "weight_tracking"]
+                dataTypes: ["recipes", "favorites", "grocery_lists", "food_tracking", "progress_tracking", "weight_tracking", "tdee"]
             };
 
             mockPool.query
@@ -217,7 +217,8 @@ describe("deleteDataHandler", () => {
                 .mockResolvedValueOnce({ rowCount: 2 })
                 .mockResolvedValueOnce({ rowCount: 50 })
                 .mockResolvedValueOnce({ rowCount: 20 })
-                .mockResolvedValueOnce({ rowCount: 30 });
+                .mockResolvedValueOnce({ rowCount: 30 })
+                .mockResolvedValueOnce({ rowCount: 1 });
 
             await handleDeleteData(mockRequest as Request, mockResponse as Response);
 
@@ -231,7 +232,8 @@ describe("deleteDataHandler", () => {
                     grocery_lists: 2,
                     food_tracking: 50,
                     progress_tracking: 20,
-                    weight_tracking: 30
+                    weight_tracking: 30,
+                    tdee: 1
                 }
             });
         });

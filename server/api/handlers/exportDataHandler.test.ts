@@ -108,7 +108,7 @@ describe("exportDataHandler", () => {
 
         // Mock all required queries in order:
         // 1. User, 2. Recipes, 3. Favorites, 4. Grocery Lists, 5. Grocery List Items (for each list)
-        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking
+        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking, 9. TDEE
         mockPool.query
             .mockResolvedValueOnce({ rows: [mockUser] })
             .mockResolvedValueOnce({ rows: mockRecipes })
@@ -117,7 +117,8 @@ describe("exportDataHandler", () => {
             .mockResolvedValueOnce({ rows: mockGroceryListItems })
             .mockResolvedValueOnce({ rows: [] }) // food_tracking
             .mockResolvedValueOnce({ rows: [] }) // progress_tracking
-            .mockResolvedValueOnce({ rows: [] }); // weight_tracking
+            .mockResolvedValueOnce({ rows: [] }) // weight_tracking
+            .mockResolvedValueOnce({ rows: [] }); // tdee
 
         await handleExportData(mockRequest as Request, mockResponse as Response);
 
@@ -137,10 +138,18 @@ describe("exportDataHandler", () => {
                 recipes: expect.any(Array),
                 favorites: expect.any(Array),
                 grocery_lists: expect.any(Array),
+                food_tracking: expect.any(Array),
+                progress_tracking: expect.any(Array),
+                weight_tracking: expect.any(Array),
                 summary: expect.objectContaining({
                     total_recipes: expect.any(Number),
                     total_favorites: expect.any(Number),
-                    total_grocery_lists: expect.any(Number)
+                    total_grocery_lists: expect.any(Number),
+                    total_grocery_list_items: expect.any(Number),
+                    total_food_tracking_entries: expect.any(Number),
+                    total_progress_tracking_entries: expect.any(Number),
+                    total_weight_tracking_entries: expect.any(Number),
+                    has_tdee_data: expect.any(Boolean)
                 })
             })
         );
@@ -209,7 +218,7 @@ describe("exportDataHandler", () => {
 
         // Mock all required queries in order:
         // 1. User, 2. Recipes, 3. Favorites, 4. Grocery Lists, 5. Grocery List Items (for each list)
-        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking
+        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking, 9. TDEE
         mockPool.query
             .mockResolvedValueOnce({ rows: [mockUser] })
             .mockResolvedValueOnce({ rows: [] }) // recipes
@@ -218,7 +227,8 @@ describe("exportDataHandler", () => {
             .mockResolvedValueOnce({ rows: mockGroceryListItems })
             .mockResolvedValueOnce({ rows: [] }) // food_tracking
             .mockResolvedValueOnce({ rows: [] }) // progress_tracking
-            .mockResolvedValueOnce({ rows: [] }); // weight_tracking
+            .mockResolvedValueOnce({ rows: [] }) // weight_tracking
+            .mockResolvedValueOnce({ rows: [] }); // tdee
 
         await handleExportData(mockRequest as Request, mockResponse as Response);
 

@@ -172,6 +172,16 @@ export async function handleDeleteData(req: Request, res: Response) {
             }
         }
 
+        // Delete TDEE data
+        if (dataTypes.includes("tdee")) {
+            // TDEE is a single record per user, so we delete it regardless of date threshold
+            const result = await pool.query(
+                "DELETE FROM user_tdee WHERE user_id = $1 RETURNING id",
+                [userId]
+            );
+            deletionResults.tdee = result.rowCount || 0;
+        }
+
         return res.status(200).json({
             success: true,
             message: "Selected data has been successfully deleted.",

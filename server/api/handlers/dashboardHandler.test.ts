@@ -123,7 +123,11 @@ describe("dashboardHandler", () => {
                         { date: new Date("2024-01-14"), weight: "75.0", unit: "kg" },
                         { date: new Date("2024-01-15"), weight: "74.8", unit: "kg" }
                     ]
-                });
+                })
+                // Weight count check
+                .mockResolvedValueOnce({ rows: [{ count: "2" }] })
+                // TDEE data
+                .mockResolvedValueOnce({ rows: [] });
 
             await handleGetDashboardStats(mockRequest as Request, mockResponse as Response);
 
@@ -163,7 +167,9 @@ describe("dashboardHandler", () => {
                 .mockResolvedValueOnce({ rows: [] })
                 .mockResolvedValueOnce({ rows: [] })
                 .mockResolvedValueOnce({ rows: [] })
-                .mockResolvedValueOnce({ rows: [] });
+                .mockResolvedValueOnce({ rows: [] })
+                // Weight count check
+                .mockResolvedValueOnce({ rows: [{ count: "0" }] });
 
             await handleGetDashboardStats(mockRequest as Request, mockResponse as Response);
 
@@ -190,7 +196,9 @@ describe("dashboardHandler", () => {
                 .mockResolvedValueOnce({ rows: [] })
                 .mockResolvedValueOnce({ rows: [] })
                 .mockResolvedValueOnce({ rows: [] })
-                .mockResolvedValueOnce({ rows: [] });
+                .mockResolvedValueOnce({ rows: [] })
+                // Weight count check
+                .mockResolvedValueOnce({ rows: [{ count: "0" }] });
 
             await handleGetDashboardStats(mockRequest as Request, mockResponse as Response);
 
@@ -215,7 +223,11 @@ describe("dashboardHandler", () => {
                         { date: new Date("2024-01-14"), weight: "165", unit: "lbs" },
                         { date: new Date("2024-01-15"), weight: "164", unit: "lbs" }
                     ]
-                });
+                })
+                // Weight count check
+                .mockResolvedValueOnce({ rows: [{ count: "2" }] })
+                // TDEE data
+                .mockResolvedValueOnce({ rows: [] });
 
             await handleGetDashboardStats(mockRequest as Request, mockResponse as Response);
 
@@ -248,7 +260,11 @@ describe("dashboardHandler", () => {
                         { date: new Date("2024-01-14"), weight: "75", unit: "kg" },
                         { date: new Date("2024-01-15"), weight: "165", unit: "lbs" }
                     ]
-                });
+                })
+                // Weight count check
+                .mockResolvedValueOnce({ rows: [{ count: "2" }] })
+                // TDEE data
+                .mockResolvedValueOnce({ rows: [] });
 
             await handleGetDashboardStats(mockRequest as Request, mockResponse as Response);
 
@@ -287,7 +303,9 @@ describe("dashboardHandler", () => {
                 .mockResolvedValueOnce({ rows: [] })
                 .mockResolvedValueOnce({ rows: [] })
                 .mockResolvedValueOnce({ rows: [] })
-                .mockResolvedValueOnce({ rows: [] });
+                .mockResolvedValueOnce({ rows: [] })
+                // Weight count check
+                .mockResolvedValueOnce({ rows: [{ count: "0" }] });
 
             await handleGetDashboardStats(mockRequest as Request, mockResponse as Response);
 

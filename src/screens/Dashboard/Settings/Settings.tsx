@@ -461,7 +461,7 @@ const Settings: React.FC = () => {
                                 {isExportingData ? "Exporting..." : "Download My Data"}
                             </Button>
                             <Text className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                                Your data will be downloaded as a JSON file containing your profile, recipes, favorites, grocery lists, food tracking, and progress tracking.
+                                Your data will be downloaded as a JSON file containing your profile, recipes, favorites, grocery lists, food tracking, progress tracking, weight tracking, and TDEE data.
                             </Text>
                         </div>
                     </div>
@@ -487,7 +487,7 @@ const Settings: React.FC = () => {
                                     Delete Selected Data
                                 </Button>
                                 <Text className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                                    You can delete recipes, favorites, grocery lists, food tracking, progress tracking, or weight tracking data for the last 7 days, 30 days, or all time.
+                                    You can delete recipes, favorites, grocery lists, food tracking, progress tracking, weight tracking, or TDEE data for the last 7 days, 30 days, or all time.
                                 </Text>
                             </div>
                         </div>
@@ -691,6 +691,16 @@ const Settings: React.FC = () => {
                                             />
                                             <Label>Weight Tracking</Label>
                                             <Description>Delete your weight entries</Description>
+                                        </CheckboxField>
+
+                                        <CheckboxField>
+                                            <Checkbox
+                                                checked={deleteDataTypes.includes("tdee")}
+                                                onChange={() => handleDataTypeToggle("tdee")}
+                                                disabled={isDeletingData}
+                                            />
+                                            <Label>TDEE Data</Label>
+                                            <Description>Delete your TDEE calculation data</Description>
                                         </CheckboxField>
                                     </CheckboxGroup>
                                 </Field>

@@ -110,6 +110,31 @@ export async function handleExportData(req: Request, res: Response) {
             activity_data: entry.activity_data && typeof entry.activity_data === "string" ? JSON.parse(entry.activity_data) : entry.activity_data
         }));
 
+        // Get weight tracking data
+        const weightTrackingResult = await pool.query(
+            "SELECT id, weight, unit, date, timezone, created_at, updated_at FROM weight_tracking WHERE user_id = $1 ORDER BY date DESC, created_at DESC",
+            [userId]
+        );
+
+        const weightTracking = weightTrackingResult.rows.map(entry => ({
+            ...entry,
+            weight: parseFloat(String(entry.weight))
+        }));
+
+        // Get TDEE data
+        const tdeeResult = await pool.query(
+            "SELECT id, age, gender, height_cm, activity_level, bmr, tdee, created_at, updated_at FROM user_tdee WHERE user_id = $1",
+            [userId]
+        );
+
+        const tdee = tdeeResult.rows.length > 0 ? {
+            ...tdeeResult.rows[0],
+            age: parseInt(String(tdeeResult.rows[0].age)),
+            height_cm: parseFloat(String(tdeeResult.rows[0].height_cm)),
+            bmr: parseFloat(String(tdeeResult.rows[0].bmr)),
+            tdee: parseFloat(String(tdeeResult.rows[0].tdee))
+        } : null;
+
         // Compile all data
         const exportData = {
             export_date: new Date().toISOString(),
@@ -128,13 +153,17 @@ export async function handleExportData(req: Request, res: Response) {
             grocery_lists: groceryLists,
             food_tracking: foodTracking,
             progress_tracking: progressTracking,
+            weight_tracking: weightTracking,
+            tdee: tdee,
             summary: {
                 total_recipes: recipes.length,
                 total_favorites: favorites.length,
                 total_grocery_lists: groceryLists.length,
                 total_grocery_list_items: groceryLists.reduce((sum, list) => sum + list.items.length, 0),
                 total_food_tracking_entries: foodTracking.length,
-                total_progress_tracking_entries: progressTracking.length
+                total_progress_tracking_entries: progressTracking.length,
+                total_weight_tracking_entries: weightTracking.length,
+                has_tdee_data: tdee !== null
             }
         };
 

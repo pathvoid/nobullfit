@@ -266,6 +266,34 @@ export async function handleGetDashboardStats(req: Request, res: Response): Prom
         const avgCarbs = dailyStats.reduce((sum, day) => sum + day.carbs, 0) / totalDays;
         const avgFat = dailyStats.reduce((sum, day) => sum + day.fat, 0) / totalDays;
 
+        // Get TDEE data (only if user has weight data)
+        let tdee = null;
+        const weightCheckResult = await pool.query(
+            "SELECT COUNT(*) as count FROM weight_tracking WHERE user_id = $1",
+            [userId]
+        );
+        const hasWeight = parseInt(String(weightCheckResult.rows[0]?.count)) > 0;
+        
+        if (hasWeight) {
+            const tdeeResult = await pool.query(
+                "SELECT id, age, gender, height_cm, activity_level, bmr, tdee, created_at, updated_at FROM user_tdee WHERE user_id = $1",
+                [userId]
+            );
+
+            if (tdeeResult.rows.length > 0) {
+                tdee = {
+                    age: parseInt(String(tdeeResult.rows[0].age)),
+                    gender: tdeeResult.rows[0].gender,
+                    height_cm: parseFloat(String(tdeeResult.rows[0].height_cm)),
+                    activity_level: tdeeResult.rows[0].activity_level,
+                    bmr: parseFloat(String(tdeeResult.rows[0].bmr)),
+                    tdee: parseFloat(String(tdeeResult.rows[0].tdee)),
+                    created_at: tdeeResult.rows[0].created_at,
+                    updated_at: tdeeResult.rows[0].updated_at
+                };
+            }
+        }
+
         const responseData = {
             today: {
                 calories_consumed: parseFloat(String(todayFoodResult.rows[0]?.calories)) || 0,
@@ -295,7 +323,8 @@ export async function handleGetDashboardStats(req: Request, res: Response): Prom
                 total_calories: parseFloat(String(row.total_calories)) || 0
             })),
             weightData: weightData,
-            weightUnit: standardUnit
+            weightUnit: standardUnit,
+            tdee: tdee
         };
         
         res.status(200).json(responseData);

@@ -37,6 +37,8 @@ import GroceryLists from "@screens/Dashboard/GroceryLists/GroceryLists";
 import groceryListsLoader from "@loaders/groceryListsLoader";
 import ProgressTracking from "@screens/Dashboard/ProgressTracking/ProgressTracking";
 import progressTrackingLoader from "@loaders/progressTrackingLoader";
+import TDEE from "@screens/Dashboard/TDEE/TDEE";
+import tdeeLoader from "@loaders/tdeeLoader";
 import RecipeDatabase from "@screens/Dashboard/RecipeDatabase/RecipeDatabase";
 import recipeDatabaseLoader from "@loaders/recipeDatabaseLoader";
 import RecipeDetails from "@screens/Dashboard/RecipeDatabase/RecipeDetails";
@@ -160,6 +162,12 @@ const routes: RouteObject[] = [
         path: "dashboard/progress-tracking",
         element: <ProgressTracking />,
         loader: progressTrackingLoader,
+        errorElement: <Error />
+    },
+    {
+        path: "dashboard/tdee",
+        element: <TDEE />,
+        loader: tdeeLoader,
         errorElement: <Error />
     },
     {

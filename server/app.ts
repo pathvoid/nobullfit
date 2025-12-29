@@ -53,6 +53,11 @@ import {
     handleLogWeight,
     handleDeleteWeight
 } from "./api/handlers/weightTrackingHandler.js";
+import {
+    handleGetLatestWeight,
+    handleGetTDEE,
+    handleSaveTDEE
+} from "./api/handlers/tdeeHandler.js";
 import { handleGetDashboardStats } from "./api/handlers/dashboardHandler.js";
 
 // API router class - handles all /api routes
@@ -131,6 +136,11 @@ class App {
         this.router.get("/weight-tracking/last-unit", handleGetLastWeightUnit);
         this.router.post("/weight-tracking", handleLogWeight);
         this.router.delete("/weight-tracking/:id", handleDeleteWeight);
+        
+        // TDEE endpoints
+        this.router.get("/tdee/latest-weight", handleGetLatestWeight);
+        this.router.get("/tdee", handleGetTDEE);
+        this.router.post("/tdee", handleSaveTDEE);
         
         // Dashboard stats
         this.router.get("/dashboard/stats", handleGetDashboardStats);
