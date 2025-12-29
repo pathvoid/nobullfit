@@ -128,6 +128,8 @@ CREATE TABLE IF NOT EXISTS recipes (
     tags JSONB DEFAULT '[]',
     is_public BOOLEAN NOT NULL DEFAULT FALSE,
     is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    last_verified_at TIMESTAMP,
+    is_flagged BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -137,6 +139,8 @@ CREATE INDEX IF NOT EXISTS idx_recipes_user_id ON recipes(user_id);
 CREATE INDEX IF NOT EXISTS idx_recipes_is_public ON recipes(is_public);
 CREATE INDEX IF NOT EXISTS idx_recipes_created_at ON recipes(created_at);
 CREATE INDEX IF NOT EXISTS idx_recipes_name ON recipes(name);
+CREATE INDEX IF NOT EXISTS idx_recipes_is_flagged ON recipes(is_flagged);
+CREATE INDEX IF NOT EXISTS idx_recipes_last_verified_at ON recipes(last_verified_at);
 
 -- Food tracking table - stores user's logged food items
 CREATE TABLE IF NOT EXISTS food_tracking (
