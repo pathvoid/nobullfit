@@ -35,9 +35,9 @@ export async function handleSignIn(req: Request, res: Response): Promise<void> {
             return;
         }
 
-        // Find user by email
+        // Find user by email (case-insensitive)
         const userResult = await pool.query(
-            "SELECT id, email, full_name, password_hash FROM users WHERE email = $1",
+            "SELECT id, email, full_name, password_hash FROM users WHERE LOWER(email) = LOWER($1)",
             [email]
         );
 
