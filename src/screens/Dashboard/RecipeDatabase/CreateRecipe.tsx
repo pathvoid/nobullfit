@@ -12,7 +12,7 @@ import { Field, Label as FieldLabel, Label, Description, ErrorMessage } from "@c
 import { CheckboxField, Checkbox } from "@components/checkbox";
 import { Select } from "@components/select";
 import { containsEmoji } from "@utils/emojiValidation";
-import RecipeMacrosInput, { RecipeMacros } from "@components/RecipeMacrosInput";
+import RecipeMacrosInput, { RecipeMacros } from "@core/components/RecipeMacrosInput";
 import { Ingredient, getAllUnits } from "@utils/ingredientUnits";
 import { RecipeTagKey, RECIPE_TAGS, getTagsByCategory } from "@utils/recipeTags";
 import { ChevronUp, ChevronDown } from "lucide-react";

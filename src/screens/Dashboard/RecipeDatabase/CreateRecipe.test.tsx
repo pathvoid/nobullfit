@@ -26,7 +26,7 @@ vi.mock("../DashboardSidebar", () => ({
 }));
 
 // Mock RecipeMacrosInput
-vi.mock("@components/RecipeMacrosInput", () => ({
+vi.mock("@core/components/RecipeMacrosInput", () => ({
     default: ({ macros, onChange }: { macros: unknown; onChange: (m: unknown) => void }) => (
         <div data-testid="recipe-macros-input">
             <button onClick={() => onChange({ calories: 250 })}>Set Macros</button>

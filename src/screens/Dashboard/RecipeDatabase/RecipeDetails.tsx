@@ -15,7 +15,7 @@ import { DescriptionList, DescriptionTerm, DescriptionDetails } from "@component
 import { Description } from "@components/fieldset";
 import { Dropdown, DropdownButton, DropdownItem, DropdownMenu } from "@components/dropdown";
 import { useAuth } from "@core/contexts/AuthContext";
-import { RecipeMacros } from "@components/RecipeMacrosInput";
+import { RecipeMacros } from "@core/components/RecipeMacrosInput";
 import { Ingredient, convertIngredient, UNITS, UnitSystem } from "@utils/ingredientUnits";
 import { RecipeTagKey, RECIPE_TAGS } from "@utils/recipeTags";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
