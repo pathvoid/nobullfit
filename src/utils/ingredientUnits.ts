@@ -110,32 +110,52 @@ export function formatFraction(decimal: number): string | number {
         [0.75, "3/4"]
     ];
     
-    // Check for whole numbers first
-    if (Number.isInteger(decimal)) {
-        return decimal;
+    // Check for whole numbers first (or very close to whole)
+    if (Number.isInteger(decimal) || Math.abs(decimal - Math.round(decimal)) < 0.05) {
+        return Math.round(decimal);
     }
     
-    // Check for exact matches
+    // For values >= 10, round to whole number (no fractions for large measurements)
+    if (decimal >= 10) {
+        return Math.round(decimal);
+    }
+    
+    // Check for exact matches (only for values < 10)
     for (const [value, fraction] of commonFractions) {
-        if (Math.abs(decimal - value) < 0.01) {
+        if (Math.abs(decimal - value) < 0.05) {
             return fraction;
         }
     }
     
-    // Check for whole numbers with fractions
+    // Check for whole numbers with fractions (only for values < 10)
     const whole = Math.floor(decimal);
     const remainder = decimal - whole;
     
-    if (whole > 0 && remainder > 0.01) {
+    if (whole > 0 && remainder > 0.05) {
         for (const [value, fraction] of commonFractions) {
-            if (Math.abs(remainder - value) < 0.01) {
+            if (Math.abs(remainder - value) < 0.05) {
                 return `${whole} ${fraction}`;
             }
         }
     }
     
-    // Return as decimal for non-standard fractions
-    return decimal;
+    // For values >= 1, round to nearest 0.5
+    if (decimal >= 1) {
+        const rounded = Math.round(decimal * 2) / 2;
+        if (Number.isInteger(rounded)) {
+            return rounded;
+        }
+        return Number(rounded.toFixed(1));
+    }
+    
+    // For small values < 1, round to nearest 0.25 or show 1 decimal
+    const roundedQuarter = Math.round(decimal * 4) / 4;
+    if (roundedQuarter === 0.25) return "1/4";
+    if (roundedQuarter === 0.5) return "1/2";
+    if (roundedQuarter === 0.75) return "3/4";
+    
+    // Fallback: round to 1 decimal place
+    return Number(decimal.toFixed(1));
 }
 
 // Unit system types

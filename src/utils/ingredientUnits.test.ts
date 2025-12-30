@@ -61,16 +61,25 @@ describe("ingredientUnits", () => {
             expect(formatFraction(3.75)).toBe("3 3/4");
         });
 
-        it("should return decimal for non-standard fractions", () => {
-            // Values far from any common fraction should be returned as decimals
-            // 0.123 is close enough to 0.125 (1/8) to match, so test with a value further from any fraction
-            const result1 = formatFraction(0.15);  // Not close to any common fraction
-            const result2 = formatFraction(1.87);  // Not close to any common fraction
-            // These should be returned as numbers, not strings
-            expect(typeof result1).toBe("number");
-            expect(typeof result2).toBe("number");
-            expect(result1).toBeCloseTo(0.15, 2);
-            expect(result2).toBeCloseTo(1.87, 2);
+        it("should round non-standard fractions to human-readable values", () => {
+            // Values >= 10 round to whole numbers
+            expect(formatFraction(9.85784)).toBe(10);
+            expect(formatFraction(15.3)).toBe(15);
+            expect(formatFraction(28.35)).toBe(28);
+            
+            // Values >= 1 and < 10 use fractions when close, otherwise round to nearest 0.5
+            expect(formatFraction(1.87)).toBe(2); // Rounds to whole (close to 2)
+            expect(formatFraction(1.3)).toBe("1 1/3"); // 0.3 is close to 1/3
+            expect(formatFraction(2.7)).toBe("2 2/3"); // 0.7 is close to 2/3
+            expect(formatFraction(3.527)).toBe("3 1/2"); // 0.527 is close to 1/2
+            expect(formatFraction(8.45)).toBe(8.5); // 0.45 rounds to nearest 0.5
+            expect(formatFraction(1.4)).toBe(1.5); // 0.4 is not close to any fraction, rounds to 0.5
+            
+            // Values < 1 try to match common fractions or round to 1 decimal
+            expect(formatFraction(0.15)).toBe("1/8"); // 0.15 is close to 0.125 (1/8)
+            expect(formatFraction(0.26)).toBe("1/4"); // Close to 0.25
+            expect(formatFraction(0.48)).toBe("1/2"); // Close to 0.5
+            expect(formatFraction(0.55)).toBe("1/2"); // Rounds to nearest 0.25 (0.5) → "1/2"
         });
     });
 
@@ -79,37 +88,40 @@ describe("ingredientUnits", () => {
             const ingredient: Ingredient = { quantity: 100, unit: "g", name: "flour" };
             const converted = convertIngredient(ingredient, "imperial");
             expect(converted.unit).toBe("oz");
-            expect(converted.quantity).toBeCloseTo(3.527, 1);
+            // 100g = 3.527oz, displayed as 3 1/2
+            expect(converted.quantity).toBe("3 1/2");
         });
 
         it("should convert ounces to grams", () => {
             const ingredient: Ingredient = { quantity: 1, unit: "oz", name: "flour" };
             const converted = convertIngredient(ingredient, "metric");
             expect(converted.unit).toBe("g");
-            expect(converted.quantity).toBeCloseTo(28.35, 1);
+            // 1oz = 28.35g, rounds to 28 (values >= 10 round to whole)
+            expect(converted.quantity).toBe(28);
         });
 
         it("should convert milliliters to fluid ounces", () => {
             const ingredient: Ingredient = { quantity: 250, unit: "ml", name: "milk" };
             const converted = convertIngredient(ingredient, "imperial");
             expect(converted.unit).toBe("fl_oz");
-            expect(converted.quantity).toBeCloseTo(8.45, 1);
+            // 250ml = 8.45 fl oz, displayed as 8 1/2
+            expect(converted.quantity).toBe("8 1/2");
         });
 
         it("should convert cups to milliliters", () => {
             const ingredient: Ingredient = { quantity: 1, unit: "cup", name: "water" };
             const converted = convertIngredient(ingredient, "metric");
             expect(converted.unit).toBe("ml");
-            // 1 US cup = 236.588 ml
-            expect(parseFloat(String(converted.quantity))).toBeCloseTo(236.59, 1);
+            // 1 US cup = 236.588 ml, rounds to 237
+            expect(converted.quantity).toBe(237);
         });
 
         it("should handle fractional quantities", () => {
             const ingredient: Ingredient = { quantity: "1/2", unit: "cup", name: "sugar" };
             const converted = convertIngredient(ingredient, "metric");
             expect(converted.unit).toBe("ml");
-            // 0.5 US cup = 118.29 ml
-            expect(parseFloat(String(converted.quantity))).toBeCloseTo(118.29, 1);
+            // 0.5 US cup = 118.29 ml, rounds to 118 (values >= 10 round to whole)
+            expect(converted.quantity).toBe(118);
         });
 
         it("should return original if quantity is null", () => {
@@ -331,9 +343,11 @@ describe("ingredientUnits", () => {
             expect(formatQuantityForDisplay(1.5, "cup")).toBe("1 1/2");
         });
 
-        it("should round decimals to 2 places", () => {
-            expect(formatQuantityForDisplay(1.234, "l")).toBe("1.23");
+        it("should round decimals to reasonable values", () => {
+            // Values between 1-10 get formatted as fractions when close to common fractions
+            expect(formatQuantityForDisplay(1.234, "l")).toBe("1 1/4");
+            // Values not close to fractions round to 2 decimal places
+            expect(formatQuantityForDisplay(1.4, "l")).toBe("1.4");
         });
     });
 });
-

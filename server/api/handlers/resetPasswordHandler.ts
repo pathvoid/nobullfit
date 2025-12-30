@@ -33,10 +33,6 @@ export async function handleResetPassword(req: Request, res: Response): Promise<
             return;
         }
 
-        // Debug: Log the token being searched
-        console.log("Reset password attempt - Token received:", token);
-        console.log("Token length:", token?.length);
-
         // First check if token exists at all (even if expired)
         const tokenCheckResult = await pool.query(
             "SELECT token, expires_at, user_id FROM password_resets WHERE token = $1",
@@ -52,9 +48,6 @@ export async function handleResetPassword(req: Request, res: Response): Promise<
         }
 
         const tokenData = tokenCheckResult.rows[0];
-        console.log("Token found - Expires at:", tokenData.expires_at);
-        console.log("Current time:", new Date().toISOString());
-        console.log("Is expired?", new Date(tokenData.expires_at) < new Date());
 
         // Check expiration manually (more reliable than database NOW())
         const expiresAt = new Date(tokenData.expires_at);

@@ -1,5 +1,4 @@
 import clsx from "clsx";
-import { Text } from "./text";
 
 type FormAlertVariant = "error" | "success" | "warning" | "info";
 
@@ -46,10 +45,9 @@ export function FormAlert({ variant = "error", children, className }: FormAlertP
             role="alert"
             aria-live="polite"
         >
-            <Text className={clsx(styles.text, "text-sm/6 font-medium")}>
+            <div className={clsx(styles.text, "text-sm/6 font-medium")}>
                 {children}
-            </Text>
+            </div>
         </div>
     );
 }
-

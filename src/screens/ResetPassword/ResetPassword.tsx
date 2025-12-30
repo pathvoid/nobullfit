@@ -56,10 +56,6 @@ const ResetPassword: React.FC = () => {
         }
 
         try {
-            // Debug: Log token being sent
-            console.log("Sending reset request - Token:", token);
-            console.log("Token length:", token?.length);
-            
             const response = await fetch("/api/reset-password", {
                 method: "POST",
                 headers: {
