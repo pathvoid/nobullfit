@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "react-router-dom";
 import dashboardLoader from "./dashboardLoader";
+import { generateSEOTags } from "@utils/seo";
 
 // Loader for TDEE page - requires authentication
 const tdeeLoader = async (args: LoaderFunctionArgs) => {
@@ -67,9 +68,12 @@ const tdeeLoader = async (args: LoaderFunctionArgs) => {
     return {
         ...data,
         title: "TDEE Calculator - NoBullFit",
-        meta: [
-            { name: "description", content: "Calculate your Total Daily Energy Expenditure (TDEE)" }
-        ],
+        meta: generateSEOTags({
+            title: "TDEE Calculator",
+            description: "Calculate your Total Daily Energy Expenditure (TDEE) to understand how many calories you burn daily and optimize your nutrition plan.",
+            path: "/dashboard/tdee",
+            noIndex: true
+        }),
         hasWeight,
         weightData,
         tdeeData

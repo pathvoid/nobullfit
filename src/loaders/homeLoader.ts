@@ -1,4 +1,5 @@
 import { rand, sleep } from "@utils/utils";
+import { generateSEOTags } from "@utils/seo";
 import type { MetaTag } from "../types/helmet";
 
 interface LoaderData {
@@ -14,12 +15,25 @@ const homeLoader = async (): Promise<LoaderData> => {
     await sleep();
     return {
         data: `Home loader - random value ${rand()}`,
-        title: "Home - NoBullFit",
-        meta: [
-            { name: "description", content: "Transform your fitness journey with NoBullFit" },
-            { property: "og:title", content: "Home - NoBullFit" },
-            { property: "og:description", content: "Transform your fitness journey with NoBullFit" }
-        ]
+        title: "NoBullFit - Transform Your Fitness Journey",
+        meta: generateSEOTags({
+            title: "NoBullFit - Transform Your Fitness Journey",
+            description: "Transform your fitness journey with NoBullFit - Your all-in-one platform for nutrition tracking, recipe management, and progress monitoring.",
+            path: "/",
+            keywords: [
+                "fitness",
+                "nutrition",
+                "calories",
+                "recipe",
+                "meal planning",
+                "food tracking",
+                "TDEE calculator",
+                "macros",
+                "health",
+                "weight loss",
+                "muscle building"
+            ]
+        })
     };
 };
 

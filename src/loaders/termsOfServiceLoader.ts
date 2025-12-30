@@ -1,3 +1,4 @@
+import { generateSEOTags } from "@utils/seo";
 import type { MetaTag } from "../types/helmet";
 
 interface LoaderData {
@@ -9,11 +10,17 @@ interface LoaderData {
 const termsOfServiceLoader = async (): Promise<LoaderData> => {
     return {
         title: "Terms of Service - NoBullFit",
-        meta: [
-            { name: "description", content: "Read NoBullFit's terms of service" },
-            { property: "og:title", content: "Terms of Service - NoBullFit" },
-            { property: "og:description", content: "Read NoBullFit's terms of service" }
-        ]
+        meta: generateSEOTags({
+            title: "Terms of Service",
+            description: "Read NoBullFit's terms of service. Understand the rules and guidelines for using our fitness and nutrition platform.",
+            path: "/terms-of-service",
+            keywords: [
+                "terms of service",
+                "user agreement",
+                "terms and conditions",
+                "NoBullFit terms"
+            ]
+        })
     };
 };
 

@@ -1,6 +1,6 @@
-import { redirect } from "react-router-dom";
 import type { LoaderFunctionArgs } from "react-router-dom";
 import dashboardLoader from "./dashboardLoader";
+import { generateSEOTags } from "@utils/seo";
 
 // Loader for Grocery Lists page - requires authentication
 const groceryListsLoader = async (args: LoaderFunctionArgs) => {
@@ -28,13 +28,18 @@ const groceryListsLoader = async (args: LoaderFunctionArgs) => {
             authToken = token || headerToken;
         }
 
+        const seoMeta = generateSEOTags({
+            title: "Grocery Lists",
+            description: "Create and manage your grocery lists. Organize your shopping with easy-to-use lists.",
+            path: "/dashboard/grocery-lists",
+            noIndex: true
+        });
+
         if (!authToken) {
             return {
                 ...data,
                 title: "Grocery Lists - NoBullFit",
-                meta: [
-                    { name: "description", content: "Create and manage your grocery lists" }
-                ],
+                meta: seoMeta,
                 lists: [],
                 error: "Authentication required"
             };
@@ -60,9 +65,7 @@ const groceryListsLoader = async (args: LoaderFunctionArgs) => {
             return {
                 ...data,
                 title: "Grocery Lists - NoBullFit",
-                meta: [
-                    { name: "description", content: "Create and manage your grocery lists" }
-                ],
+                meta: seoMeta,
                 lists: [],
                 error: "Failed to load grocery lists"
             };
@@ -73,9 +76,7 @@ const groceryListsLoader = async (args: LoaderFunctionArgs) => {
         return {
             ...data,
             title: "Grocery Lists - NoBullFit",
-            meta: [
-                { name: "description", content: "Create and manage your grocery lists" }
-            ],
+            meta: seoMeta,
             lists: listsData.lists || []
         };
     } catch (error) {
@@ -83,9 +84,12 @@ const groceryListsLoader = async (args: LoaderFunctionArgs) => {
         return {
             ...data,
             title: "Grocery Lists - NoBullFit",
-            meta: [
-                { name: "description", content: "Create and manage your grocery lists" }
-            ],
+            meta: generateSEOTags({
+                title: "Grocery Lists",
+                description: "Create and manage your grocery lists.",
+                path: "/dashboard/grocery-lists",
+                noIndex: true
+            }),
             lists: [],
             error: "Failed to load grocery lists"
         };

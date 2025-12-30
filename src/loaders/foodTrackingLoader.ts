@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "react-router-dom";
 import dashboardLoader from "./dashboardLoader";
+import { generateSEOTags } from "@utils/seo";
 
 // Loader for Food Tracking page - requires authentication
 const foodTrackingLoader = async (args: LoaderFunctionArgs) => {
@@ -31,9 +32,12 @@ const foodTrackingLoader = async (args: LoaderFunctionArgs) => {
     return {
         ...data,
         title: "Food Tracking - NoBullFit",
-        meta: [
-            { name: "description", content: "Track your daily food intake and nutrition" }
-        ],
+        meta: generateSEOTags({
+            title: "Food Tracking",
+            description: "Track your daily food intake and nutrition. Log meals, monitor calories, and track your macros with ease.",
+            path: "/dashboard/food-tracking",
+            noIndex: true
+        }),
         initialFoods: foods,
         initialDate: dateParam || null,
         initialTimezone: timezoneParam || null

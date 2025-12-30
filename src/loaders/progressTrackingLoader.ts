@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "react-router-dom";
 import dashboardLoader from "./dashboardLoader";
+import { generateSEOTags } from "@utils/seo";
 
 // Loader for Progress Tracking page - requires authentication
 const progressTrackingLoader = async (args: LoaderFunctionArgs) => {
@@ -31,9 +32,12 @@ const progressTrackingLoader = async (args: LoaderFunctionArgs) => {
     return {
         ...data,
         title: "Progress Tracking - NoBullFit",
-        meta: [
-            { name: "description", content: "Track your health and fitness progress over time" }
-        ],
+        meta: generateSEOTags({
+            title: "Progress Tracking",
+            description: "Track your health and fitness progress over time. Log activities, monitor trends, and celebrate your achievements.",
+            path: "/dashboard/progress-tracking",
+            noIndex: true
+        }),
         initialActivities: activities,
         initialDate: dateParam || null,
         initialTimezone: timezoneParam || null

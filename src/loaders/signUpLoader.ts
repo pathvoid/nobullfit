@@ -1,4 +1,5 @@
-import { rand, sleep } from "@utils/utils";
+import { sleep } from "@utils/utils";
+import { generateSEOTags } from "@utils/seo";
 import type { MetaTag } from "../types/helmet";
 
 interface LoaderData {
@@ -13,11 +14,17 @@ const signUpLoader = async (): Promise<LoaderData> => {
     await sleep();
     return {
         title: "Sign Up - NoBullFit",
-        meta: [
-            { name: "description", content: "Create your NoBullFit account" },
-            { property: "og:title", content: "Sign Up - NoBullFit" },
-            { property: "og:description", content: "Create your NoBullFit account" }
-        ]
+        meta: generateSEOTags({
+            title: "Sign Up",
+            description: "Create your free NoBullFit account and start your fitness journey today. Track nutrition, discover recipes, and monitor your progress.",
+            path: "/sign-up",
+            keywords: [
+                "create account",
+                "fitness app signup",
+                "nutrition tracking",
+                "free fitness account"
+            ]
+        })
     };
 };
 

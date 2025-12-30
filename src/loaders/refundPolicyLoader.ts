@@ -1,3 +1,4 @@
+import { generateSEOTags } from "@utils/seo";
 import type { MetaTag } from "../types/helmet";
 
 interface LoaderData {
@@ -9,11 +10,17 @@ interface LoaderData {
 const refundPolicyLoader = async (): Promise<LoaderData> => {
     return {
         title: "Refund Policy - NoBullFit",
-        meta: [
-            { name: "description", content: "Read NoBullFit's refund policy and terms" },
-            { property: "og:title", content: "Refund Policy - NoBullFit" },
-            { property: "og:description", content: "Read NoBullFit's refund policy and terms" }
-        ]
+        meta: generateSEOTags({
+            title: "Refund Policy",
+            description: "Read NoBullFit's refund policy. Learn about our refund process and eligibility requirements.",
+            path: "/refund-policy",
+            keywords: [
+                "refund policy",
+                "money back",
+                "cancellation policy",
+                "NoBullFit refund"
+            ]
+        })
     };
 };
 

@@ -1,4 +1,5 @@
-import { rand, sleep } from "@utils/utils";
+import { sleep } from "@utils/utils";
+import { generateSEOTags } from "@utils/seo";
 import type { MetaTag } from "../types/helmet";
 
 interface LoaderData {
@@ -13,11 +14,12 @@ const signInLoader = async (): Promise<LoaderData> => {
     await sleep();
     return {
         title: "Sign In - NoBullFit",
-        meta: [
-            { name: "description", content: "Sign in to your NoBullFit account" },
-            { property: "og:title", content: "Sign In - NoBullFit" },
-            { property: "og:description", content: "Sign in to your NoBullFit account" }
-        ]
+        meta: generateSEOTags({
+            title: "Sign In",
+            description: "Sign in to your NoBullFit account to access your personalized nutrition tracking, recipes, and fitness progress.",
+            path: "/sign-in",
+            noIndex: true
+        })
     };
 };
 

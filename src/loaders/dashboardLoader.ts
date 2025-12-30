@@ -1,5 +1,6 @@
 import { redirect } from "react-router-dom";
 import type { LoaderFunctionArgs } from "react-router-dom";
+import { generateSEOTags } from "@utils/seo";
 
 // Loader for Dashboard page - requires authentication
 const dashboardLoader = async ({ request }: LoaderFunctionArgs) => {
@@ -82,9 +83,12 @@ const dashboardLoader = async ({ request }: LoaderFunctionArgs) => {
         // User is authenticated, return loader data
         return {
             title: "Dashboard - NoBullFit",
-            meta: [
-                { name: "description", content: "Your NoBullFit dashboard" }
-            ],
+            meta: generateSEOTags({
+                title: "Dashboard",
+                description: "Your personal NoBullFit dashboard. Track your nutrition, manage recipes, and monitor your fitness progress.",
+                path: "/dashboard",
+                noIndex: true
+            }),
             user: data.user,
             stats
         };

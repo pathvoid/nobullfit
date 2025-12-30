@@ -1,3 +1,4 @@
+import { generateSEOTags } from "@utils/seo";
 import type { MetaTag } from "../types/helmet";
 
 interface LoaderData {
@@ -9,11 +10,17 @@ interface LoaderData {
 const privacyPolicyLoader = async (): Promise<LoaderData> => {
     return {
         title: "Privacy Policy - NoBullFit",
-        meta: [
-            { name: "description", content: "Read NoBullFit's privacy policy" },
-            { property: "og:title", content: "Privacy Policy - NoBullFit" },
-            { property: "og:description", content: "Read NoBullFit's privacy policy" }
-        ]
+        meta: generateSEOTags({
+            title: "Privacy Policy",
+            description: "Read NoBullFit's privacy policy. Learn how we collect, use, and protect your personal information.",
+            path: "/privacy-policy",
+            keywords: [
+                "privacy policy",
+                "data protection",
+                "user privacy",
+                "NoBullFit privacy"
+            ]
+        })
     };
 };
 

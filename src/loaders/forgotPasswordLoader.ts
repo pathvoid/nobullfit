@@ -1,4 +1,5 @@
-import { rand, sleep } from "@utils/utils";
+import { sleep } from "@utils/utils";
+import { generateSEOTags } from "@utils/seo";
 import type { MetaTag } from "../types/helmet";
 
 interface LoaderData {
@@ -13,11 +14,12 @@ const forgotPasswordLoader = async (): Promise<LoaderData> => {
     await sleep();
     return {
         title: "Forgot Password - NoBullFit",
-        meta: [
-            { name: "description", content: "Reset your NoBullFit account password" },
-            { property: "og:title", content: "Forgot Password - NoBullFit" },
-            { property: "og:description", content: "Reset your NoBullFit account password" }
-        ]
+        meta: generateSEOTags({
+            title: "Forgot Password",
+            description: "Reset your NoBullFit account password. Enter your email to receive password reset instructions.",
+            path: "/forgot-password",
+            noIndex: true
+        })
     };
 };
 

@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "react-router-dom";
 import dashboardLoader from "./dashboardLoader";
+import { generateSEOTags } from "@utils/seo";
 
 // Loader for Food Details page - requires authentication
 const foodDetailsLoader = async (args: LoaderFunctionArgs) => {
@@ -10,9 +11,12 @@ const foodDetailsLoader = async (args: LoaderFunctionArgs) => {
         return {
             ...data,
             title: "Food Details - NoBullFit",
-            meta: [
-                { name: "description", content: "Food details" }
-            ],
+            meta: generateSEOTags({
+                title: "Food Details",
+                description: "View detailed nutritional information for this food item.",
+                path: "/dashboard/food-database",
+                noIndex: true
+            }),
             error: "Food ID is required"
         };
     }
@@ -30,21 +34,28 @@ const foodDetailsLoader = async (args: LoaderFunctionArgs) => {
             return {
                 ...data,
                 title: "Food Details - NoBullFit",
-                meta: [
-                    { name: "description", content: "Food details" }
-                ],
+                meta: generateSEOTags({
+                    title: "Food Details",
+                    description: "View detailed nutritional information.",
+                    path: `/dashboard/food-database/${foodId}`,
+                    noIndex: true
+                }),
                 error: "Failed to load food details"
             };
         }
 
         const foodData = await response.json();
+        const foodLabel = foodData.food?.label || "Food Details";
 
         return {
             ...data,
-            title: `${foodData.food?.label || "Food Details"} - NoBullFit`,
-            meta: [
-                { name: "description", content: `Nutritional information for ${foodData.food?.label || "food"}` }
-            ],
+            title: `${foodLabel} - NoBullFit`,
+            meta: generateSEOTags({
+                title: foodLabel,
+                description: `Nutritional information for ${foodLabel}. View calories, macros, vitamins, and minerals.`,
+                path: `/dashboard/food-database/${foodId}`,
+                noIndex: true
+            }),
             foodData: {
                 food: foodData.food || foodData
             }
@@ -54,9 +65,12 @@ const foodDetailsLoader = async (args: LoaderFunctionArgs) => {
         return {
             ...data,
             title: "Food Details - NoBullFit",
-            meta: [
-                { name: "description", content: "Food details" }
-            ],
+            meta: generateSEOTags({
+                title: "Food Details",
+                description: "View detailed nutritional information.",
+                path: `/dashboard/food-database/${foodId}`,
+                noIndex: true
+            }),
             error: "Failed to load food details"
         };
     }

@@ -1,6 +1,6 @@
-import { redirect } from "react-router-dom";
 import type { LoaderFunctionArgs } from "react-router-dom";
 import dashboardLoader from "./dashboardLoader";
+import { generateSEOTags } from "@utils/seo";
 
 // Loader for Favorites page - requires authentication
 const favoritesLoader = async (args: LoaderFunctionArgs) => {
@@ -28,13 +28,18 @@ const favoritesLoader = async (args: LoaderFunctionArgs) => {
             authToken = token || headerToken;
         }
 
+        const seoMeta = generateSEOTags({
+            title: "Favorites",
+            description: "View and manage your favorite recipes and foods. Quick access to your most-loved items.",
+            path: "/dashboard/favorites",
+            noIndex: true
+        });
+
         if (!authToken) {
             return {
                 ...data,
                 title: "Favorites - NoBullFit",
-                meta: [
-                    { name: "description", content: "Your favorite items" }
-                ],
+                meta: seoMeta,
                 favorites: [],
                 error: "Authentication required"
             };
@@ -60,9 +65,7 @@ const favoritesLoader = async (args: LoaderFunctionArgs) => {
             return {
                 ...data,
                 title: "Favorites - NoBullFit",
-                meta: [
-                    { name: "description", content: "Your favorite items" }
-                ],
+                meta: seoMeta,
                 favorites: [],
                 error: "Failed to load favorites"
             };
@@ -73,9 +76,7 @@ const favoritesLoader = async (args: LoaderFunctionArgs) => {
         return {
             ...data,
             title: "Favorites - NoBullFit",
-            meta: [
-                { name: "description", content: "Your favorite items" }
-            ],
+            meta: seoMeta,
             favorites: favoritesData.favorites || []
         };
     } catch (error) {
@@ -83,9 +84,12 @@ const favoritesLoader = async (args: LoaderFunctionArgs) => {
         return {
             ...data,
             title: "Favorites - NoBullFit",
-            meta: [
-                { name: "description", content: "Your favorite items" }
-            ],
+            meta: generateSEOTags({
+                title: "Favorites",
+                description: "View and manage your favorite recipes and foods.",
+                path: "/dashboard/favorites",
+                noIndex: true
+            }),
             favorites: [],
             error: "Failed to load favorites"
         };

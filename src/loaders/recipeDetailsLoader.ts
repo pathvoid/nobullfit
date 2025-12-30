@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router-dom";
+import { generateSEOTags, DEFAULT_OG_IMAGE } from "@utils/seo";
 
 // Loader for Recipe Details page
 const recipeDetailsLoader = async (args: LoaderFunctionArgs) => {
@@ -58,12 +59,27 @@ const recipeDetailsLoader = async (args: LoaderFunctionArgs) => {
     const data = await response.json();
     const recipe = data.recipe;
 
+    // Use recipe image if available, otherwise use default OG image
+    const recipeImage = recipe.image || DEFAULT_OG_IMAGE;
+    const recipeDescription = recipe.description || `View the recipe for ${recipe.name} with detailed nutritional information and cooking instructions.`;
+
     return {
         recipe,
         title: `${recipe.name} - Recipe Database - NoBullFit`,
-        meta: [
-            { name: "description", content: recipe.description || `View recipe: ${recipe.name}` }
-        ]
+        meta: generateSEOTags({
+            title: `${recipe.name} - Recipe`,
+            description: recipeDescription,
+            path: `/recipes/${recipeId}`,
+            ogImage: recipeImage,
+            ogType: "article",
+            keywords: [
+                recipe.name,
+                "recipe",
+                "cooking",
+                "nutrition",
+                ...(recipe.tags || [])
+            ]
+        })
     };
 };
 

@@ -1,3 +1,4 @@
+import { generateSEOTags } from "@utils/seo";
 import type { MetaTag } from "../types/helmet";
 
 interface LoaderData {
@@ -9,11 +10,17 @@ interface LoaderData {
 const contactLoader = async (): Promise<LoaderData> => {
     return {
         title: "Contact Us - NoBullFit",
-        meta: [
-            { name: "description", content: "Get in touch with NoBullFit" },
-            { property: "og:title", content: "Contact Us - NoBullFit" },
-            { property: "og:description", content: "Get in touch with NoBullFit" }
-        ]
+        meta: generateSEOTags({
+            title: "Contact Us",
+            description: "Get in touch with the NoBullFit team. We're here to help with any questions about our nutrition tracking and fitness tools.",
+            path: "/contact",
+            keywords: [
+                "contact NoBullFit",
+                "fitness support",
+                "customer service",
+                "help"
+            ]
+        })
     };
 };
 
