@@ -4,7 +4,7 @@ import type { MetaTag } from "../types/helmet";
 const SITE_NAME = "NoBullFit";
 const SITE_URL = "https://nobull.fit";
 const DEFAULT_OG_IMAGE = "https://cdn.nobull.fit/nbf-og.jpg";
-const TWITTER_HANDLE = "@nobullfit";
+const TWITTER_HANDLE = "@nobullfitx";
 const DEFAULT_DESCRIPTION = "Transform your fitness journey with NoBullFit - Your all-in-one platform for nutrition tracking, recipe management, and progress monitoring.";
 
 // Options for generating SEO meta tags
