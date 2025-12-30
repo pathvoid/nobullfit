@@ -22,6 +22,7 @@ interface Recipe {
     id: number;
     name: string;
     description: string | null;
+    image_filename: string | null;
     tags?: RecipeTagKey[];
     is_public: boolean;
     is_verified?: boolean;
@@ -324,9 +325,9 @@ const RecipeDatabase: React.FC = () => {
                         </Text>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto -mx-6 sm:mx-0">
+                    <div className="overflow-x-auto">
                         <div className="inline-block min-w-full align-middle">
-                            <div className="overflow-hidden ring-1 ring-zinc-950/5 dark:ring-white/10">
+                            <div className="overflow-hidden">
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -342,38 +343,53 @@ const RecipeDatabase: React.FC = () => {
                                             return (
                                                 <TableRow key={recipe.id}>
                                                     <TableCell>
-                                                        <div className="flex flex-col gap-1">
-                                                            <div className="inline-flex items-center gap-2">
-                                                                <Link
-                                                                    to={`/dashboard/recipe-database/${recipe.id}`}
-                                                                    className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
-                                                                >
-                                                                    {recipe.name}
-                                                                </Link>
-                                                                {recipe.is_verified && (
-                                                                    <Badge color="green" className="text-xs">
-                                                                        Verified
-                                                                    </Badge>
-                                                                )}
-                                                                {isMyRecipe && (
-                                                                    <Badge color="blue" className="text-xs">
-                                                                        Mine
-                                                                    </Badge>
-                                                                )}
-                                                            </div>
-                                                            <div className="md:hidden text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2">
-                                                                {recipe.description || (
-                                                                    <span className="text-zinc-400 dark:text-zinc-500">—</span>
-                                                                )}
-                                                            </div>
-                                                            <div className="sm:hidden text-sm text-zinc-600 dark:text-zinc-400">
-                                                                By {recipe.author_name}
+                                                        <div className="flex items-center gap-3">
+                                                            <Link
+                                                                to={`/dashboard/recipe-database/${recipe.id}`}
+                                                                className="shrink-0"
+                                                            >
+                                                                <img
+                                                                    src={recipe.image_filename 
+                                                                        ? `https://cdn.nobull.fit/recipes/${recipe.image_filename}` 
+                                                                        : "https://cdn.nobull.fit/no-image-no-text.jpg"
+                                                                    }
+                                                                    alt={recipe.name}
+                                                                    className="h-12 w-12 rounded-md object-cover"
+                                                                />
+                                                            </Link>
+                                                            <div className="flex flex-col gap-1 min-w-0">
+                                                                <div className="inline-flex items-center gap-2 flex-wrap">
+                                                                    <Link
+                                                                        to={`/dashboard/recipe-database/${recipe.id}`}
+                                                                        className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline truncate"
+                                                                    >
+                                                                        {recipe.name}
+                                                                    </Link>
+                                                                    {recipe.is_verified && (
+                                                                        <Badge color="green" className="text-xs shrink-0">
+                                                                            Verified
+                                                                        </Badge>
+                                                                    )}
+                                                                    {isMyRecipe && (
+                                                                        <Badge color="blue" className="text-xs shrink-0">
+                                                                            Mine
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                                <div className="md:hidden text-sm text-zinc-600 dark:text-zinc-400 line-clamp-3 whitespace-normal">
+                                                                    {recipe.description || (
+                                                                        <span className="text-zinc-400 dark:text-zinc-500">—</span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="sm:hidden text-sm text-zinc-600 dark:text-zinc-400">
+                                                                    By {recipe.author_name}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="hidden md:table-cell">
-                                                        <div className="max-w-md">
-                                                            <Text className="line-clamp-2">
+                                                    <TableCell className="hidden md:table-cell align-top">
+                                                        <div className="max-w-lg">
+                                                            <Text className="line-clamp-3 whitespace-normal">
                                                                 {recipe.description || (
                                                                     <span className="text-zinc-400 dark:text-zinc-500">—</span>
                                                                 )}

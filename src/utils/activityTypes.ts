@@ -143,4 +143,3 @@ export function getActivityTypeConfig(type: ActivityType): ActivityTypeConfig | 
 export function getAllActivityTypes(): ActivityTypeConfig[] {
     return ACTIVITY_TYPES;
 }
-

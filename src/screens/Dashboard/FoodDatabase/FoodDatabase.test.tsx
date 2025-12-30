@@ -25,6 +25,58 @@ vi.mock("../DashboardSidebar", () => ({
     UserDropdown: () => <div data-testid="user-dropdown">User Dropdown</div>
 }));
 
+// Mock fetch for food API calls
+const mockFoodHints = [
+    {
+        food: {
+            foodId: "food_123",
+            label: "Apple",
+            knownAs: "Red Apple",
+            nutrients: {
+                ENERC_KCAL: 52,
+                PROCNT: 0.3,
+                FAT: 0.2,
+                CHOCDF: 14
+            },
+            brand: null,
+            category: "Generic foods",
+            categoryLabel: "food",
+            image: "https://example.com/apple.jpg"
+        },
+        measures: [{ uri: "measure_1", label: "Whole", weight: 182 }]
+    },
+    {
+        food: {
+            foodId: "food_456",
+            label: "Chicken Breast",
+            knownAs: null,
+            nutrients: {
+                ENERC_KCAL: 165,
+                PROCNT: 31,
+                FAT: 3.6,
+                CHOCDF: 0
+            },
+            brand: "Tyson",
+            category: "Generic foods",
+            categoryLabel: "food",
+            image: null
+        },
+        measures: [{ uri: "measure_2", label: "Serving", weight: 100 }]
+    }
+];
+
+global.fetch = vi.fn(() =>
+    Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+            text: "test",
+            count: 2,
+            parsed: [],
+            hints: mockFoodHints
+        })
+    })
+) as unknown as typeof fetch;
+
 describe("FoodDatabase", () => {
     it("should render the food database page", async () => {
         const router = createMemoryRouter([

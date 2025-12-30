@@ -279,38 +279,63 @@ const FoodDatabase: React.FC = () => {
                                         )}
                                     </Text>
                                 </div>
-                                <Table>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableHeader>Food Name</TableHeader>
-                                            <TableHeader>Brand</TableHeader>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {searchResults.hints.map((hint, index) => (
-                                            <TableRow key={`${hint.food.foodId}-${index}`}>
-                                                <TableCell>
-                                                    <Link 
-                                                        href={`/dashboard/food-database/${encodeURIComponent(hint.food.foodId)}`}
-                                                        className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
-                                                    >
-                                                        {hint.food.label}
-                                                    </Link>
-                                                    {hint.food.knownAs && (
-                                                        <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                                                            {hint.food.knownAs}
-                                                        </div>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {hint.food.brand || (
-                                                        <span className="text-zinc-400 dark:text-zinc-500">—</span>
-                                                    )}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                <div className="overflow-x-auto">
+                                    <div className="inline-block min-w-full align-middle">
+                                        <div className="overflow-hidden">
+                                            <Table>
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableHeader className="min-w-[250px]">Food Name</TableHeader>
+                                                        <TableHeader className="hidden sm:table-cell min-w-[150px]">Brand</TableHeader>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {searchResults.hints.map((hint, index) => (
+                                                        <TableRow key={`${hint.food.foodId}-${index}`}>
+                                                            <TableCell>
+                                                                <div className="flex items-center gap-3">
+                                                                    <Link 
+                                                                        href={`/dashboard/food-database/${encodeURIComponent(hint.food.foodId)}`}
+                                                                        className="shrink-0"
+                                                                    >
+                                                                        <img
+                                                                            src={hint.food.image || "https://cdn.nobull.fit/no-image-no-text.jpg"}
+                                                                            alt={hint.food.label}
+                                                                            className="h-12 w-12 rounded-md object-cover"
+                                                                        />
+                                                                    </Link>
+                                                                    <div className="flex flex-col gap-1 min-w-0">
+                                                                        <Link 
+                                                                            href={`/dashboard/food-database/${encodeURIComponent(hint.food.foodId)}`}
+                                                                            className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                                                                        >
+                                                                            {hint.food.label}
+                                                                        </Link>
+                                                                        {hint.food.knownAs && (
+                                                                            <div className="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2 whitespace-normal">
+                                                                                {hint.food.knownAs}
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="sm:hidden text-sm text-zinc-600 dark:text-zinc-400">
+                                                                            {hint.food.brand || (
+                                                                                <span className="text-zinc-400 dark:text-zinc-500">—</span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="hidden sm:table-cell">
+                                                                {hint.food.brand || (
+                                                                    <span className="text-zinc-400 dark:text-zinc-500">—</span>
+                                                                )}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </div>
+                                </div>
                                 {renderPagination()}
                             </>
                         ) : (

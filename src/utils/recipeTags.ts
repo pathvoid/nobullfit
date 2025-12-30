@@ -71,7 +71,7 @@ export const RECIPE_TAGS = {
     meal_prep: "Meal Prep",
     kid_friendly: "Kid-Friendly",
     party: "Party",
-    comfort_food: "Comfort Food",
+    comfort_food: "Comfort Food"
 } as const;
 
 export type RecipeTagKey = keyof typeof RECIPE_TAGS;
@@ -117,4 +117,3 @@ export function getTagsByCategory() {
         ] as RecipeTagKey[]
     };
 }
-
