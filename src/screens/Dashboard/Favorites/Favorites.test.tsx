@@ -25,6 +25,33 @@ vi.mock("../DashboardSidebar", () => ({
     UserDropdown: () => <div data-testid="user-dropdown">User Dropdown</div>
 }));
 
+// Mock favorites data
+const mockFavorites = [
+    {
+        id: 1,
+        food_id: "food_123",
+        food_label: "Apple",
+        food_data: {
+            brand: null,
+            category: "Generic foods",
+            categoryLabel: "food",
+            image: "https://example.com/apple.jpg"
+        },
+        item_type: "food",
+        created_at: "2025-01-01T00:00:00.000Z"
+    },
+    {
+        id: 2,
+        food_id: "42",
+        food_label: "My Recipe",
+        food_data: {
+            image_filename: "my-recipe.jpg"
+        },
+        item_type: "recipe",
+        created_at: "2025-01-02T00:00:00.000Z"
+    }
+];
+
 describe("Favorites", () => {
     it("should render the favorites page", async () => {
         const router = createMemoryRouter([

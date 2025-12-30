@@ -19,6 +19,8 @@ interface Favorite {
         brand?: string;
         category?: string;
         categoryLabel?: string;
+        image?: string;
+        image_filename?: string;
     };
     item_type: string;
     created_at: string;
@@ -108,71 +110,103 @@ const Favorites: React.FC = () => {
                         <Text className="text-zinc-600 dark:text-zinc-400">
                             {favorites.length} favorite{favorites.length !== 1 ? "s" : ""}
                         </Text>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableHeader>Name</TableHeader>
-                                    <TableHeader>Type</TableHeader>
-                                    <TableHeader>Brand</TableHeader>
-                                    <TableHeader>Category</TableHeader>
-                                    <TableHeader>Actions</TableHeader>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {favorites.map((favorite) => {
-                                    const isRecipe = favorite.item_type === "recipe";
-                                    const detailUrl = isRecipe 
-                                        ? `/dashboard/recipe-database/${encodeURIComponent(favorite.food_id)}`
-                                        : `/dashboard/food-database/${encodeURIComponent(favorite.food_id)}`;
-                                    
-                                    return (
-                                        <TableRow key={favorite.id}>
-                                            <TableCell>
-                                                <Link 
-                                                    href={detailUrl}
-                                                    className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
-                                                >
-                                                    {favorite.food_label}
-                                                </Link>
-                                            </TableCell>
-                                            <TableCell>
-                                                {isRecipe ? (
-                                                    <span className="text-purple-600 dark:text-purple-400">Recipe</span>
-                                                ) : (
-                                                    <span className="text-green-600 dark:text-green-400">Food</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                {!isRecipe && (favorite.food_data?.brand || (
-                                                    <span className="text-zinc-400 dark:text-zinc-500">—</span>
-                                                ))}
-                                                {isRecipe && (
-                                                    <span className="text-zinc-400 dark:text-zinc-500">—</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                {!isRecipe && (favorite.food_data?.categoryLabel || favorite.food_data?.category || (
-                                                    <span className="text-zinc-400 dark:text-zinc-500">—</span>
-                                                ))}
-                                                {isRecipe && (
-                                                    <span className="text-zinc-400 dark:text-zinc-500">—</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    onClick={() => handleRemoveFavorite(favorite)}
-                                                    disabled={removingIds.has(favorite.id)}
-                                                    color="red"
-                                                    outline
-                                                >
-                                                    {removingIds.has(favorite.id) ? "Removing..." : "Remove"}
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
+                        <div className="overflow-x-auto">
+                            <div className="inline-block min-w-full align-middle">
+                                <div className="overflow-hidden">
+                                    <Table>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableHeader className="min-w-[250px]">Name</TableHeader>
+                                                <TableHeader className="min-w-[80px]">Type</TableHeader>
+                                                <TableHeader className="hidden md:table-cell min-w-[120px]">Brand</TableHeader>
+                                                <TableHeader className="hidden lg:table-cell min-w-[120px]">Category</TableHeader>
+                                                <TableHeader className="min-w-[100px]">Actions</TableHeader>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {favorites.map((favorite) => {
+                                                const isRecipe = favorite.item_type === "recipe";
+                                                const detailUrl = isRecipe 
+                                                    ? `/dashboard/recipe-database/${encodeURIComponent(favorite.food_id)}`
+                                                    : `/dashboard/food-database/${encodeURIComponent(favorite.food_id)}`;
+                                                
+                                                // Get thumbnail image
+                                                let thumbnailUrl = "https://cdn.nobull.fit/no-image-no-text.jpg";
+                                                if (isRecipe && favorite.food_data?.image_filename) {
+                                                    thumbnailUrl = `https://cdn.nobull.fit/recipes/${favorite.food_data.image_filename}`;
+                                                } else if (!isRecipe && favorite.food_data?.image) {
+                                                    thumbnailUrl = favorite.food_data.image;
+                                                }
+                                                
+                                                return (
+                                                    <TableRow key={favorite.id}>
+                                                        <TableCell>
+                                                            <div className="flex items-center gap-3">
+                                                                <Link 
+                                                                    href={detailUrl}
+                                                                    className="shrink-0"
+                                                                >
+                                                                    <img
+                                                                        src={thumbnailUrl}
+                                                                        alt={favorite.food_label}
+                                                                        className="h-12 w-12 rounded-md object-cover"
+                                                                    />
+                                                                </Link>
+                                                                <div className="flex flex-col gap-1 min-w-0">
+                                                                    <Link 
+                                                                        href={detailUrl}
+                                                                        className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                                                                    >
+                                                                        {favorite.food_label}
+                                                                    </Link>
+                                                                    <div className="md:hidden text-sm text-zinc-600 dark:text-zinc-400">
+                                                                        {!isRecipe && favorite.food_data?.brand && (
+                                                                            <span>{favorite.food_data.brand}</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {isRecipe ? (
+                                                                <span className="text-purple-600 dark:text-purple-400">Recipe</span>
+                                                            ) : (
+                                                                <span className="text-green-600 dark:text-green-400">Food</span>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="hidden md:table-cell">
+                                                            {!isRecipe && (favorite.food_data?.brand || (
+                                                                <span className="text-zinc-400 dark:text-zinc-500">—</span>
+                                                            ))}
+                                                            {isRecipe && (
+                                                                <span className="text-zinc-400 dark:text-zinc-500">—</span>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="hidden lg:table-cell">
+                                                            {!isRecipe && (favorite.food_data?.categoryLabel || favorite.food_data?.category || (
+                                                                <span className="text-zinc-400 dark:text-zinc-500">—</span>
+                                                            ))}
+                                                            {isRecipe && (
+                                                                <span className="text-zinc-400 dark:text-zinc-500">—</span>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Button
+                                                                onClick={() => handleRemoveFavorite(favorite)}
+                                                                disabled={removingIds.has(favorite.id)}
+                                                                color="red"
+                                                            >
+                                                                {removingIds.has(favorite.id) ? "Removing..." : "Remove"}
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
