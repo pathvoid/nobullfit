@@ -152,109 +152,58 @@ export async function sendPasswordResetEmail(email: string, name: string, resetT
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-                body { 
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
-                    line-height: 1.6; 
-                    color: #18181b; 
-                    margin: 0;
-                    padding: 40px 20px;
-                }
-                .container { 
-                    max-width: 600px; 
-                    margin: 0 auto; 
-                }
-                .header { 
-                    padding: 0 0 32px 0; 
-                }
-                .header h1 {
-                    margin: 0;
-                    font-size: 24px;
-                    font-weight: 600;
-                    color: #18181b;
-                }
-                .content { 
-                    padding: 0; 
-                }
-                .content p {
-                    margin: 0 0 20px 0;
-                    color: #3f3f46;
-                    font-size: 16px;
-                    line-height: 1.6;
-                }
-                .button { 
-                    display: inline-block; 
-                    padding: 10px 20px; 
-                    background-color: #27272a; 
-                    color: #ffffff !important; 
-                    text-decoration: none; 
-                    border-radius: 8px; 
-                    margin: 24px 0;
-                    font-weight: 600;
-                    font-size: 14px;
-                }
-                .link-text {
-                    word-break: break-all; 
-                    color: #ffffff;
-                    font-size: 14px;
-                    font-family: monospace;
-                    background-color: #27272a;
-                    padding: 12px;
-                    border-radius: 6px;
-                    margin: 16px 0;
-                    display: block;
-                }
-                .notice {
-                    margin: 32px 0;
-                    padding: 16px;
-                    background-color: #27272a;
-                    border-radius: 4px;
-                }
-                .notice p {
-                    margin: 0;
-                    color: #ffffff;
-                    font-size: 14px;
-                }
-                .footer { 
-                    margin-top: 48px;
-                    padding-top: 24px; 
-                    font-size: 12px; 
-                    color: #71717a;
-                    border-top: 1px solid #e4e4e7;
-                }
-                .footer p {
-                    margin: 4px 0;
-                    color: #71717a;
-                }
-                a {
-                    color: #18181b;
-                    text-decoration: underline;
-                }
-            </style>
+            <title>${subject}</title>
         </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Password Reset Request</h1>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #18181b;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #18181b; margin: 0; font-size: 24px; font-weight: 600;">NoBullFit</h1>
                 </div>
-                <div class="content">
-                    <p>Hi ${name},</p>
-                    <p>We received a request to reset your password for your NoBullFit account.</p>
-                    <p>Click the button below to reset your password. This link will expire in 1 hour.</p>
-                    <div style="margin: 24px 0;">
-                        <a href="${resetLink}" class="button">Reset Password</a>
+                
+                <div style="background-color: #ffffff; padding: 30px; border-radius: 8px;">
+                    <h2 style="color: #18181b; margin-top: 0; font-size: 20px; font-weight: 600;">Password Reset Request</h2>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Hi ${name},</p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        We received a request to reset your password for your NoBullFit account.
+                    </p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        Click the button below to reset your password. This link will expire in 1 hour.
+                    </p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${resetLink}" style="display: inline-block; background-color: #27272a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Reset Password</a>
                     </div>
-                    <p>Or copy and paste this link into your browser:</p>
-                    <span class="link-text">${resetLink}</span>
-                    <div class="notice">
-                        <p><strong>Security Notice:</strong> If you didn't request a password reset, please ignore this email. Your password will remain unchanged.</p>
+                    
+                    <p style="color: #18181b; margin: 16px 0; font-size: 14px;">
+                        Or copy and paste this link into your browser:
+                    </p>
+                    <p style="color: #18181b; margin: 8px 0; font-size: 12px; word-break: break-all;">
+                        <a href="${resetLink}" style="color: #27272a; text-decoration: underline;">${resetLink}</a>
+                    </p>
+                    
+                    <div style="margin-top: 30px; padding: 16px; background-color: #27272a; border-radius: 6px;">
+                        <p style="color: #ffffff; margin: 0; font-size: 12px; font-weight: 500;">Security Notice</p>
+                        <p style="color: #ffffff; margin: 8px 0 0 0; font-size: 12px;">
+                            If you didn't request a password reset, please ignore this email. Your password will remain unchanged.
+                        </p>
                     </div>
-                    <p>Best regards,<br>The NoBullFit Team</p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Best regards,<br>The NoBullFit Team</p>
                 </div>
-                <div class="footer">
-                    <p>This email was sent to ${email}.</p>
-                    <p>If you didn't request a password reset, please ignore this email.</p>
-                    <p>This link expires in 1 hour.</p>
+                
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e4e4e7;">
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        This email was sent to <a href="mailto:${email}" style="color: #27272a; text-decoration: underline;">${email}</a>.
+                    </p>
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        If you didn't request a password reset, please ignore this email.
+                    </p>
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        This link expires in 1 hour.
+                    </p>
                 </div>
             </div>
         </body>
