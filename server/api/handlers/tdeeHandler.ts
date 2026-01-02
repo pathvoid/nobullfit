@@ -24,13 +24,13 @@ async function getUserIdFromRequest(req: Request): Promise<number | null> {
 }
 
 // Calculate BMR using Mifflin-St Jeor equation
-function calculateBMR(weightKg: number, heightCm: number, age: number, gender: string): number {
+export function calculateBMR(weightKg: number, heightCm: number, age: number, gender: string): number {
     const baseBMR = (10 * weightKg) + (6.25 * heightCm) - (5 * age);
     return gender === "male" ? baseBMR + 5 : baseBMR - 161;
 }
 
 // Calculate TDEE from BMR and activity level
-function calculateTDEE(bmr: number, activityLevel: string): number {
+export function calculateTDEE(bmr: number, activityLevel: string): number {
     const multipliers: Record<string, number> = {
         sedentary: 1.2,
         lightly_active: 1.375,
@@ -222,4 +222,3 @@ export async function handleSaveTDEE(req: Request, res: Response): Promise<void>
         res.status(500).json({ error: "Internal server error" });
     }
 }
-

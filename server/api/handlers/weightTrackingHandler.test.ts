@@ -228,7 +228,7 @@ describe("weightTrackingHandler", () => {
             expect(mockResponse.json).toHaveBeenCalledWith({ error: "Weight must be a positive number" });
         });
 
-        it("should log weight successfully", async () => {
+        it("should log weight successfully without TDEE recalculation when TDEE not set up", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
             mockRequest.headers = { authorization: "Bearer token" };
             mockRequest.body = {
@@ -245,7 +245,10 @@ describe("weightTrackingHandler", () => {
                 date: "2024-01-15"
             };
 
-            mockPool.query.mockResolvedValue({ rows: [insertedWeight] });
+            // First call: insert weight, second call: check TDEE (not set up)
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [insertedWeight] })
+                .mockResolvedValueOnce({ rows: [] });
 
             await handleLogWeight(mockRequest as Request, mockResponse as Response);
 
@@ -257,6 +260,125 @@ describe("weightTrackingHandler", () => {
                     unit: "kg"
                 })
             });
+            // Should not call update TDEE query (only 2 queries: insert + check TDEE)
+            expect(mockPool.query).toHaveBeenCalledTimes(2);
+        });
+
+        it("should recalculate TDEE when logging latest weight and TDEE is set up", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+            mockRequest.body = {
+                weight: 80,
+                unit: "kg",
+                date: "2024-01-15",
+                timezone: "UTC"
+            };
+
+            const insertedWeight = {
+                id: 1,
+                weight: "80",
+                unit: "kg",
+                date: "2024-01-15"
+            };
+
+            const tdeeData = {
+                age: 30,
+                gender: "male",
+                height_cm: "175",
+                activity_level: "moderately_active"
+            };
+
+            // Mock queries in order: insert weight, check TDEE, check latest weight date, update TDEE
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [insertedWeight] })
+                .mockResolvedValueOnce({ rows: [tdeeData] })
+                .mockResolvedValueOnce({ rows: [{ date: "2024-01-15" }] })
+                .mockResolvedValueOnce({ rows: [] });
+
+            await handleLogWeight(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            // Should have called update TDEE query
+            expect(mockPool.query).toHaveBeenCalledTimes(4);
+            // Verify the update TDEE query was called with calculated values
+            expect(mockPool.query).toHaveBeenLastCalledWith(
+                expect.stringContaining("UPDATE user_tdee"),
+                expect.arrayContaining([expect.any(Number), expect.any(Number), 1])
+            );
+        });
+
+        it("should not recalculate TDEE when weight logged is not the latest date", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+            mockRequest.body = {
+                weight: 75,
+                unit: "kg",
+                date: "2024-01-10",
+                timezone: "UTC"
+            };
+
+            const insertedWeight = {
+                id: 1,
+                weight: "75",
+                unit: "kg",
+                date: "2024-01-10"
+            };
+
+            const tdeeData = {
+                age: 30,
+                gender: "male",
+                height_cm: "175",
+                activity_level: "moderately_active"
+            };
+
+            // Mock queries: insert weight, check TDEE (exists), check latest weight (different date)
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [insertedWeight] })
+                .mockResolvedValueOnce({ rows: [tdeeData] })
+                .mockResolvedValueOnce({ rows: [{ date: "2024-01-15" }] });
+
+            await handleLogWeight(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            // Should not call update TDEE query since weight is not the latest
+            expect(mockPool.query).toHaveBeenCalledTimes(3);
+        });
+
+        it("should recalculate TDEE with lbs to kg conversion", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+            mockRequest.body = {
+                weight: 176.37,
+                unit: "lbs",
+                date: "2024-01-15",
+                timezone: "UTC"
+            };
+
+            const insertedWeight = {
+                id: 1,
+                weight: "176.37",
+                unit: "lbs",
+                date: "2024-01-15"
+            };
+
+            const tdeeData = {
+                age: 30,
+                gender: "female",
+                height_cm: "165",
+                activity_level: "lightly_active"
+            };
+
+            // Mock queries in order: insert weight, check TDEE, check latest weight date, update TDEE
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [insertedWeight] })
+                .mockResolvedValueOnce({ rows: [tdeeData] })
+                .mockResolvedValueOnce({ rows: [{ date: "2024-01-15" }] })
+                .mockResolvedValueOnce({ rows: [] });
+
+            await handleLogWeight(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockPool.query).toHaveBeenCalledTimes(4);
         });
 
         it("should update existing weight for same date (upsert)", async () => {
@@ -276,7 +398,10 @@ describe("weightTrackingHandler", () => {
                 date: "2024-01-15"
             };
 
-            mockPool.query.mockResolvedValue({ rows: [updatedWeight] });
+            // Mock queries: insert/update weight, check TDEE (not set up)
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [updatedWeight] })
+                .mockResolvedValueOnce({ rows: [] });
 
             await handleLogWeight(mockRequest as Request, mockResponse as Response);
 
