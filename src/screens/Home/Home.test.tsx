@@ -31,7 +31,11 @@ describe("Home", () => {
         render(<RouterProvider router={router} />);
         
         // Wait for loader data to be available
-        expect(await screen.findByRole("heading", { name: /Transform Your Health Journey/i })).toBeInTheDocument();
+        expect(
+            await screen.findByRole("heading", {
+                name: /Track nutrition, recipes, and progress — without ads or data selling\./i
+            })
+        ).toBeInTheDocument();
     });
 
     it("should render the Sign Up Now button", async () => {
@@ -52,7 +56,7 @@ describe("Home", () => {
         render(<RouterProvider router={router} />);
         
         // Wait for loader data to be available
-        expect(await screen.findByRole("link", { name: /Sign Up Now!/i })).toBeInTheDocument();
+        expect(await screen.findByRole("link", { name: /Create a free account/i })).toBeInTheDocument();
     });
 
     it("should render the View on GitHub link", async () => {
@@ -73,9 +77,9 @@ describe("Home", () => {
         render(<RouterProvider router={router} />);
         
         // Wait for loader data to be available
-        await screen.findByRole("heading", { name: /Transform Your Health Journey/i });
+        await screen.findByRole("heading", { name: /Track nutrition, recipes, and progress — without ads or data selling\./i });
         
         // Check for View on GitHub link
-        expect(screen.getByRole("link", { name: /View on GitHub/i })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /View the code on GitHub/i })).toBeInTheDocument();
     });
 });

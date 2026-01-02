@@ -3,6 +3,7 @@ import useHelmet from "@hooks/useHelmet";
 import { Heading, Subheading } from "@components/heading";
 import { Button } from "@components/button";
 import { Text, Strong } from "@components/text";
+import { Check } from "lucide-react";
 import styles from "./Home.module.scss";
 
 const Home: React.FC = () => {
@@ -18,12 +19,46 @@ const Home: React.FC = () => {
             <div className="py-16">
                 <div className="max-w-4xl mx-auto space-y-12">
                     <div className="text-center space-y-8">
-                        <Heading>Transform Your Health Journey</Heading>
+                        <Heading>Track nutrition, recipes, and progress - without ads or data selling.</Heading>
                         <Text className="text-xl leading-relaxed">
-                            <Strong>NoBullFit</Strong> is a comprehensive privacy-first platform designed to help you track your nutrition, discover recipes, manage grocery lists, and monitor your health progress — all without compromising your data.
+                            <Strong>NoBullFit</Strong> is a privacy-first health tracking platform for food logging, recipes, grocery lists, weight, and activity. Your data isn’t the product.
                         </Text>
-                        <Text className="text-lg">
-                            This project is currently in <Strong>early development</Strong>, but it's already publicly available. You're welcome to explore and use the features, all completely free.
+                        <div className="mx-auto max-w-3xl">
+                            <div className="grid gap-3 text-left sm:grid-cols-3 sm:gap-4">
+                                <div className="flex gap-3 rounded-xl border border-zinc-950/10 bg-white/5 p-4 dark:border-white/10">
+                                    <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                                    <Text className="text-sm/6 text-zinc-600 dark:text-zinc-300">
+                                        Log meals and macros with a clean food diary
+                                    </Text>
+                                </div>
+                                <div className="flex gap-3 rounded-xl border border-zinc-950/10 bg-white/5 p-4 dark:border-white/10">
+                                    <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                                    <Text className="text-sm/6 text-zinc-600 dark:text-zinc-300">
+                                        Build recipes with full nutrition breakdowns
+                                    </Text>
+                                </div>
+                                <div className="flex gap-3 rounded-xl border border-zinc-950/10 bg-white/5 p-4 dark:border-white/10">
+                                    <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                                    <Text className="text-sm/6 text-zinc-600 dark:text-zinc-300">
+                                        Track weight + activities and see trends over time
+                                    </Text>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Button href="/sign-up">Create a free account</Button>
+                            <Button
+                                outline
+                                href="https://github.com/pathvoid/nobullfit"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                reloadDocument
+                            >
+                                View the code on GitHub
+                            </Button>
+                        </div>
+                        <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                            Public beta: usable today, improving steadily. No ads. No tracking.
                         </Text>
                     </div>
                     <div className="flex justify-center">
@@ -33,18 +68,8 @@ const Home: React.FC = () => {
                         <div className="space-y-8">
                             <Heading level={2} className="text-3xl font-bold text-center">Open & Transparent</Heading>
                             <Text className="leading-relaxed text-center max-w-2xl mx-auto">
-                                NoBullFit is <Strong>source-available</Strong>, meaning our code is publicly accessible for transparency and trust. You can view our source code to understand how we handle your data and build our platform.
+                                NoBullFit is <Strong>source-available</Strong>, meaning our code is publicly accessible for transparency and trust. You can review our source to see how we handle your data and build the platform.
                             </Text>
-                            <div className="text-center">
-                                <a 
-                                    href="https://github.com/pathvoid/nobullfit" 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="relative isolate inline-flex items-baseline justify-center gap-x-2 rounded-lg border text-base/6 font-semibold px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/6 focus:outline-hidden focus:outline-2 focus:outline-offset-2 focus:outline-blue-500 border-transparent bg-zinc-950/90 dark:bg-zinc-600 before:absolute before:inset-0 before:-z-10 before:rounded-[calc(var(--radius-lg)-1px)] before:bg-zinc-900 before:shadow-sm dark:before:hidden dark:border-white/5 after:absolute after:inset-0 after:-z-10 after:rounded-[calc(var(--radius-lg)-1px)] after:shadow-[inset_0_1px_--theme(--color-white/15%)] hover:after:bg-white/10 active:after:bg-white/10 dark:after:-inset-px dark:after:rounded-lg text-white hover:text-white dark:text-white"
-                                >
-                                    View on GitHub
-                                </a>
-                            </div>
                         </div>
                         <div className="space-y-12">
                             <Heading level={2} className="text-3xl font-bold text-center">What You Can Do</Heading>
@@ -105,7 +130,7 @@ const Home: React.FC = () => {
                             </Text>
                             <div className="flex justify-center">
                                 <Button href="/sign-up">
-                                    Sign Up Now!
+                                    Create a free account
                                 </Button>
                             </div>
                         </div>
