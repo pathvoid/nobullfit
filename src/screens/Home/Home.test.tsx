@@ -33,12 +33,12 @@ describe("Home", () => {
         // Wait for loader data to be available
         expect(
             await screen.findByRole("heading", {
-                name: /Track nutrition, recipes, and progress — without ads or data selling\./i
+                name: /Track nutrition, recipes, and progress/i
             })
         ).toBeInTheDocument();
     });
 
-    it("should render the Sign Up Now button", async () => {
+    it("should render the Create a free account button", async () => {
         const router = createMemoryRouter(
             [
                 {
@@ -55,8 +55,9 @@ describe("Home", () => {
 
         render(<RouterProvider router={router} />);
         
-        // Wait for loader data to be available
-        expect(await screen.findByRole("link", { name: /Create a free account/i })).toBeInTheDocument();
+        // Wait for loader data to be available - there are multiple CTAs on the page
+        const links = await screen.findAllByRole("link", { name: /Create a free account/i });
+        expect(links.length).toBeGreaterThan(0);
     });
 
     it("should render the View on GitHub link", async () => {
@@ -77,7 +78,7 @@ describe("Home", () => {
         render(<RouterProvider router={router} />);
         
         // Wait for loader data to be available
-        await screen.findByRole("heading", { name: /Track nutrition, recipes, and progress — without ads or data selling\./i });
+        await screen.findByRole("heading", { name: /Track nutrition, recipes, and progress/i });
         
         // Check for View on GitHub link
         expect(screen.getByRole("link", { name: /View the code on GitHub/i })).toBeInTheDocument();

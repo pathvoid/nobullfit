@@ -1,9 +1,7 @@
-import { rand, sleep } from "@utils/utils";
 import { generateSEOTags } from "@utils/seo";
 import type { MetaTag } from "../types/helmet";
 
 interface LoaderData {
-    data: string;
     title: string;
     meta: MetaTag[];
 }
@@ -11,27 +9,28 @@ interface LoaderData {
 // Home page loader - fetches data and sets page metadata
 // Runs on both server (SSR) and client (navigation)
 const homeLoader = async (): Promise<LoaderData> => {
-    // Simulate async data fetching
-    await sleep();
     return {
-        data: `Home loader - random value ${rand()}`,
-        title: "NoBullFit - Transform Your Fitness Journey",
+        title: "NoBullFit - Track nutrition without ads or data selling",
         meta: generateSEOTags({
-            title: "NoBullFit - Transform Your Fitness Journey",
-            description: "Transform your fitness journey with NoBullFit - Your all-in-one platform for nutrition tracking, recipe management, and progress monitoring.",
+            title: "Track nutrition, recipes, and progress - without ads or data selling",
+            description: "NoBullFit is a privacy-first health tracking platform for food logging, recipes, grocery lists, weight, and activity. Your data isn’t the product.",
             path: "/",
             keywords: [
+                "privacy-first",
                 "fitness",
                 "nutrition",
                 "calories",
                 "recipe",
                 "meal planning",
                 "food tracking",
+                "food diary",
                 "TDEE calculator",
                 "macros",
                 "health",
                 "weight loss",
-                "muscle building"
+                "muscle building",
+                "no ads",
+                "no tracking"
             ]
         })
     };

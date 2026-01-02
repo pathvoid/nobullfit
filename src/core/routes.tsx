@@ -13,6 +13,18 @@ import TermsOfService from "@screens/TermsOfService/TermsOfService";
 import termsOfServiceLoader from "@loaders/termsOfServiceLoader";
 import PrivacyPolicy from "@screens/PrivacyPolicy/PrivacyPolicy";
 import privacyPolicyLoader from "@loaders/privacyPolicyLoader";
+import PrivacyNutritionAppFaq from "@screens/PrivacyNutritionAppFaq/PrivacyNutritionAppFaq";
+import privacyNutritionAppFaqLoader from "@loaders/privacyNutritionAppFaqLoader";
+import MyFitnessPalAlternative from "@screens/MyFitnessPalAlternative/MyFitnessPalAlternative";
+import myFitnessPalAlternativeLoader from "@loaders/myFitnessPalAlternativeLoader";
+import TrackMacrosWithRecipes from "@screens/TrackMacrosWithRecipes/TrackMacrosWithRecipes";
+import trackMacrosWithRecipesLoader from "@loaders/trackMacrosWithRecipesLoader";
+import GroceryListFromRecipesApp from "@screens/GroceryListFromRecipesApp/GroceryListFromRecipesApp";
+import groceryListFromRecipesAppLoader from "@loaders/groceryListFromRecipesAppLoader";
+import SourceAvailableVsOpenSourceHealthApps from "@screens/SourceAvailableVsOpenSourceHealthApps/SourceAvailableVsOpenSourceHealthApps";
+import sourceAvailableVsOpenSourceHealthAppsLoader from "@loaders/sourceAvailableVsOpenSourceHealthAppsLoader";
+import PrivacyFirstCalorieTracker from "@screens/PrivacyFirstCalorieTracker/PrivacyFirstCalorieTracker";
+import privacyFirstCalorieTrackerLoader from "@loaders/privacyFirstCalorieTrackerLoader";
 import SignIn from "@screens/SignIn/SignIn";
 import signInLoader from "@loaders/signInLoader";
 import SignUp from "@screens/SignUp/SignUp";
@@ -89,6 +101,36 @@ const routes: RouteObject[] = [
                 path: "privacy-policy",
                 element: <PrivacyPolicy />,
                 loader: privacyPolicyLoader
+            },
+            {
+                path: "privacy-nutrition-app-faq",
+                element: <PrivacyNutritionAppFaq />,
+                loader: privacyNutritionAppFaqLoader
+            },
+            {
+                path: "myfitnesspal-alternative-without-ads-or-data-selling",
+                element: <MyFitnessPalAlternative />,
+                loader: myFitnessPalAlternativeLoader
+            },
+            {
+                path: "track-macros-with-recipes",
+                element: <TrackMacrosWithRecipes />,
+                loader: trackMacrosWithRecipesLoader
+            },
+            {
+                path: "grocery-list-from-recipes-app",
+                element: <GroceryListFromRecipesApp />,
+                loader: groceryListFromRecipesAppLoader
+            },
+            {
+                path: "source-available-vs-open-source-for-health-apps",
+                element: <SourceAvailableVsOpenSourceHealthApps />,
+                loader: sourceAvailableVsOpenSourceHealthAppsLoader
+            },
+            {
+                path: "privacy-first-calorie-tracker",
+                element: <PrivacyFirstCalorieTracker />,
+                loader: privacyFirstCalorieTrackerLoader
             }
         ]
     },

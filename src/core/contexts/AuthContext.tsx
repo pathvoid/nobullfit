@@ -17,25 +17,21 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    // Initialize state synchronously - check for token immediately
-    // This prevents flicker by knowing auth state before first render
+    // Initialize with consistent state for SSR hydration
+    // Both server and client start with isLoading=true to prevent premature redirects
+    // and ensure hydration matches (server doesn't know auth state)
     const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(() => {
-        // Check for token synchronously during initialization
-        if (typeof window === "undefined") {
-            return false;
-        }
-        const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
-        // If no token, we know user is not logged in immediately
-        // If token exists, we need to verify it, so keep loading true
-        return !!token;
-    });
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Check authentication status on mount (only if we have a token to verify)
+    // Check authentication status on mount (client-side only)
     useEffect(() => {
-        // Only check auth if we detected a token during initialization
-        if (isLoading) {
+        // Check for token after hydration to avoid SSR mismatch
+        const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
+        if (token) {
             checkAuth();
+        } else {
+            // No token found, user is definitely not logged in
+            setIsLoading(false);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

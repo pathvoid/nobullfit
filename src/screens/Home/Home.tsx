@@ -3,11 +3,12 @@ import useHelmet from "@hooks/useHelmet";
 import { Heading, Subheading } from "@components/heading";
 import { Button } from "@components/button";
 import { Text, Strong } from "@components/text";
+import { Link } from "@components/link";
 import { Check } from "lucide-react";
 import styles from "./Home.module.scss";
 
 const Home: React.FC = () => {
-    const loaderData = useLoaderData() as { data: string; title: string; meta: unknown[] };
+    const loaderData = useLoaderData() as { title: string; meta: unknown[] };
     const helmet = useHelmet();
 
     // Set helmet values - refs are updated synchronously for SSR, state updates are deferred
@@ -61,77 +62,210 @@ const Home: React.FC = () => {
                             Public beta: usable today, improving steadily. No ads. No tracking.
                         </Text>
                     </div>
-                    <div className="flex justify-center">
+                    <div className="flex justify-center my-32">
                         <img src="https://cdn.nobull.fit/avocado.png" alt="NoBullFit" className={`w-30 h-auto mx-auto ${styles.parachutingAvocado}`} />
                     </div>
-                    <div className="space-y-24">
+                    <div className="space-y-48">
                         <div className="space-y-8">
-                            <Heading level={2} className="text-3xl font-bold text-center">Open & Transparent</Heading>
+                            <Heading level={2} className="text-3xl font-bold text-center">Transparent by design</Heading>
                             <Text className="leading-relaxed text-center max-w-2xl mx-auto">
-                                NoBullFit is <Strong>source-available</Strong>, meaning our code is publicly accessible for transparency and trust. You can review our source to see how we handle your data and build the platform.
+                                NoBullFit is <Strong>source-available</Strong>: the code is public so you can understand how the platform works and how data is handled.
                             </Text>
+                            <div className="text-center space-y-4">
+                                <Link
+                                    href="/source-available-vs-open-source-for-health-apps"
+                                    className="inline-block font-semibold text-blue-600 underline underline-offset-4 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                    Read: Source-available vs open source for health apps
+                                </Link>
+                                <div>
+                                    <Button
+                                        outline
+                                        href="https://github.com/pathvoid/nobullfit"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        reloadDocument
+                                    >
+                                        View on GitHub
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                         <div className="space-y-12">
-                            <Heading level={2} className="text-3xl font-bold text-center">What You Can Do</Heading>
+                            <div className="text-center space-y-6">
+                                <Heading level={2} className="text-3xl font-bold">Everything you need to track — in one place</Heading>
+                                <Text className="leading-relaxed max-w-2xl mx-auto">
+                                    Designed for clarity and consistency, not streak pressure.
+                                </Text>
+                            </div>
                             <div className="grid md:grid-cols-2 gap-12">
                                 <div className="space-y-6">
                                     <Subheading className="text-xl font-semibold">Food Database</Subheading>
                                     <Text className="leading-relaxed">
-                                        Browse a comprehensive database of foods with detailed nutritional information to make informed dietary choices.
+                                        Find foods and log them consistently
                                     </Text>
                                 </div>
                                 <div className="space-y-6">
                                     <Subheading className="text-xl font-semibold">Food Tracking</Subheading>
                                     <Text className="leading-relaxed">
-                                        Log your daily meals and snacks to track your nutrition intake and maintain a detailed food diary.
+                                        Keep a simple daily food diary (meals + snacks)
                                     </Text>
                                 </div>
                                 <div className="space-y-6">
                                     <Subheading className="text-xl font-semibold">Recipe Database</Subheading>
                                     <Text className="leading-relaxed">
-                                        Discover and save recipes with complete nutritional breakdowns and ingredient lists.
+                                        Save recipes with nutrition per serving
                                     </Text>
                                 </div>
                                 <div className="space-y-6">
                                     <Subheading className="text-xl font-semibold">Favorites</Subheading>
                                     <Text className="leading-relaxed">
-                                        Save your favorite foods and recipes for quick access and easy meal planning.
+                                        Repeat meals without re-entering everything
                                     </Text>
                                 </div>
                                 <div className="space-y-6">
                                     <Subheading className="text-xl font-semibold">Grocery Lists</Subheading>
                                     <Text className="leading-relaxed">
-                                        Create and manage multiple grocery lists. Perfect for meal planning and shopping.
+                                        Plan meals and shop from a clean list
                                     </Text>
                                 </div>
                                 <div className="space-y-6">
                                     <Subheading className="text-xl font-semibold">Progress Tracking</Subheading>
                                     <Text className="leading-relaxed">
-                                        Monitor your health journey with comprehensive tracking:
+                                        Weight trends, activities, and daily nutrition
                                     </Text>
-                                    <ul className="list-disc list-inside space-y-3 ml-4">
-                                        <li className="text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">Weight tracking and trends</li>
-                                        <li className="text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">Activity logging</li>
-                                        <li className="text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">Daily nutrition tracking</li>
-                                    </ul>
+                                </div>
+                            </div>
+                            <div className="pt-2 text-center space-y-3">
+                                <Link
+                                    href="/myfitnesspal-alternative-without-ads-or-data-selling"
+                                    className="block font-semibold text-blue-600 underline underline-offset-4 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                    MyFitnessPal alternative without ads or data selling
+                                </Link>
+                                <Link
+                                    href="/track-macros-with-recipes"
+                                    className="block font-semibold text-blue-600 underline underline-offset-4 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                    Cooking a lot?
+                                </Link>
+                            </div>
+                        </div>
+                        <div className="space-y-10">
+                            <div className="text-center space-y-6">
+                                <Heading level={2} className="text-3xl font-bold">From recipe to grocery list to logged meal</Heading>
+                            </div>
+                            <div className="mx-auto max-w-4xl">
+                                <ol className="grid gap-4 text-left md:grid-cols-3">
+                                    <li className="rounded-xl border border-zinc-950/10 bg-white/5 p-5 dark:border-white/10">
+                                        <Subheading className="text-base font-semibold">1. Create or save a recipe</Subheading>
+                                    </li>
+                                    <li className="rounded-xl border border-zinc-950/10 bg-white/5 p-5 dark:border-white/10">
+                                        <Subheading className="text-base font-semibold">2. Add ingredients to a grocery list</Subheading>
+                                    </li>
+                                    <li className="rounded-xl border border-zinc-950/10 bg-white/5 p-5 dark:border-white/10">
+                                        <Subheading className="text-base font-semibold">3. Log a serving and automatically track nutrition</Subheading>
+                                    </li>
+                                </ol>
+                                <div className="mt-6 text-center">
+                                    <Link
+                                        href="/grocery-list-from-recipes-app"
+                                        className="font-semibold text-blue-600 underline underline-offset-4 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                                    >
+                                        See how it works: Grocery list from recipes app
+                                    </Link>
                                 </div>
                             </div>
                         </div>
                         <div className="space-y-8">
-                            <Heading level={2} className="text-3xl font-bold text-center">Built with Privacy in Mind</Heading>
-                            <Text className="leading-relaxed text-center max-w-2xl mx-auto">
-                                Unlike many health apps, we don't collect unnecessary data and we <Strong>never</Strong> sell your personal information. NoBullFit is and always will be a <em>privacy-first</em> platform.
-                            </Text>
+                            <div className="text-center space-y-6">
+                                <Subheading>Privacy is the baseline</Subheading>
+                                <Heading level={2} className="text-3xl font-bold">Privacy by default (not a premium feature)</Heading>
+                                <Text className="leading-relaxed max-w-2xl mx-auto">
+                                    Most health apps are funded by attention and advertising. NoBullFit is built to respect your data and your time.
+                                </Text>
+                            </div>
+                            <div className="mx-auto max-w-3xl">
+                                <ul className="grid gap-3 text-left sm:grid-cols-2 sm:gap-4">
+                                    <li className="flex gap-3">
+                                        <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                                        <Text className="text-sm/6 text-zinc-600 dark:text-zinc-300">
+                                            No advertising and no behavioral tracking
+                                        </Text>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                                        <Text className="text-sm/6 text-zinc-600 dark:text-zinc-300">
+                                            We don’t sell or share personal data with third parties
+                                        </Text>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                                        <Text className="text-sm/6 text-zinc-600 dark:text-zinc-300">
+                                            Export and delete your data (so you can leave anytime)
+                                        </Text>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                                        <Text className="text-sm/6 text-zinc-600 dark:text-zinc-300">
+                                            Minimal collection: only what’s needed to provide the service
+                                        </Text>
+                                    </li>
+                                </ul>
+                                <div className="mt-6 text-center">
+                                    <Link
+                                        href="/privacy-nutrition-app-faq"
+                                        className="font-semibold text-blue-600 underline underline-offset-4 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                                    >
+                                        Learn more: Privacy nutrition app FAQ
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
-                        <div className="text-center space-y-10">
-                            <Heading level={2} className="text-3xl font-bold">Get Started</Heading>
-                            <Text className="text-lg">
-                                Ready to explore?
+                        <div className="space-y-8">
+                            <div className="text-center space-y-6">
+                                <Heading level={2} className="text-3xl font-bold">Built for people who want control</Heading>
+                            </div>
+                            <div className="mx-auto max-w-3xl">
+                                <ul className="grid gap-3 text-left sm:grid-cols-2 sm:gap-4">
+                                    <li className="flex gap-3">
+                                        <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                                        <Text className="text-sm/6 text-zinc-600 dark:text-zinc-300">
+                                            You want to track food and progress without becoming a data product
+                                        </Text>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                                        <Text className="text-sm/6 text-zinc-600 dark:text-zinc-300">
+                                            You prefer calm tracking over gamification and streak pressure
+                                        </Text>
+                                    </li>
+                                    <li className="flex gap-3 sm:col-span-2">
+                                        <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                                        <Text className="text-sm/6 text-zinc-600 dark:text-zinc-300">
+                                            You want the option to export or delete your data anytime
+                                        </Text>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="text-center space-y-8">
+                            <Heading level={2} className="text-3xl font-bold">Get started in under a minute</Heading>
+                            <Text className="text-lg max-w-2xl mx-auto">
+                                Create an account and log your first meal. If it’s not for you, you can delete your data.
                             </Text>
                             <div className="flex justify-center">
                                 <Button href="/sign-up">
                                     Create a free account
                                 </Button>
+                            </div>
+                            <div className="text-center">
+                                <Link
+                                    href="/privacy-first-calorie-tracker"
+                                    className="inline-block font-semibold text-blue-600 underline underline-offset-4 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                    Read the details: Privacy-first calorie tracker
+                                </Link>
                             </div>
                         </div>
                     </div>
