@@ -455,6 +455,9 @@ const FoodTracking: React.FC = () => {
                     });
                 }
                 
+                // Determine measure label for recipe (singular/plural)
+                const measureLabel = servings === 1 ? "serving" : "servings";
+                
                 const requestBody: Record<string, unknown> = {
                     itemType: "recipe",
                     foodId: isManualEntry ? `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` : selectedQuickAddFood!.food_id,
@@ -462,6 +465,7 @@ const FoodTracking: React.FC = () => {
                     foodData: {}, // API requires foodData even for recipes
                     recipeData: addRecipeData || {},
                     quantity: servings,
+                    measureLabel: measureLabel,
                     category: addCategory,
                     date: dateStr,
                     timezone: userTimezone,
