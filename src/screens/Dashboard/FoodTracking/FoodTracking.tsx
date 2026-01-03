@@ -907,7 +907,7 @@ const FoodTracking: React.FC = () => {
                                         <option value="">Select a measure...</option>
                                         {(editingFood.food_data as { measures: Array<{ uri: string; label: string; weight: number }> }).measures.map((measure) => (
                                             <option key={measure.uri} value={measure.uri}>
-                                                {measure.label} ({measure.weight}g)
+                                                {measure.label}{measure.weight > 0 ? ` (${measure.weight}g)` : ""}
                                             </option>
                                         ))}
                                     </Select>
@@ -1067,7 +1067,7 @@ const FoodTracking: React.FC = () => {
                                         <option value="">Select a measure...</option>
                                         {(addFoodData as { measures: Array<{ uri: string; label: string; weight: number }> }).measures.map((measure) => (
                                             <option key={measure.uri} value={measure.uri}>
-                                                {measure.label} ({measure.weight}g)
+                                                {measure.label}{measure.weight > 0 ? ` (${measure.weight}g)` : ""}
                                             </option>
                                         ))}
                                     </Select>

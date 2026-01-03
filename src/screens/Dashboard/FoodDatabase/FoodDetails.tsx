@@ -778,7 +778,7 @@ const FoodDetails: React.FC = () => {
                                         <option value="">Select a measure...</option>
                                         {foodData.food.measures.map((measure) => (
                                             <option key={measure.uri} value={measure.uri}>
-                                                {measure.label} ({measure.weight}g)
+                                                {measure.label}{measure.weight > 0 ? ` (${measure.weight}g)` : ""}
                                             </option>
                                         ))}
                                     </Select>
