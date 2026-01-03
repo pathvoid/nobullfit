@@ -2,7 +2,7 @@
 
 export interface Ingredient {
     quantity: number | string | null; // Can be number, fraction string (e.g., "1/3"), or null
-    unit: string;
+    unit?: string; // Optional - when not provided, quantity represents whole items (e.g., "4 tortilla wraps")
     name: string;
 }
 
@@ -171,8 +171,8 @@ export function convertIngredient(
         return ingredient;
     }
 
-    // If no quantity, return as-is
-    if (ingredient.quantity === null) {
+    // If no quantity or no unit, return as-is
+    if (ingredient.quantity === null || !ingredient.unit) {
         return ingredient;
     }
     

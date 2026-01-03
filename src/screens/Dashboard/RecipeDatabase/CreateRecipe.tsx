@@ -50,7 +50,7 @@ const CreateRecipe: React.FC = () => {
 
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    const [ingredients, setIngredients] = useState<Ingredient[]>([{ quantity: null, unit: "g", name: "" }]);
+    const [ingredients, setIngredients] = useState<Ingredient[]>([{ quantity: null, unit: "", name: "" }]);
     const [steps, setSteps] = useState<string[]>([""]);
     const [isPublic, setIsPublic] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -103,18 +103,19 @@ const CreateRecipe: React.FC = () => {
                         const recipe = data.recipe;
                         setName(recipe.name || "");
                         setDescription(recipe.description || "");
-                        // Handle both old string format and new structured format
-                        if (recipe.ingredients && recipe.ingredients.length > 0) {
-                            const parsedIngredients = recipe.ingredients.map((ing: string | Ingredient) => {
-                                if (typeof ing === "string") {
-                                    // Old format - try to parse or use as name
-                                    return { quantity: null, unit: "g", name: ing };
-                                }
-                                return ing;
-                            });
-                            setIngredients(parsedIngredients);
+// Handle both old string format and new structured format
+                            if (recipe.ingredients && recipe.ingredients.length > 0) {
+                                const parsedIngredients = recipe.ingredients.map((ing: string | Ingredient) => {
+                                    if (typeof ing === "string") {
+                                        // Old format - try to parse or use as name
+                                        return { quantity: null, unit: "", name: ing };
+                                    }
+                                    // Ensure unit property exists (handle ingredients saved without unit)
+                                    return { ...ing, unit: ing.unit || "" };
+                                });
+                                setIngredients(parsedIngredients);
                         } else {
-                            setIngredients([{ quantity: null, unit: "g", name: "" }]);
+                            setIngredients([{ quantity: null, unit: "", name: "" }]);
                         }
                         setSteps(recipe.steps && recipe.steps.length > 0 ? recipe.steps : [""]);
                         setIsPublic(recipe.is_public || false);
@@ -154,13 +155,14 @@ const CreateRecipe: React.FC = () => {
             if (duplicateRecipe.ingredients && duplicateRecipe.ingredients.length > 0) {
                 const parsedIngredients = duplicateRecipe.ingredients.map((ing: string | Ingredient) => {
                     if (typeof ing === "string") {
-                        return { quantity: null, unit: "g", name: ing };
+                        return { quantity: null, unit: "", name: ing };
                     }
-                    return ing;
+                    // Ensure unit property exists (handle ingredients saved without unit)
+                    return { ...ing, unit: ing.unit || "" };
                 });
                 setIngredients(parsedIngredients);
             } else {
-                setIngredients([{ quantity: null, unit: "g", name: "" }]);
+                setIngredients([{ quantity: null, unit: "", name: "" }]);
             }
             setSteps(duplicateRecipe.steps && duplicateRecipe.steps.length > 0 ? duplicateRecipe.steps : [""]);
             setIsPublic(duplicateRecipe.is_public || false);
@@ -185,7 +187,7 @@ const CreateRecipe: React.FC = () => {
     }, [isEditMode, recipeId, duplicateRecipe]);
 
     const handleAddIngredient = () => {
-        setIngredients([...ingredients, { quantity: null, unit: "g", name: "" }]);
+        setIngredients([...ingredients, { quantity: null, unit: "", name: "" }]);
     };
 
     const handleRemoveIngredient = (index: number) => {
@@ -822,10 +824,11 @@ const CreateRecipe: React.FC = () => {
                                         <div className="sm:col-span-3">
                                             <label className="text-xs text-zinc-600 dark:text-zinc-400 mb-1 block">Unit</label>
                                             <Select
-                                                value={ingredient.unit}
+                                                value={ingredient.unit || ""}
                                                 onChange={(e) => handleIngredientUnitChange(index, e.target.value)}
                                                 className="w-full"
                                             >
+                                                <option value="">No unit</option>
                                                 {getAllUnits().map((unit) => (
                                                     <option key={unit.key} value={unit.key}>
                                                         {unit.label}

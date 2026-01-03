@@ -147,6 +147,22 @@ describe("ingredientUnits", () => {
             expect(convertedMetric).toEqual(ingredientMetric);
             expect(convertedImperial).toEqual(ingredientImperial);
         });
+
+        it("should return original if unit is not provided (whole items)", () => {
+            const ingredient: Ingredient = { quantity: 4, name: "tortilla wraps" };
+            const convertedMetric = convertIngredient(ingredient, "metric");
+            const convertedImperial = convertIngredient(ingredient, "imperial");
+            expect(convertedMetric).toEqual(ingredient);
+            expect(convertedImperial).toEqual(ingredient);
+        });
+
+        it("should return original if unit is empty string", () => {
+            const ingredient: Ingredient = { quantity: 2, unit: "", name: "eggs" };
+            const convertedMetric = convertIngredient(ingredient, "metric");
+            const convertedImperial = convertIngredient(ingredient, "imperial");
+            expect(convertedMetric).toEqual(ingredient);
+            expect(convertedImperial).toEqual(ingredient);
+        });
     });
 
     describe("getAllUnits", () => {

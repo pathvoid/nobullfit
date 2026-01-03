@@ -231,6 +231,34 @@ describe("recipesHandler", () => {
                 recipe: expect.objectContaining({ id: 1, servings: null })
             });
         });
+
+        it("should create recipe with ingredients without unit (whole items)", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1, email: "test@example.com" });
+            (containsEmoji as ReturnType<typeof vi.fn>).mockReturnValue(false);
+            mockRequest.headers = { authorization: "Bearer token" };
+            mockRequest.body = {
+                name: "Tortilla Wraps",
+                description: "Simple wraps",
+                ingredients: [
+                    { quantity: 4, name: "wholemeal tortilla wraps" },
+                    { quantity: 2, unit: "", name: "eggs" },
+                    { quantity: "100", unit: "g", name: "cheese" }
+                ],
+                steps: ["Prepare wraps"],
+                isPublic: false
+            };
+
+            const mockCreatedRecipe = { id: 1, name: "Tortilla Wraps" };
+            mockPool.query.mockResolvedValue({ rows: [mockCreatedRecipe] });
+
+            await handleCreateRecipe(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(201);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                recipe: expect.objectContaining({ id: 1 })
+            });
+        });
     });
 
     describe("handleUpdateRecipe", () => {

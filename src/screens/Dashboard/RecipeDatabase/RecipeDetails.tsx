@@ -256,8 +256,9 @@ const RecipeDetails: React.FC = () => {
 
             const nutrients: Record<string, number> = {};
             if (recipe.macros) {
-                Object.keys(recipe.macros).forEach((key) => {
-                    const value = recipe.macros[key as keyof typeof recipe.macros];
+                const macros = recipe.macros;
+                Object.keys(macros).forEach((key) => {
+                    const value = macros[key as keyof typeof macros];
                     if (value !== undefined && value !== null) {
                         // Map recipe macro keys to Edamam nutrient codes
                         const nutrientKey = key === "calories" ? "ENERC_KCAL" :
@@ -380,7 +381,7 @@ const RecipeDetails: React.FC = () => {
                                         key={tagKey}
                                         className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30"
                                     >
-                                        {RECIPE_TAGS[tagKey]?.label || tagKey}
+                                        {RECIPE_TAGS[tagKey] || tagKey}
                                     </span>
                                 ))}
                             </div>
@@ -495,18 +496,26 @@ const RecipeDetails: React.FC = () => {
                                         {recipe.ingredients.map((ingredient, index) => {
                                             let displayIngredient: Ingredient;
                                             if (typeof ingredient === "string") {
-                                                displayIngredient = { quantity: null, unit: "g", name: ingredient };
+                                                displayIngredient = { quantity: null, unit: "", name: ingredient };
                                             } else {
                                                 displayIngredient = ingredient;
                                             }
                                             
+                                            // Only convert if we have both quantity and a unit
                                             if (displayIngredient.quantity !== null && displayIngredient.unit) {
                                                 displayIngredient = convertIngredient(displayIngredient, unitSystem);
                                             }
                                             
-                                            const quantityDisplay = displayIngredient.quantity !== null 
-                                                ? `${displayIngredient.quantity} ${UNITS[displayIngredient.unit as keyof typeof UNITS]?.label || displayIngredient.unit}`
-                                                : "";
+                                            // Build quantity display - only show unit label if unit exists
+                                            let quantityDisplay = "";
+                                            if (displayIngredient.quantity !== null) {
+                                                const unitLabel = displayIngredient.unit 
+                                                    ? (UNITS[displayIngredient.unit as keyof typeof UNITS]?.label || displayIngredient.unit)
+                                                    : "";
+                                                quantityDisplay = unitLabel 
+                                                    ? `${displayIngredient.quantity} ${unitLabel}`
+                                                    : `${displayIngredient.quantity}`;
+                                            }
                                             const fullDisplay = quantityDisplay 
                                                 ? `${quantityDisplay} ${displayIngredient.name}`
                                                 : displayIngredient.name;
