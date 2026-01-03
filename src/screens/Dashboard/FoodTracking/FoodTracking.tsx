@@ -10,7 +10,7 @@ import { Button } from "@components/button";
 import { Input } from "@components/input";
 import { Select } from "@components/select";
 import { Dialog, DialogActions, DialogBody, DialogDescription, DialogTitle } from "@components/dialog";
-import { Field, Label as FieldLabel } from "@components/fieldset";
+import { Field, Label as FieldLabel, Description } from "@components/fieldset";
 import { DescriptionList, DescriptionTerm, DescriptionDetails } from "@components/description-list";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus } from "lucide-react";
@@ -1079,13 +1079,20 @@ const FoodTracking: React.FC = () => {
                                         ))}
                                     </Select>
                                 ) : (
-                                    <Input
-                                        type="text"
-                                        value={addMeasureLabel}
-                                        onChange={(e) => setAddMeasureLabel(e.target.value)}
-                                        placeholder="e.g., serving, piece, cup"
-                                        disabled={isSaving}
-                                    />
+                                    <>
+                                        <Input
+                                            type="text"
+                                            value={addMeasureLabel}
+                                            onChange={(e) => setAddMeasureLabel(e.target.value)}
+                                            placeholder="e.g., serving, piece, cup"
+                                            disabled={isSaving}
+                                        />
+                                        {!selectedQuickAddFood && (
+                                            <Description>
+                                                This measure will be used as the baseline for this food. When you log it again, macronutrients will scale based on this measure.
+                                            </Description>
+                                        )}
+                                    </>
                                 )}
                             </Field>
                         )}
@@ -1111,10 +1118,10 @@ const FoodTracking: React.FC = () => {
                             <>
                                 <div className="border-t border-zinc-950/10 pt-4 dark:border-white/10">
                                     <Text className="mb-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                        Macronutrients (Optional)
+                                        Macronutrients (Optional, but recommended)
                                     </Text>
                                     <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-                                        Enter the macronutrients for the total quantity and measure you specified above (e.g., if you entered "2 cups", provide the nutrients for 2 cups total).
+                                        Enter the macronutrients for the quantity and measure specified above. These values will be saved as the baseline and will scale automatically when you log different quantities later.
                                     </Text>
                                     <div className="grid grid-cols-2 gap-4">
                                         <Field>
