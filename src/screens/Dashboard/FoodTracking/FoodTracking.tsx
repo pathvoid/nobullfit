@@ -1015,7 +1015,9 @@ const FoodTracking: React.FC = () => {
                                     disabled={isSaving}
                                 >
                                     <option value="">Select a previous food or recipe...</option>
-                                    {recentFoods.map((food, index) => (
+                                    {[...recentFoods]
+                                        .sort((a, b) => a.food_label.localeCompare(b.food_label))
+                                        .map((food, index) => (
                                         <option key={`${food.item_type}-${food.food_id}-${index}`} value={`${food.item_type}:${food.food_id}`}>
                                             {food.food_label} {food.item_type === "recipe" ? "(Recipe)" : ""}
                                         </option>
