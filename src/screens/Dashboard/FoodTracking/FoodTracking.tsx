@@ -49,6 +49,13 @@ function formatDate(date: Date): string {
     return date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 }
 
+// Format quantity for display (removes unnecessary trailing zeros)
+function formatQuantity(quantity: number): string {
+    // Round to 2 decimal places max, then remove trailing zeros
+    const rounded = Math.round(quantity * 100) / 100;
+    return rounded.toString();
+}
+
 // Format date for API (YYYY-MM-DD)
 function formatDateForAPI(date: Date): string {
     const year = date.getFullYear();
@@ -202,7 +209,7 @@ const FoodTracking: React.FC = () => {
     // Handle edit food
     const handleEditFood = (food: LoggedFood) => {
         setEditingFood(food);
-        setEditQuantity(food.quantity.toString());
+        setEditQuantity(formatQuantity(food.quantity));
         setEditMeasureUri(food.measure_uri || "");
         // For recipes, ensure measure label is set to "serving" or "servings"
         if (food.item_type === "recipe") {
@@ -370,7 +377,7 @@ const FoodTracking: React.FC = () => {
         if (food) {
             // Populate form fields with selected food's data
             setAddFoodName(food.food_label);
-            setAddQuantity(food.quantity.toString());
+            setAddQuantity(formatQuantity(food.quantity));
             setAddCategory(food.category || getDefaultCategory());
             setAddItemType(food.item_type as "food" | "recipe");
             
@@ -770,8 +777,8 @@ const FoodTracking: React.FC = () => {
                                         {categoryFoods.map((food) => {
                                             const nutrients = food.nutrients || {};
                                             const quantityDisplay = food.measure_label
-                                                ? `${food.quantity} ${food.measure_label}`
-                                                : food.quantity.toString();
+                                                ? `${formatQuantity(food.quantity)} ${food.measure_label}`
+                                                : formatQuantity(food.quantity);
 
                                             return (
                                                 <div
