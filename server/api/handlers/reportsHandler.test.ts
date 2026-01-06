@@ -89,7 +89,7 @@ describe("reportsHandler", () => {
 
         it("should return 404 if user is not found", async () => {
             vi.mocked(verifyToken).mockReturnValue({ userId: 1, email: "test@example.com" });
-            vi.mocked(getPool).mockResolvedValue(mockPool as unknown as ReturnType<typeof getPool>);
+            vi.mocked(getPool).mockResolvedValue(mockPool as unknown as Awaited<ReturnType<typeof getPool>>);
             
             // User query returns empty
             mockPool.query.mockResolvedValueOnce({ rows: [] });
@@ -105,7 +105,7 @@ describe("reportsHandler", () => {
 
         it("should generate PDF report successfully", async () => {
             vi.mocked(verifyToken).mockReturnValue({ userId: 1, email: "test@example.com" });
-            vi.mocked(getPool).mockResolvedValue(mockPool as unknown as ReturnType<typeof getPool>);
+            vi.mocked(getPool).mockResolvedValue(mockPool as unknown as Awaited<ReturnType<typeof getPool>>);
             
             // Mock all database queries
             mockPool.query
@@ -139,7 +139,7 @@ describe("reportsHandler", () => {
 
         it("should handle empty data gracefully", async () => {
             vi.mocked(verifyToken).mockReturnValue({ userId: 1, email: "test@example.com" });
-            vi.mocked(getPool).mockResolvedValue(mockPool as unknown as ReturnType<typeof getPool>);
+            vi.mocked(getPool).mockResolvedValue(mockPool as unknown as Awaited<ReturnType<typeof getPool>>);
             
             // Mock all database queries with empty data
             mockPool.query
