@@ -59,6 +59,7 @@ import {
     handleSaveTDEE
 } from "./api/handlers/tdeeHandler.js";
 import { handleGetDashboardStats } from "./api/handlers/dashboardHandler.js";
+import { handleGenerateDashboardReport } from "./api/handlers/reportsHandler.js";
 
 // API router class - handles all /api routes
 class App {
@@ -144,6 +145,9 @@ class App {
         
         // Dashboard stats
         this.router.get("/dashboard/stats", handleGetDashboardStats);
+        
+        // Reports
+        this.router.post("/reports/dashboard", handleGenerateDashboardReport);
     }
 }
 

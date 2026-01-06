@@ -25,7 +25,7 @@ import {
     Legend,
     ResponsiveContainer
 } from "recharts";
-import { TrendingUp, TrendingDown, Activity, UtensilsCrossed, Flame } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, UtensilsCrossed, Flame, FileDown } from "lucide-react";
 
 interface DashboardStats {
     today: {
@@ -96,6 +96,58 @@ const Dashboard: React.FC = () => {
     const [stats, setStats] = useState<DashboardStats | null>(loaderData.stats || null);
     const [period, setPeriod] = useState<"week" | "month" | "all">("week");
     const [isLoadingStats, setIsLoadingStats] = useState(false);
+    const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+
+    // Generate PDF report
+    const handleGenerateReport = async () => {
+        setIsGeneratingReport(true);
+        try {
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const response = await fetch("/api/reports/dashboard", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    period,
+                    timezone: userTimezone
+                })
+            });
+
+            if (response.ok) {
+                // Get the PDF blob
+                const blob = await response.blob();
+                
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                
+                // Get filename from Content-Disposition header or use default
+                const contentDisposition = response.headers.get("Content-Disposition");
+                let filename = "NoBullFit_Report.pdf";
+                if (contentDisposition) {
+                    const match = contentDisposition.match(/filename="(.+)"/);
+                    if (match) {
+                        filename = match[1];
+                    }
+                }
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            } else {
+                console.error("Failed to generate report");
+            }
+        } catch (error) {
+            console.error("Error generating report:", error);
+        } finally {
+            setIsGeneratingReport(false);
+        }
+    };
 
     // Client-side protection: redirect if not authenticated (fallback for client-side navigation)
     useEffect(() => {
@@ -181,15 +233,15 @@ const Dashboard: React.FC = () => {
                 }
             `}</style>
             <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                <div>
-                    <Heading level={1}>Dashboard</Heading>
-                    <Text className="mt-2 text-zinc-600 dark:text-zinc-400">
-                        Welcome back, {user?.full_name || "User"}!
-                    </Text>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <Heading level={1}>Dashboard</Heading>
+                        <Text className="mt-2 text-zinc-600 dark:text-zinc-400">
+                            Welcome back, {user?.full_name || "User"}!
+                        </Text>
                     </div>
-                    {hasData && (
-                        <div className="w-auto min-w-[140px]">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <div className="w-full sm:w-auto sm:min-w-[140px]">
                             <Select
                                 value={period}
                                 onChange={(e) => setPeriod(e.target.value as "week" | "month" | "all")}
@@ -199,7 +251,16 @@ const Dashboard: React.FC = () => {
                                 <option value="all">All Time</option>
                             </Select>
                         </div>
-                    )}
+                        <Button
+                            onClick={handleGenerateReport}
+                            disabled={isGeneratingReport}
+                            outline
+                            className="w-full sm:w-auto"
+                        >
+                            <FileDown className="h-4 w-4" data-slot="icon" />
+                            {isGeneratingReport ? "Generating..." : "Generate Report"}
+                        </Button>
+                    </div>
                 </div>
 
                 {stats?.tdee && (
