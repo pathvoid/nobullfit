@@ -65,7 +65,7 @@ export const NavbarItem = forwardRef(function NavbarItem(
     <span className={clsx(className, "relative")}>
       {current && (
         <motion.span
-          layoutId="current-indicator"
+          layoutId="navbar-indicator"
           className="absolute inset-x-2 -bottom-2.5 h-0.5 rounded-full bg-zinc-950 dark:bg-white"
         />
       )}

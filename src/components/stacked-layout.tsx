@@ -3,7 +3,21 @@
 import * as Headless from "@headlessui/react";
 import { useState } from "react";
 import { NavbarItem } from "./navbar";
-import { Menu, X } from "lucide-react";
+import { X } from "lucide-react";
+
+// CSS-based hamburger menu icon to avoid SVG rendering artifacts
+function HamburgerIcon({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
+  return (
+    <span
+      className={`flex h-6 w-6 flex-col items-center justify-center gap-1 ${className || ""}`}
+      {...props}
+    >
+      <span className="h-0.5 w-4 rounded-full bg-current" />
+      <span className="h-0.5 w-4 rounded-full bg-current" />
+      <span className="h-0.5 w-4 rounded-full bg-current" />
+    </span>
+  );
+}
 
 // Mobile sidebar component - slide-out sidebar for mobile devices
 function MobileSidebar({ open, close, children }: React.PropsWithChildren<{ open: boolean; close: () => void }>) {
@@ -49,7 +63,7 @@ export function StackedLayout({
       <header className="flex items-center px-4">
         <div className="py-2.5 lg:hidden mr-3">
           <NavbarItem onClick={() => setShowSidebar(true)} aria-label="Open navigation">
-            <Menu data-slot="icon" />
+            <HamburgerIcon data-slot="icon" />
           </NavbarItem>
         </div>
         <div className="min-w-0 flex-1">{navbar}</div>
