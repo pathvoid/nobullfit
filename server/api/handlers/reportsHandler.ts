@@ -219,12 +219,14 @@ function generateReportHTML(data: {
             // Start a new day section
             const dayHeader = `
                 <div class="day-section">
-                    <div class="day-header">
-                        <span class="day-date">${dayLog.formattedDate}</span>
-                        <span class="day-summary">${dayLog.entries.length} items • ${Math.round(dayLog.totalCalories)} cal</span>
-                    </div>
                     <table class="food-table">
                         <thead>
+                            <tr class="day-header-row">
+                                <th colspan="7" class="day-header-cell">
+                                    <span class="day-date">${dayLog.formattedDate}</span>
+                                    <span class="day-summary">${dayLog.entries.length} items • ${Math.round(dayLog.totalCalories)} cal</span>
+                                </th>
+                            </tr>
                             <tr>
                                 <th>Food</th>
                                 <th>Category</th>
@@ -331,12 +333,14 @@ function generateReportHTML(data: {
         stats.dailyActivityLogs.forEach((dayLog, dayIndex) => {
             const dayHeader = `
                 <div class="day-section">
-                    <div class="day-header">
-                        <span class="day-date">${dayLog.formattedDate}</span>
-                        <span class="day-summary">${dayLog.entries.length} activities • ${Math.round(dayLog.totalCalories)} cal burned • ${dayLog.totalDuration} min</span>
-                    </div>
                     <table class="activity-table">
                         <thead>
+                            <tr class="day-header-row">
+                                <th colspan="4" class="day-header-cell">
+                                    <span class="day-date">${dayLog.formattedDate}</span>
+                                    <span class="day-summary">${dayLog.entries.length} activities • ${Math.round(dayLog.totalCalories)} cal burned • ${dayLog.totalDuration} min</span>
+                                </th>
+                            </tr>
                             <tr>
                                 <th>Activity Type</th>
                                 <th>Activity Name</th>
@@ -652,6 +656,22 @@ function generateReportHTML(data: {
             justify-content: space-between;
             align-items: center;
             break-after: avoid;
+        }
+        
+        /* Day header inside table thead - repeats on page breaks */
+        .day-header-row .day-header-cell {
+            background: #1e3a5f;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px 4px 0 0;
+            text-align: left;
+            font-size: 11px;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+        
+        .day-header-cell .day-summary {
+            float: right;
         }
         
         .day-date {
