@@ -213,7 +213,7 @@ function generateReportHTML(data: {
         let pages = "";
         let currentPageContent = "";
         let entriesOnCurrentPage = 0;
-        const maxEntriesPerPage = 15;
+        const maxEntriesPerPage = 30;
 
         stats.dailyFoodLogs.forEach((dayLog, dayIndex) => {
             // Start a new day section
@@ -326,7 +326,7 @@ function generateReportHTML(data: {
         let pages = "";
         let currentPageContent = "";
         let entriesOnCurrentPage = 0;
-        const maxEntriesPerPage = 20;
+        const maxEntriesPerPage = 35;
 
         stats.dailyActivityLogs.forEach((dayLog, dayIndex) => {
             const dayHeader = `
