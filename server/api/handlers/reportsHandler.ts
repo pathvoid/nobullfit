@@ -413,6 +413,16 @@ function generateReportHTML(data: {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NoBullFit Health Report</title>
     <style>
+        /* First page (cover) has no margins for full-bleed */
+        @page :first {
+            margin: 0;
+        }
+        
+        /* All other pages have 40px margins */
+        @page {
+            margin: 40px;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -432,7 +442,7 @@ function generateReportHTML(data: {
             break-before: page;
         }
         
-        /* Cover Page - full bleed, no padding needed */
+        /* Cover Page - full bleed via @page :first rule */
         .cover-page {
             display: flex;
             flex-direction: column;
@@ -441,8 +451,8 @@ function generateReportHTML(data: {
             text-align: center;
             background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
             color: white;
-            min-height: 100vh;
             padding: 40px;
+            min-height: 100vh;
         }
         
         .logo {
@@ -491,11 +501,9 @@ function generateReportHTML(data: {
             text-decoration: none;
         }
         
-        /* Content Pages - add padding since Puppeteer margins are 0 */
+        /* Content Pages */
         .content-page {
             background: #ffffff;
-            padding: 40px;
-            min-height: calc(100vh - 80px);
         }
         
         .page-header {
@@ -591,6 +599,17 @@ function generateReportHTML(data: {
             font-size: 10px;
         }
         
+        /* Keep table header with at least some content */
+        thead {
+            display: table-header-group;
+        }
+        
+        /* Prevent tfoot from being orphaned at top of page */
+        tfoot {
+            display: table-footer-group;
+            break-before: avoid;
+        }
+        
         th, td {
             padding: 6px 8px;
             text-align: left;
@@ -619,6 +638,11 @@ function generateReportHTML(data: {
             margin-bottom: 16px;
         }
         
+        /* Keep total row with content above it */
+        .total-row {
+            break-before: avoid;
+        }
+        
         .day-header {
             background: #1e3a5f;
             color: white;
@@ -627,6 +651,7 @@ function generateReportHTML(data: {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            break-after: avoid;
         }
         
         .day-date {
@@ -1432,12 +1457,7 @@ export async function handleGenerateDashboardReport(req: Request, res: Response)
         const pdfBuffer = await page.pdf({
             format: "A4",
             printBackground: true,
-            margin: {
-                top: "0",
-                right: "0",
-                bottom: "0",
-                left: "0"
-            }
+            preferCSSPageSize: true
         });
 
         await browser.close();
