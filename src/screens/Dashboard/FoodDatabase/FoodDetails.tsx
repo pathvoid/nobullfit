@@ -293,10 +293,16 @@ const FoodDetails: React.FC = () => {
 
         setIsLoggingFood(true);
         try {
-            // Get current date in user's timezone
+            // Get current date in user's local timezone (not UTC)
             const now = new Date();
-            const dateStr = now.toISOString().split("T")[0];
             const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            // Use Intl.DateTimeFormat with en-CA locale to get YYYY-MM-DD format in local timezone
+            const dateStr = new Intl.DateTimeFormat("en-CA", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                timeZone: timezone
+            }).format(now);
 
             // Log the food (nutrients will be calculated server-side)
             const logResponse = await fetch("/api/food-tracking", {
