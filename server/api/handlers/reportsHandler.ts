@@ -427,17 +427,12 @@ function generateReportHTML(data: {
             font-size: 11px;
         }
         
-        .page {
-            page-break-after: always;
-            min-height: 100vh;
-            padding: 40px;
+        /* Use break-before instead of break-after to avoid trailing blank page */
+        .page + .page {
+            break-before: page;
         }
         
-        .page:last-child {
-            page-break-after: avoid;
-        }
-        
-        /* Cover Page */
+        /* Cover Page - full bleed, no padding needed */
         .cover-page {
             display: flex;
             flex-direction: column;
@@ -446,6 +441,8 @@ function generateReportHTML(data: {
             text-align: center;
             background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
             color: white;
+            min-height: 100vh;
+            padding: 40px;
         }
         
         .logo {
@@ -494,9 +491,11 @@ function generateReportHTML(data: {
             text-decoration: none;
         }
         
-        /* Content Pages */
+        /* Content Pages - add padding since Puppeteer margins are 0 */
         .content-page {
             background: #ffffff;
+            padding: 40px;
+            min-height: calc(100vh - 80px);
         }
         
         .page-header {
@@ -618,7 +617,6 @@ function generateReportHTML(data: {
         /* Day sections for food/activity logs */
         .day-section {
             margin-bottom: 16px;
-            page-break-inside: avoid;
         }
         
         .day-header {
