@@ -28,6 +28,9 @@ Record and monitor your weight over time with support for both kilograms and pou
 ### Dashboard Overview
 Comprehensive data visualization with interactive charts and statistics. View daily calorie consumption vs. calories burned, macronutrient breakdowns, activity type distributions, food category analysis, and weight trends. Filter data by time period (7 days, 30 days, or all time).
 
+### PDF Health Reports
+Generate professional PDF reports of your health and nutrition data. Reports include a branded cover page, executive summary with TDEE/BMR metrics, detailed daily food logs showing every item you've eaten, comprehensive activity logs, macronutrient analysis, and weight progress tracking. Perfect for sharing with healthcare professionals or keeping personal records. Reports can be generated for the last 7 days, 30 days, or all time.
+
 ### Grocery Lists
 Create and manage multiple grocery lists. Add items from the food database or recipes, track quantities and units, and organize your shopping efficiently.
 
