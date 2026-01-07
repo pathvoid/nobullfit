@@ -40,6 +40,12 @@ function getDateRangeLabel(period: string): string {
     return "All Time";
 }
 
+// Capitalize first letter of a string
+function capitalizeFirst(str: string): string {
+    if (!str) return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
 // Calculate macros percentages
 function calculateMacroPercentages(protein: number, carbs: number, fat: number): { protein: number; carbs: number; fat: number } {
     const proteinCals = protein * 4;
@@ -56,6 +62,44 @@ function calculateMacroPercentages(protein: number, carbs: number, fat: number):
         carbs: Math.round((carbsCals / totalCals) * 100),
         fat: Math.round((fatCals / totalCals) * 100)
     };
+}
+
+// Types for detailed entries
+interface FoodEntry {
+    date: string;
+    food_label: string;
+    category: string;
+    quantity: number;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+}
+
+interface ActivityEntry {
+    date: string;
+    activity_type: string;
+    activity_name: string;
+    duration_minutes: number;
+    calories_burned: number;
+}
+
+interface DailyFoodLog {
+    date: string;
+    formattedDate: string;
+    entries: FoodEntry[];
+    totalCalories: number;
+    totalProtein: number;
+    totalCarbs: number;
+    totalFat: number;
+}
+
+interface DailyActivityLog {
+    date: string;
+    formattedDate: string;
+    entries: ActivityEntry[];
+    totalCalories: number;
+    totalDuration: number;
 }
 
 // Generate HTML for the PDF report
@@ -88,16 +132,8 @@ function generateReportHTML(data: {
             carbs: number;
             fat: number;
         }>;
-        activityTypes: Array<{
-            type: string;
-            count: number;
-            total_calories: number;
-        }>;
-        categories: Array<{
-            category: string;
-            count: number;
-            total_calories: number;
-        }>;
+        dailyFoodLogs: DailyFoodLog[];
+        dailyActivityLogs: DailyActivityLog[];
         weightData: Array<{
             date: string;
             weight: number;
@@ -126,8 +162,8 @@ function generateReportHTML(data: {
     const hasCalorieData = stats.dailyStats.length > 0 && stats.dailyStats.some(d => d.calories_consumed > 0 || d.calories_burned > 0);
     const hasMacroData = stats.averages.protein > 0 || stats.averages.carbs > 0 || stats.averages.fat > 0;
     const hasWeightData = stats.weightData && stats.weightData.length > 0;
-    const hasActivityData = stats.activityTypes && stats.activityTypes.length > 0;
-    const hasFoodData = stats.categories && stats.categories.length > 0;
+    const hasActivityData = stats.dailyActivityLogs && stats.dailyActivityLogs.length > 0;
+    const hasFoodData = stats.dailyFoodLogs && stats.dailyFoodLogs.length > 0;
     const hasTDEEData = stats.tdee !== null;
     const hasAnyData = hasCalorieData || hasMacroData || hasWeightData || hasActivityData || hasFoodData || hasTDEEData;
     
@@ -156,6 +192,220 @@ function generateReportHTML(data: {
         return levels[level] || level;
     };
 
+    // Generate food log pages - group by reasonable page sizes
+    const generateFoodLogPages = (): string => {
+        if (!hasFoodData) {
+            return `
+            <div class="page content-page">
+                <div class="page-header">
+                    <div class="page-title">Food Log</div>
+                </div>
+                <div class="section">
+                    <div class="empty-state">
+                        <div class="empty-state-title">No Food Data</div>
+                        <div class="empty-state-text">Log your meals to see your detailed food intake history.</div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        let pages = "";
+        let currentPageContent = "";
+        let entriesOnCurrentPage = 0;
+        const maxEntriesPerPage = 15;
+
+        stats.dailyFoodLogs.forEach((dayLog, dayIndex) => {
+            // Start a new day section
+            const dayHeader = `
+                <div class="day-section">
+                    <div class="day-header">
+                        <span class="day-date">${dayLog.formattedDate}</span>
+                        <span class="day-summary">${dayLog.entries.length} items • ${Math.round(dayLog.totalCalories)} cal</span>
+                    </div>
+                    <table class="food-table">
+                        <thead>
+                            <tr>
+                                <th>Food</th>
+                                <th>Category</th>
+                                <th class="text-right">Qty</th>
+                                <th class="text-right">Cal</th>
+                                <th class="text-right">P</th>
+                                <th class="text-right">C</th>
+                                <th class="text-right">F</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            const dayFooter = `
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="3"><strong>Day Total</strong></td>
+                                <td class="text-right"><strong>${Math.round(dayLog.totalCalories)}</strong></td>
+                                <td class="text-right"><strong>${Math.round(dayLog.totalProtein)}g</strong></td>
+                                <td class="text-right"><strong>${Math.round(dayLog.totalCarbs)}g</strong></td>
+                                <td class="text-right"><strong>${Math.round(dayLog.totalFat)}g</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+
+            // Check if we need a new page before starting this day
+            if (entriesOnCurrentPage > 0 && entriesOnCurrentPage + dayLog.entries.length + 2 > maxEntriesPerPage) {
+                // Finish current page and start new one
+                pages += `
+                    <div class="page content-page">
+                        <div class="page-header">
+                            <div class="page-title">Food Log</div>
+                        </div>
+                        ${currentPageContent}
+                    </div>
+                `;
+                currentPageContent = "";
+                entriesOnCurrentPage = 0;
+            }
+
+            // Start the day
+            currentPageContent += dayHeader;
+            
+            dayLog.entries.forEach(entry => {
+                currentPageContent += `
+                    <tr>
+                        <td class="food-name">${entry.food_label}</td>
+                        <td>${entry.category}</td>
+                        <td class="text-right">${entry.quantity}</td>
+                        <td class="text-right">${Math.round(entry.calories)}</td>
+                        <td class="text-right">${Math.round(entry.protein)}g</td>
+                        <td class="text-right">${Math.round(entry.carbs)}g</td>
+                        <td class="text-right">${Math.round(entry.fat)}g</td>
+                    </tr>
+                `;
+                entriesOnCurrentPage++;
+            });
+
+            currentPageContent += dayFooter;
+            entriesOnCurrentPage += 2; // Header and footer
+        });
+
+        // Add remaining content as final page
+        if (currentPageContent) {
+            pages += `
+                <div class="page content-page">
+                    <div class="page-header">
+                        <div class="page-title">Food Log</div>
+                    </div>
+                    ${currentPageContent}
+                </div>
+            `;
+        }
+
+        return pages;
+    };
+
+    // Generate activity log pages
+    const generateActivityLogPages = (): string => {
+        if (!hasActivityData) {
+            return `
+            <div class="page content-page">
+                <div class="page-header">
+                    <div class="page-title">Activity Log</div>
+                </div>
+                <div class="section">
+                    <div class="empty-state">
+                        <div class="empty-state-title">No Activity Data</div>
+                        <div class="empty-state-text">Track your workouts and activities to see your exercise history.</div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        let pages = "";
+        let currentPageContent = "";
+        let entriesOnCurrentPage = 0;
+        const maxEntriesPerPage = 20;
+
+        stats.dailyActivityLogs.forEach((dayLog, dayIndex) => {
+            const dayHeader = `
+                <div class="day-section">
+                    <div class="day-header">
+                        <span class="day-date">${dayLog.formattedDate}</span>
+                        <span class="day-summary">${dayLog.entries.length} activities • ${Math.round(dayLog.totalCalories)} cal burned • ${dayLog.totalDuration} min</span>
+                    </div>
+                    <table class="activity-table">
+                        <thead>
+                            <tr>
+                                <th>Activity Type</th>
+                                <th>Activity Name</th>
+                                <th class="text-right">Duration</th>
+                                <th class="text-right">Calories Burned</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            const dayFooter = `
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="2"><strong>Day Total</strong></td>
+                                <td class="text-right"><strong>${dayLog.totalDuration} min</strong></td>
+                                <td class="text-right"><strong>${Math.round(dayLog.totalCalories)} cal</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+
+            // Check if we need a new page
+            if (entriesOnCurrentPage > 0 && entriesOnCurrentPage + dayLog.entries.length + 2 > maxEntriesPerPage) {
+                pages += `
+                    <div class="page content-page">
+                        <div class="page-header">
+                            <div class="page-title">Activity Log</div>
+                        </div>
+                        ${currentPageContent}
+                    </div>
+                `;
+                currentPageContent = "";
+                entriesOnCurrentPage = 0;
+            }
+
+            currentPageContent += dayHeader;
+            
+            dayLog.entries.forEach(entry => {
+                currentPageContent += `
+                    <tr>
+                        <td>${capitalizeFirst(entry.activity_type)}</td>
+                        <td>${entry.activity_name}</td>
+                        <td class="text-right">${entry.duration_minutes} min</td>
+                        <td class="text-right">${Math.round(entry.calories_burned)}</td>
+                    </tr>
+                `;
+                entriesOnCurrentPage++;
+            });
+
+            currentPageContent += dayFooter;
+            entriesOnCurrentPage += 2;
+        });
+
+        if (currentPageContent) {
+            pages += `
+                <div class="page content-page">
+                    <div class="page-header">
+                        <div class="page-title">Activity Log</div>
+                    </div>
+                    ${currentPageContent}
+                </div>
+            `;
+        }
+
+        return pages;
+    };
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -172,14 +422,15 @@ function generateReportHTML(data: {
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             color: #1f2937;
-            line-height: 1.6;
+            line-height: 1.5;
             background: #ffffff;
+            font-size: 11px;
         }
         
         .page {
             page-break-after: always;
             min-height: 100vh;
-            padding: 48px;
+            padding: 40px;
         }
         
         .page:last-child {
@@ -198,35 +449,35 @@ function generateReportHTML(data: {
         }
         
         .logo {
-            font-size: 64px;
+            font-size: 56px;
             font-weight: 800;
             letter-spacing: -2px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         
         .motto {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 300;
             letter-spacing: 4px;
             text-transform: uppercase;
-            margin-bottom: 48px;
+            margin-bottom: 40px;
             color: #60a5fa;
         }
         
         .report-title {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 600;
             margin-bottom: 8px;
         }
         
         .report-period {
-            font-size: 20px;
+            font-size: 18px;
             color: #94a3b8;
-            margin-bottom: 48px;
+            margin-bottom: 40px;
         }
         
         .user-name {
-            font-size: 24px;
+            font-size: 20px;
             margin-bottom: 8px;
         }
         
@@ -237,8 +488,8 @@ function generateReportHTML(data: {
         
         .website-url {
             position: absolute;
-            bottom: 48px;
-            font-size: 16px;
+            bottom: 40px;
+            font-size: 14px;
             color: #60a5fa;
             text-decoration: none;
         }
@@ -249,60 +500,60 @@ function generateReportHTML(data: {
         }
         
         .page-header {
-            border-bottom: 3px solid #1e3a5f;
-            padding-bottom: 16px;
-            margin-bottom: 32px;
+            border-bottom: 2px solid #1e3a5f;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
         }
         
         .page-title {
-            font-size: 28px;
+            font-size: 22px;
             font-weight: 700;
             color: #1e3a5f;
         }
         
         .section {
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
         
         .section-title {
-            font-size: 18px;
+            font-size: 14px;
             font-weight: 600;
             color: #374151;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
             border-bottom: 1px solid #e5e7eb;
         }
         
         .stat-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
+            gap: 12px;
         }
         
         .stat-box {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 6px;
+            padding: 16px;
             text-align: center;
         }
         
         .stat-label {
-            font-size: 12px;
+            font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #64748b;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         
         .stat-value {
-            font-size: 28px;
+            font-size: 22px;
             font-weight: 700;
             color: #1e3a5f;
         }
         
         .stat-unit {
-            font-size: 14px;
+            font-size: 12px;
             color: #64748b;
             font-weight: 400;
         }
@@ -310,13 +561,13 @@ function generateReportHTML(data: {
         .two-col {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 24px;
+            gap: 20px;
         }
         
         .info-row {
             display: flex;
             justify-content: space-between;
-            padding: 12px 0;
+            padding: 8px 0;
             border-bottom: 1px solid #f1f5f9;
         }
         
@@ -326,7 +577,7 @@ function generateReportHTML(data: {
         
         .info-label {
             color: #64748b;
-            font-size: 14px;
+            font-size: 12px;
         }
         
         .info-value {
@@ -338,11 +589,11 @@ function generateReportHTML(data: {
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 10px;
         }
         
         th, td {
-            padding: 12px;
+            padding: 6px 8px;
             text-align: left;
             border-bottom: 1px solid #e5e7eb;
         }
@@ -352,12 +603,8 @@ function generateReportHTML(data: {
             font-weight: 600;
             color: #374151;
             text-transform: uppercase;
-            font-size: 11px;
+            font-size: 9px;
             letter-spacing: 0.5px;
-        }
-        
-        tr:nth-child(even) {
-            background: #fafafa;
         }
         
         .text-right {
@@ -368,20 +615,80 @@ function generateReportHTML(data: {
             text-align: center;
         }
         
+        /* Day sections for food/activity logs */
+        .day-section {
+            margin-bottom: 16px;
+            page-break-inside: avoid;
+        }
+        
+        .day-header {
+            background: #1e3a5f;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px 4px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .day-date {
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .day-summary {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+        
+        .food-table, .activity-table {
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .food-table th, .activity-table th {
+            background: #f1f5f9;
+        }
+        
+        .food-name {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .notes {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #64748b;
+            font-size: 9px;
+        }
+        
+        .total-row {
+            background: #f8fafc;
+        }
+        
+        .total-row td {
+            border-top: 2px solid #e5e7eb;
+        }
+        
         /* Macro bars */
         .macro-bar-container {
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         
         .macro-bar-label {
             display: flex;
             justify-content: space-between;
             margin-bottom: 4px;
-            font-size: 14px;
+            font-size: 12px;
         }
         
         .macro-bar {
-            height: 24px;
+            height: 20px;
             background: #e5e7eb;
             border-radius: 4px;
             overflow: hidden;
@@ -425,14 +732,14 @@ function generateReportHTML(data: {
         /* Empty state */
         .empty-state {
             text-align: center;
-            padding: 48px;
+            padding: 40px;
             background: #f8fafc;
             border-radius: 8px;
             border: 1px dashed #cbd5e1;
         }
         
         .empty-state-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: #475569;
             margin-bottom: 8px;
@@ -440,19 +747,7 @@ function generateReportHTML(data: {
         
         .empty-state-text {
             color: #64748b;
-            font-size: 14px;
-        }
-        
-        /* Footer */
-        .page-footer {
-            position: absolute;
-            bottom: 32px;
-            left: 48px;
-            right: 48px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: #94a3b8;
+            font-size: 12px;
         }
         
         /* Positive/Negative indicators */
@@ -478,7 +773,7 @@ function generateReportHTML(data: {
         <div class="page-header">
             <div class="page-title">Getting Started</div>
         </div>
-        <div class="empty-state" style="margin-top: 100px;">
+        <div class="empty-state" style="margin-top: 80px;">
             <div class="empty-state-title">No Data Available Yet</div>
             <div class="empty-state-text" style="max-width: 500px; margin: 0 auto;">
                 <p style="margin-bottom: 16px;">
@@ -521,7 +816,7 @@ function generateReportHTML(data: {
                 </div>
                 <div class="stat-box">
                     <div class="stat-label">Activity Level</div>
-                    <div class="stat-value" style="font-size: 16px;">${formatActivityLevel(stats.tdee!.activity_level)}</div>
+                    <div class="stat-value" style="font-size: 14px;">${formatActivityLevel(stats.tdee!.activity_level)}</div>
                 </div>
             </div>
         </div>
@@ -530,7 +825,7 @@ function generateReportHTML(data: {
             <div class="section-title">Metabolic Profile</div>
             <div class="empty-state">
                 <div class="empty-state-title">TDEE Not Calculated</div>
-                <div class="empty-state-text">Set up your TDEE calculator to see your metabolic profile and recommended calorie intake.</div>
+                <div class="empty-state-text">Set up your TDEE calculator to see your metabolic profile.</div>
             </div>
         </div>
         `}
@@ -555,48 +850,7 @@ function generateReportHTML(data: {
                 </div>
             </div>
         </div>
-        ` : `
-        <div class="section">
-            <div class="section-title">Calorie Summary</div>
-            <div class="empty-state">
-                <div class="empty-state-title">No Calorie Data</div>
-                <div class="empty-state-text">Start logging your food and activities to see calorie insights.</div>
-            </div>
-        </div>
-        `}
-        
-        ${hasWeightData && weightChange ? `
-        <div class="section">
-            <div class="section-title">Weight Progress</div>
-            <div class="two-col">
-                <div>
-                    <div class="info-row">
-                        <span class="info-label">Starting Weight</span>
-                        <span class="info-value">${weightChange.start} ${weightChange.unit}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Current Weight</span>
-                        <span class="info-value">${weightChange.end} ${weightChange.unit}</span>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center;">
-                    <div>
-                        <div style="text-align: center; margin-bottom: 8px; font-size: 12px; color: #64748b;">Net Change</div>
-                        <span class="weight-change ${weightChange.change < 0 ? "weight-loss" : weightChange.change > 0 ? "weight-gain" : "weight-neutral"}">
-                            ${weightChange.change > 0 ? "+" : ""}${weightChange.change} ${weightChange.unit}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
         ` : ""}
-    </div>
-    
-    <!-- Nutrition Details Page -->
-    <div class="page content-page">
-        <div class="page-header">
-            <div class="page-title">Nutrition Analysis</div>
-        </div>
         
         ${hasMacroData ? `
         <div class="section">
@@ -629,90 +883,37 @@ function generateReportHTML(data: {
                 </div>
             </div>
         </div>
-        ` : `
-        <div class="section">
-            <div class="section-title">Macronutrient Breakdown</div>
-            <div class="empty-state">
-                <div class="empty-state-title">No Macro Data</div>
-                <div class="empty-state-text">Log foods with nutritional information to see your macronutrient breakdown.</div>
-            </div>
-        </div>
-        `}
+        ` : ""}
         
-        ${hasFoodData ? `
+        ${hasWeightData && weightChange ? `
         <div class="section">
-            <div class="section-title">Food Categories</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Category</th>
-                        <th class="text-right">Items Logged</th>
-                        <th class="text-right">Total Calories</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${stats.categories.map(cat => `
-                    <tr>
-                        <td>${cat.category}</td>
-                        <td class="text-right">${cat.count}</td>
-                        <td class="text-right">${Math.round(cat.total_calories)}</td>
-                    </tr>
-                    `).join("")}
-                </tbody>
-            </table>
-        </div>
-        ` : `
-        <div class="section">
-            <div class="section-title">Food Categories</div>
-            <div class="empty-state">
-                <div class="empty-state-title">No Food Data</div>
-                <div class="empty-state-text">Log your meals to see which food categories make up your diet.</div>
+            <div class="section-title">Weight Progress</div>
+            <div class="two-col">
+                <div>
+                    <div class="info-row">
+                        <span class="info-label">Starting Weight</span>
+                        <span class="info-value">${weightChange.start} ${weightChange.unit}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Current Weight</span>
+                        <span class="info-value">${weightChange.end} ${weightChange.unit}</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center;">
+                    <div>
+                        <div style="text-align: center; margin-bottom: 8px; font-size: 10px; color: #64748b;">Net Change</div>
+                        <span class="weight-change ${weightChange.change < 0 ? "weight-loss" : weightChange.change > 0 ? "weight-gain" : "weight-neutral"}">
+                            ${weightChange.change > 0 ? "+" : ""}${weightChange.change} ${weightChange.unit}
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
-        `}
-    </div>
-    
-    <!-- Activity & Daily Log Page -->
-    <div class="page content-page">
-        <div class="page-header">
-            <div class="page-title">Activity &amp; Daily Log</div>
-        </div>
-        
-        ${hasActivityData ? `
-        <div class="section">
-            <div class="section-title">Activity Breakdown</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Activity Type</th>
-                        <th class="text-right">Sessions</th>
-                        <th class="text-right">Total Calories Burned</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${stats.activityTypes.map(act => `
-                    <tr>
-                        <td>${act.type}</td>
-                        <td class="text-right">${act.count}</td>
-                        <td class="text-right">${Math.round(act.total_calories)}</td>
-                    </tr>
-                    `).join("")}
-                </tbody>
-            </table>
-        </div>
-        ` : `
-        <div class="section">
-            <div class="section-title">Activity Summary</div>
-            <div class="empty-state">
-                <div class="empty-state-title">No Activities Logged</div>
-                <div class="empty-state-text">Track your workouts and activities to see your exercise patterns.</div>
-            </div>
-        </div>
-        `}
+        ` : ""}
         
         ${hasCalorieData && stats.dailyStats.length > 0 ? `
         <div class="section">
-            <div class="section-title">Daily Summary</div>
+            <div class="section-title">Daily Summary Overview</div>
             <table>
                 <thead>
                     <tr>
@@ -726,7 +927,7 @@ function generateReportHTML(data: {
                     </tr>
                 </thead>
                 <tbody>
-                    ${stats.dailyStats.slice(-14).map(day => {
+                    ${stats.dailyStats.map(day => {
                         const net = Math.round(day.calories_consumed - day.calories_burned);
                         const dateObj = new Date(day.date + "T00:00:00");
                         const formattedDate = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -744,10 +945,15 @@ function generateReportHTML(data: {
                     }).join("")}
                 </tbody>
             </table>
-            ${stats.dailyStats.length > 14 ? `<p style="margin-top: 8px; font-size: 12px; color: #64748b;">Showing last 14 days of ${stats.dailyStats.length} total days</p>` : ""}
         </div>
         ` : ""}
     </div>
+    
+    <!-- Food Log Pages -->
+    ${generateFoodLogPages()}
+    
+    <!-- Activity Log Pages -->
+    ${generateActivityLogPages()}
     
     ${hasWeightData && stats.weightData.length > 0 ? `
     <!-- Weight History Page -->
@@ -847,7 +1053,7 @@ export async function handleGenerateDashboardReport(req: Request, res: Response)
             todayStr = now.toISOString().split("T")[0];
         }
         
-        // Fetch all the same data as dashboard stats
+        // Fetch today's stats
         const todayFoodResult = await pool.query(
             `SELECT 
                 COALESCE(SUM((nutrients->>'ENERC_KCAL')::numeric), 0) as calories,
@@ -869,6 +1075,7 @@ export async function handleGenerateDashboardReport(req: Request, res: Response)
             [userId, todayStr]
         );
 
+        // Fetch aggregated daily food stats
         const weeklyFoodResult = await pool.query(
             `SELECT 
                 date,
@@ -895,30 +1102,161 @@ export async function handleGenerateDashboardReport(req: Request, res: Response)
             [userId, startDateStr]
         );
 
-        const activityTypeResult = await pool.query(
+        // Fetch DETAILED food entries (individual items)
+        const detailedFoodResult = await pool.query(
             `SELECT 
-                activity_type,
-                COUNT(*) as count,
-                COALESCE(SUM(calories_burned), 0) as total_calories
-             FROM progress_tracking 
-             WHERE user_id = $1 AND date >= $2
-             GROUP BY activity_type
-             ORDER BY count DESC`,
-            [userId, startDateStr]
-        );
-
-        const categoryResult = await pool.query(
-            `SELECT 
+                date,
+                food_label,
                 category,
-                COUNT(*) as count,
-                COALESCE(SUM((nutrients->>'ENERC_KCAL')::numeric), 0) as total_calories
+                quantity,
+                COALESCE((nutrients->>'ENERC_KCAL')::numeric, 0) as calories,
+                COALESCE((nutrients->>'PROCNT')::numeric, 0) as protein,
+                COALESCE((nutrients->>'CHOCDF')::numeric, 0) as carbs,
+                COALESCE((nutrients->>'FAT')::numeric, 0) as fat
              FROM food_tracking 
              WHERE user_id = $1 AND date >= $2
-             GROUP BY category
-             ORDER BY count DESC`,
+             ORDER BY date DESC, created_at DESC`,
             [userId, startDateStr]
         );
 
+        // Fetch DETAILED activity entries (individual activities)
+        const detailedActivityResult = await pool.query(
+            `SELECT 
+                date,
+                activity_type,
+                activity_name,
+                activity_data,
+                calories_burned
+             FROM progress_tracking 
+             WHERE user_id = $1 AND date >= $2
+             ORDER BY date DESC, created_at DESC`,
+            [userId, startDateStr]
+        );
+
+        // Process detailed food entries into daily logs
+        const foodEntriesMap = new Map<string, FoodEntry[]>();
+        detailedFoodResult.rows.forEach((row: { 
+            date: Date | string; 
+            food_label: string; 
+            category: string; 
+            quantity: number;
+            calories: number; 
+            protein: number; 
+            carbs: number; 
+            fat: number 
+        }) => {
+            const dateStr = row.date instanceof Date 
+                ? row.date.toISOString().split("T")[0] 
+                : String(row.date);
+            
+            if (!foodEntriesMap.has(dateStr)) {
+                foodEntriesMap.set(dateStr, []);
+            }
+            
+            foodEntriesMap.get(dateStr)!.push({
+                date: dateStr,
+                food_label: row.food_label || "Unknown Food",
+                category: row.category || "Other",
+                quantity: parseFloat(String(row.quantity)) || 1,
+                calories: parseFloat(String(row.calories)) || 0,
+                protein: parseFloat(String(row.protein)) || 0,
+                carbs: parseFloat(String(row.carbs)) || 0,
+                fat: parseFloat(String(row.fat)) || 0
+            });
+        });
+
+        // Convert to daily food logs
+        const dailyFoodLogs: DailyFoodLog[] = [];
+        foodEntriesMap.forEach((entries, dateStr) => {
+            const dateObj = new Date(dateStr + "T00:00:00");
+            const formattedDate = dateObj.toLocaleDateString("en-US", { 
+                weekday: "long",
+                month: "long", 
+                day: "numeric",
+                year: "numeric"
+            });
+            
+            dailyFoodLogs.push({
+                date: dateStr,
+                formattedDate,
+                entries,
+                totalCalories: entries.reduce((sum, e) => sum + e.calories, 0),
+                totalProtein: entries.reduce((sum, e) => sum + e.protein, 0),
+                totalCarbs: entries.reduce((sum, e) => sum + e.carbs, 0),
+                totalFat: entries.reduce((sum, e) => sum + e.fat, 0)
+            });
+        });
+        
+        // Sort by date descending (most recent first)
+        dailyFoodLogs.sort((a, b) => b.date.localeCompare(a.date));
+
+        // Process detailed activity entries into daily logs
+        const activityEntriesMap = new Map<string, ActivityEntry[]>();
+        detailedActivityResult.rows.forEach((row: { 
+            date: Date | string; 
+            activity_type: string;
+            activity_name: string;
+            activity_data: Record<string, unknown> | string | null;
+            calories_burned: number;
+        }) => {
+            const dateStr = row.date instanceof Date 
+                ? row.date.toISOString().split("T")[0] 
+                : String(row.date);
+            
+            if (!activityEntriesMap.has(dateStr)) {
+                activityEntriesMap.set(dateStr, []);
+            }
+            
+            // Parse activity_data if it's a string
+            let activityData: Record<string, unknown> = {};
+            if (row.activity_data) {
+                if (typeof row.activity_data === "string") {
+                    try {
+                        activityData = JSON.parse(row.activity_data);
+                    } catch {
+                        activityData = {};
+                    }
+                } else {
+                    activityData = row.activity_data;
+                }
+            }
+            
+            // Extract duration from activity_data if available
+            const duration = activityData.duration_minutes || activityData.duration || 0;
+            
+            activityEntriesMap.get(dateStr)!.push({
+                date: dateStr,
+                activity_type: row.activity_type || "Other",
+                activity_name: row.activity_name || row.activity_type || "Activity",
+                duration_minutes: parseInt(String(duration)) || 0,
+                calories_burned: parseFloat(String(row.calories_burned)) || 0
+            });
+        });
+
+        // Convert to daily activity logs
+        const dailyActivityLogs: DailyActivityLog[] = [];
+        activityEntriesMap.forEach((entries, dateStr) => {
+            const dateObj = new Date(dateStr + "T00:00:00");
+            const formattedDate = dateObj.toLocaleDateString("en-US", { 
+                weekday: "long",
+                month: "long", 
+                day: "numeric",
+                year: "numeric"
+            });
+            
+            dailyActivityLogs.push({
+                date: dateStr,
+                formattedDate,
+                entries,
+                totalCalories: entries.reduce((sum, e) => sum + e.calories_burned, 0),
+                totalDuration: entries.reduce((sum, e) => sum + e.duration_minutes, 0)
+            });
+        });
+        
+        // Sort by date descending
+        dailyActivityLogs.sort((a, b) => b.date.localeCompare(a.date));
+
+        // Fetch weight data
         const weightResult = await pool.query(
             `SELECT DISTINCT ON (date)
                 date,
@@ -1064,16 +1402,8 @@ export async function handleGenerateDashboardReport(req: Request, res: Response)
                 fat: Math.round(avgFat)
             },
             dailyStats,
-            activityTypes: activityTypeResult.rows.map((row: { activity_type: string; count: number; total_calories: number }) => ({
-                type: row.activity_type,
-                count: parseInt(String(row.count)) || 0,
-                total_calories: parseFloat(String(row.total_calories)) || 0
-            })),
-            categories: categoryResult.rows.map((row: { category: string; count: number; total_calories: number }) => ({
-                category: row.category,
-                count: parseInt(String(row.count)) || 0,
-                total_calories: parseFloat(String(row.total_calories)) || 0
-            })),
+            dailyFoodLogs,
+            dailyActivityLogs,
             weightData,
             weightUnit: standardUnit,
             tdee
