@@ -585,9 +585,9 @@ export async function handleUpdateRecipe(req: Request, res: Response): Promise<v
             return;
         }
 
-        // Verify recipe belongs to user and get current image filename
+        // Verify recipe belongs to user and get current image filename and is_public status
         const verifyResult = await pool.query(
-            "SELECT id, image_filename FROM recipes WHERE id = $1 AND user_id = $2",
+            "SELECT id, image_filename, is_public FROM recipes WHERE id = $1 AND user_id = $2",
             [recipeId, userId]
         );
 
@@ -597,6 +597,7 @@ export async function handleUpdateRecipe(req: Request, res: Response): Promise<v
         }
 
         const oldImageFilename = verifyResult.rows[0].image_filename;
+        const wasPublic = verifyResult.rows[0].is_public;
         const newImageFilename = imageFilename || null;
 
         // Delete old image if it's being replaced or removed (only if not used by other recipes)
@@ -675,6 +676,14 @@ export async function handleUpdateRecipe(req: Request, res: Response): Promise<v
         recipe.steps = typeof recipe.steps === "string" ? JSON.parse(recipe.steps) : recipe.steps;
         recipe.macros = recipe.macros && typeof recipe.macros === "string" ? JSON.parse(recipe.macros) : recipe.macros;
         recipe.tags = recipe.tags && typeof recipe.tags === "string" ? JSON.parse(recipe.tags) : recipe.tags;
+
+        // If recipe was made private, remove it from other users' favorites
+        if (wasPublic && isPublic !== true) {
+            await pool.query(
+                "DELETE FROM favorites WHERE food_id = $1 AND item_type = 'recipe' AND user_id != $2",
+                [recipeId, userId]
+            );
+        }
 
         res.status(200).json({
             success: true,

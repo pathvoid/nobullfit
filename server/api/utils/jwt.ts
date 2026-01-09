@@ -35,4 +35,3 @@ export function verifyToken(token: string): { userId: number; email: string } | 
 }
 
 export { JWT_SECRET };
-

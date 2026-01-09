@@ -38,13 +38,46 @@ export async function handleGetFavorites(req: Request, res: Response): Promise<v
             return;
         }
 
-        const result = await pool.query(
-            "SELECT id, food_id, food_label, food_data, item_type, created_at FROM favorites WHERE user_id = $1 ORDER BY created_at DESC",
+        // Fetch food favorites (non-recipe items) - use cached data
+        const foodResult = await pool.query(
+            `SELECT id, food_id, food_label, food_data, item_type, created_at 
+             FROM favorites 
+             WHERE user_id = $1 AND item_type != 'recipe' 
+             ORDER BY created_at DESC`,
             [userId]
         );
 
+        // Fetch recipe favorites with fresh data from recipes table
+        // Only include recipes that are still accessible (public OR owned by user)
+        const recipeResult = await pool.query(
+            `SELECT 
+                f.id, 
+                f.food_id, 
+                r.name as food_label,
+                jsonb_build_object(
+                    'image_filename', r.image_filename,
+                    'servings', r.servings,
+                    'cooking_time_minutes', r.cooking_time_minutes,
+                    'is_public', r.is_public
+                ) as food_data,
+                f.item_type, 
+                f.created_at
+             FROM favorites f
+             INNER JOIN recipes r ON f.food_id = r.id::text
+             WHERE f.user_id = $1 
+                AND f.item_type = 'recipe'
+                AND (r.is_public = TRUE OR r.user_id = $1)
+             ORDER BY f.created_at DESC`,
+            [userId]
+        );
+
+        // Combine and sort by created_at descending
+        const allFavorites = [...foodResult.rows, ...recipeResult.rows].sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
         res.status(200).json({
-            favorites: result.rows
+            favorites: allFavorites
         });
     } catch (error) {
         console.error("Error fetching favorites:", error);
