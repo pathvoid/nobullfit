@@ -470,6 +470,11 @@ export async function handleUpdateRecipe(req: Request, res: Response): Promise<v
         const { recipeId } = req.params;
         const { name, description, ingredients, steps, imageFilename, macros, servings, cookingTimeMinutes, tags, isPublic } = req.body;
 
+        if (!recipeId || typeof recipeId !== "string") {
+            res.status(400).json({ error: "Recipe ID is required" });
+            return;
+        }
+
         if (!name || typeof name !== "string" || name.trim().length === 0) {
             res.status(400).json({ error: "Recipe name is required" });
             return;
@@ -713,6 +718,11 @@ export async function handleDeleteRecipe(req: Request, res: Response): Promise<v
         }
 
         const { recipeId } = req.params;
+
+        if (!recipeId || typeof recipeId !== "string") {
+            res.status(400).json({ error: "Recipe ID is required" });
+            return;
+        }
 
         const pool = await getPool();
         if (!pool) {

@@ -190,7 +190,7 @@ export async function handleUpdateProgressTracking(req: Request, res: Response):
             caloriesBurned
         } = req.body;
 
-        if (!id) {
+        if (!id || typeof id !== "string") {
             res.status(400).json({ error: "Activity tracking ID is required" });
             return;
         }

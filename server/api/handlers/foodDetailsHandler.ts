@@ -5,7 +5,7 @@ export async function handleFoodDetails(req: Request, res: Response): Promise<vo
     try {
         const { foodId } = req.params;
 
-        if (!foodId) {
+        if (!foodId || typeof foodId !== "string") {
             res.status(400).json({ error: "Food ID parameter is required" });
             return;
         }

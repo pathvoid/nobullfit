@@ -198,7 +198,7 @@ export async function handleUpdateFoodTracking(req: Request, res: Response): Pro
             nutrients
         } = req.body;
 
-        if (!id) {
+        if (!id || typeof id !== "string") {
             res.status(400).json({ error: "Food tracking ID is required" });
             return;
         }
