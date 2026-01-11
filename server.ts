@@ -27,6 +27,11 @@ const indexProd: string = isProd
 const createServer = async () => {
     const app = express();
 
+    // Trust proxy headers when behind nginx/reverse proxy (required for secure cookies)
+    if (isProd) {
+        app.set("trust proxy", 1);
+    }
+
     // Parse request bodies for form submissions
     app.use(express.urlencoded({ extended: true }));
     app.use(express.json());
