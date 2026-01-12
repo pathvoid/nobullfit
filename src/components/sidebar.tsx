@@ -3,13 +3,18 @@
 import * as Headless from "@headlessui/react";
 import clsx from "clsx";
 import { LayoutGroup, motion } from "motion/react";
-import { forwardRef, useId } from "react";
+import { forwardRef } from "react";
 import { TouchTarget } from "./button";
 import { Link } from "./link";
 
 // Sidebar component - side navigation panel
+// LayoutGroup wraps all sidebar content so the active indicator can animate across all sections
 export function Sidebar({ className, ...props }: React.ComponentPropsWithoutRef<"nav">) {
-  return <nav {...props} className={clsx(className, "flex h-full min-h-0 flex-col")} />;
+  return (
+    <LayoutGroup id="sidebar">
+      <nav {...props} className={clsx(className, "flex h-full min-h-0 flex-col")} />
+    </LayoutGroup>
+  );
 }
 
 export function SidebarHeader({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
@@ -49,13 +54,7 @@ export function SidebarFooter({ className, ...props }: React.ComponentPropsWitho
 }
 
 export function SidebarSection({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
-  const id = useId();
-
-  return (
-    <LayoutGroup id={id}>
-      <div {...props} data-slot="section" className={clsx(className, "flex flex-col gap-0.5")} />
-    </LayoutGroup>
-  );
+  return <div {...props} data-slot="section" className={clsx(className, "flex flex-col gap-0.5")} />;
 }
 
 export function SidebarDivider({ className, ...props }: React.ComponentPropsWithoutRef<"hr">) {
