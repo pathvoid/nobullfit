@@ -26,7 +26,7 @@ export async function handleExportData(req: Request, res: Response) {
 
         // Get user profile data (excluding password_hash)
         const userResult = await pool.query(
-            "SELECT id, email, full_name, country, terms_accepted, terms_accepted_at, created_at, updated_at FROM users WHERE id = $1",
+            "SELECT id, email, full_name, country, terms_accepted, terms_accepted_at, subscribed, subscribed_at, created_at, updated_at FROM users WHERE id = $1",
             [userId]
         );
 
@@ -145,6 +145,8 @@ export async function handleExportData(req: Request, res: Response) {
                 country: user.country,
                 terms_accepted: user.terms_accepted,
                 terms_accepted_at: user.terms_accepted_at,
+                subscribed: user.subscribed,
+                subscribed_at: user.subscribed_at,
                 account_created_at: user.created_at,
                 last_updated_at: user.updated_at
             },

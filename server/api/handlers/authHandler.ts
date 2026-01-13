@@ -39,7 +39,7 @@ export async function handleGetMe(req: Request, res: Response): Promise<void> {
 
         // Get user data from database
         const userResult = await pool.query(
-            "SELECT id, email, full_name FROM users WHERE id = $1 AND email = $2",
+            "SELECT id, email, full_name, subscribed FROM users WHERE id = $1 AND email = $2",
             [decoded.userId, decoded.email]
         );
 

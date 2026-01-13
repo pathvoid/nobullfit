@@ -307,6 +307,215 @@ export async function handleDeleteFoodTracking(req: Request, res: Response): Pro
     }
 }
 
+// Helper function to check if user is subscribed (pro user)
+async function isUserSubscribed(userId: number): Promise<boolean> {
+    const pool = await getPool();
+    if (!pool) return false;
+    
+    const result = await pool.query(
+        "SELECT subscribed FROM users WHERE id = $1",
+        [userId]
+    );
+    
+    return result.rows.length > 0 && result.rows[0].subscribed === true;
+}
+
+// Copy meals from one day to another (Pro feature)
+export async function handleCopyDay(req: Request, res: Response): Promise<void> {
+    try {
+        const userId = await getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        // Check if user is subscribed
+        const subscribed = await isUserSubscribed(userId);
+        if (!subscribed) {
+            res.status(403).json({ error: "This feature requires a Pro subscription" });
+            return;
+        }
+
+        const { sourceDate, targetDate, timezone } = req.body;
+
+        if (!sourceDate || !targetDate || !timezone) {
+            res.status(400).json({ error: "sourceDate, targetDate, and timezone are required" });
+            return;
+        }
+
+        if (sourceDate === targetDate) {
+            res.status(400).json({ error: "Source and target dates cannot be the same" });
+            return;
+        }
+
+        const pool = await getPool();
+        if (!pool) {
+            res.status(500).json({ error: "Database connection not available" });
+            return;
+        }
+
+        // Get all foods from source date
+        const sourceFoods = await pool.query(
+            `SELECT item_type, food_id, food_label, food_data, recipe_data, quantity, 
+                    measure_uri, measure_label, category, nutrients
+             FROM food_tracking 
+             WHERE user_id = $1 AND date = $2`,
+            [userId, sourceDate]
+        );
+
+        if (sourceFoods.rows.length === 0) {
+            res.status(400).json({ error: "No foods found on source date" });
+            return;
+        }
+
+        // Insert copied foods to target date
+        const insertPromises = sourceFoods.rows.map(food => {
+            return pool.query(
+                `INSERT INTO food_tracking 
+                 (user_id, item_type, food_id, food_label, food_data, recipe_data, quantity, 
+                  measure_uri, measure_label, category, date, timezone, nutrients)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                 RETURNING id`,
+                [
+                    userId,
+                    food.item_type,
+                    food.food_id,
+                    food.food_label,
+                    JSON.stringify(food.food_data),
+                    food.recipe_data ? JSON.stringify(food.recipe_data) : null,
+                    food.quantity,
+                    food.measure_uri,
+                    food.measure_label,
+                    food.category,
+                    targetDate,
+                    timezone,
+                    JSON.stringify(food.nutrients)
+                ]
+            );
+        });
+
+        await Promise.all(insertPromises);
+
+        res.status(200).json({
+            success: true,
+            copiedCount: sourceFoods.rows.length,
+            message: `Successfully copied ${sourceFoods.rows.length} food(s) from ${sourceDate} to ${targetDate}`
+        });
+    } catch (error) {
+        console.error("Error copying day:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+// Copy meals from one week to another (Pro feature)
+export async function handleCopyWeek(req: Request, res: Response): Promise<void> {
+    try {
+        const userId = await getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        // Check if user is subscribed
+        const subscribed = await isUserSubscribed(userId);
+        if (!subscribed) {
+            res.status(403).json({ error: "This feature requires a Pro subscription" });
+            return;
+        }
+
+        const { sourceWeekStart, targetWeekStart, timezone } = req.body;
+
+        if (!sourceWeekStart || !targetWeekStart || !timezone) {
+            res.status(400).json({ error: "sourceWeekStart, targetWeekStart, and timezone are required" });
+            return;
+        }
+
+        if (sourceWeekStart === targetWeekStart) {
+            res.status(400).json({ error: "Source and target weeks cannot be the same" });
+            return;
+        }
+
+        const pool = await getPool();
+        if (!pool) {
+            res.status(500).json({ error: "Database connection not available" });
+            return;
+        }
+
+        // Calculate end of source week (7 days)
+        const sourceStart = new Date(sourceWeekStart + "T00:00:00");
+        const sourceEnd = new Date(sourceStart);
+        sourceEnd.setDate(sourceEnd.getDate() + 6);
+        const sourceEndStr = sourceEnd.toISOString().split("T")[0];
+
+        // Get all foods from source week
+        const sourceFoods = await pool.query(
+            `SELECT item_type, food_id, food_label, food_data, recipe_data, quantity, 
+                    measure_uri, measure_label, category, date, nutrients
+             FROM food_tracking 
+             WHERE user_id = $1 AND date >= $2 AND date <= $3
+             ORDER BY date, category, created_at`,
+            [userId, sourceWeekStart, sourceEndStr]
+        );
+
+        if (sourceFoods.rows.length === 0) {
+            res.status(400).json({ error: "No foods found in source week" });
+            return;
+        }
+
+        // Calculate day offset between source and target
+        const targetStart = new Date(targetWeekStart + "T00:00:00");
+        const dayOffset = Math.round((targetStart.getTime() - sourceStart.getTime()) / (1000 * 60 * 60 * 24));
+
+        // Insert copied foods to target week
+        const insertPromises = sourceFoods.rows.map(food => {
+            // Calculate target date by adding day offset
+            // PostgreSQL returns date as Date object, so handle both cases
+            let foodDate: Date;
+            if (food.date instanceof Date) {
+                foodDate = new Date(food.date);
+            } else {
+                foodDate = new Date(food.date + "T00:00:00");
+            }
+            foodDate.setDate(foodDate.getDate() + dayOffset);
+            const targetDateStr = foodDate.toISOString().split("T")[0];
+
+            return pool.query(
+                `INSERT INTO food_tracking 
+                 (user_id, item_type, food_id, food_label, food_data, recipe_data, quantity, 
+                  measure_uri, measure_label, category, date, timezone, nutrients)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                 RETURNING id`,
+                [
+                    userId,
+                    food.item_type,
+                    food.food_id,
+                    food.food_label,
+                    JSON.stringify(food.food_data),
+                    food.recipe_data ? JSON.stringify(food.recipe_data) : null,
+                    food.quantity,
+                    food.measure_uri,
+                    food.measure_label,
+                    food.category,
+                    targetDateStr,
+                    timezone,
+                    JSON.stringify(food.nutrients)
+                ]
+            );
+        });
+
+        await Promise.all(insertPromises);
+
+        res.status(200).json({
+            success: true,
+            copiedCount: sourceFoods.rows.length,
+            message: `Successfully copied ${sourceFoods.rows.length} food(s) from source week to target week`
+        });
+    } catch (error) {
+        console.error("Error copying week:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
 // Get recent foods/recipes for quick-add
 export async function handleGetRecentFoods(req: Request, res: Response): Promise<void> {
     try {

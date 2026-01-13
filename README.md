@@ -40,6 +40,18 @@ Save your frequently used foods and recipes for quick access. Quickly add favori
 ### Data Management
 Export all your data in JSON format, including recipes, favorites, grocery lists, food tracking entries, and progress tracking data. Delete specific data by time period (7 days, 30 days, or all time) with granular control over what to remove.
 
+## Pro Features (No ETA)
+
+The following features are designed for Pro subscribers. **Note: Subscriptions are not yet available.** These features are implemented but will only be accessible once a subscription system is in place.
+
+### Meal Planner (Food Tracking Enhancements)
+Pro users will have access to advanced meal planning capabilities:
+
+- **Future Meal Planning**: Plan your meals for upcoming days, not just today or past dates. Perfect for weekly meal prep and planning ahead.
+- **Copy Day**: Copy all meals from one day and paste them to another day, making it easy to replicate successful eating days.
+- **Copy Week**: Copy an entire week's worth of meals to another week — ideal for maintaining consistent meal plans.
+- **Drag-and-Drop Organization**: Reorganize meals between categories (Breakfast, Lunch, Dinner, Snack, Other) by simply dragging and dropping. Pro users also see all meal categories for easy organization.
+
 ## Technology Stack
 
 NoBullFit is built with modern web technologies:

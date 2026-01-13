@@ -11,9 +11,9 @@ import { Input } from "@components/input";
 import { Select } from "@components/select";
 import { Dialog, DialogActions, DialogBody, DialogDescription, DialogTitle } from "@components/dialog";
 import { Field, Label as FieldLabel, Description } from "@components/fieldset";
-import { DescriptionList, DescriptionTerm, DescriptionDetails } from "@components/description-list";
+import { Badge } from "@components/badge";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
-import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Copy, ClipboardPaste, Calendar, GripVertical, Crown } from "lucide-react";
 
 interface LoggedFood {
     id: number;
@@ -31,6 +31,13 @@ interface LoggedFood {
     nutrients: Record<string, number>;
     created_at: string;
     updated_at: string;
+}
+
+interface User {
+    id: number;
+    email: string;
+    full_name: string;
+    subscribed: boolean;
 }
 
 const CATEGORIES = ["Breakfast", "Lunch", "Dinner", "Snack", "Other"];
@@ -68,6 +75,7 @@ const FoodTracking: React.FC = () => {
     const loaderData = useLoaderData() as {
         title: string;
         meta: unknown[];
+        user?: User;
         initialFoods?: LoggedFood[];
         initialDate?: string | null;
         initialTimezone?: string | null;
@@ -77,6 +85,9 @@ const FoodTracking: React.FC = () => {
 
     // Get user's timezone
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    // Check if user is a Pro subscriber
+    const isProUser = loaderData.user?.subscribed === true;
 
     // Initialize date state
     const [currentDate, setCurrentDate] = useState<Date>(() => {
@@ -117,6 +128,20 @@ const FoodTracking: React.FC = () => {
     const [addManualProtein, setAddManualProtein] = useState("");
     const [addManualCarbs, setAddManualCarbs] = useState("");
     const [addManualFat, setAddManualFat] = useState("");
+    
+    // Copy day state (Pro feature)
+    const [copiedDate, setCopiedDate] = useState<string | null>(null);
+    const [isPasting, setIsPasting] = useState(false);
+    
+    // Copy week dialog state (Pro feature)
+    const [isCopyWeekDialogOpen, setIsCopyWeekDialogOpen] = useState(false);
+    const [copyWeekSourceStart, setCopyWeekSourceStart] = useState("");
+    const [copyWeekTargetStart, setCopyWeekTargetStart] = useState("");
+    const [isCopyingWeek, setIsCopyingWeek] = useState(false);
+    
+    // Drag-and-drop state (Pro feature)
+    const [draggedFood, setDraggedFood] = useState<LoggedFood | null>(null);
+    const [dragOverCategory, setDragOverCategory] = useState<string | null>(null);
 
     // Set helmet values
     helmet.setTitle(loaderData.title);
@@ -157,6 +182,21 @@ const FoodTracking: React.FC = () => {
             console.error("Error fetching recent foods:", error);
         }
     }, []);
+    
+    // Check if a date is allowed for non-pro users (today or past only)
+    const isDateAllowedForFreeUser = useCallback((date: Date): boolean => {
+        const today = new Date();
+        // Compare dates without time component
+        const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const compareDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        return compareDateOnly <= todayDateOnly;
+    }, []);
+    
+    // Check if navigation to a date is allowed
+    const canNavigateToDate = useCallback((date: Date): boolean => {
+        if (isProUser) return true;
+        return isDateAllowedForFreeUser(date);
+    }, [isProUser, isDateAllowedForFreeUser]);
 
     // Reset add dialog
     const resetAddDialog = () => {
@@ -192,7 +232,10 @@ const FoodTracking: React.FC = () => {
     const handleNextDay = () => {
         const newDate = new Date(currentDate);
         newDate.setDate(newDate.getDate() + 1);
-        setCurrentDate(newDate);
+        // For non-pro users, restrict to today or earlier
+        if (canNavigateToDate(newDate)) {
+            setCurrentDate(newDate);
+        }
     };
 
     // Navigate to today
@@ -203,7 +246,10 @@ const FoodTracking: React.FC = () => {
     // Handle date input change
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newDate = new Date(e.target.value + "T00:00:00");
-        setCurrentDate(newDate);
+        // For non-pro users, restrict to today or earlier
+        if (canNavigateToDate(newDate)) {
+            setCurrentDate(newDate);
+        }
     };
 
     // Handle edit food
@@ -623,6 +669,179 @@ const FoodTracking: React.FC = () => {
         }
     };
 
+    // Copy current day (Pro feature)
+    const handleCopyDay = () => {
+        if (!isProUser) return;
+        const dateStr = formatDateForAPI(currentDate);
+        setCopiedDate(dateStr);
+    };
+    
+    // Paste copied day to current date (Pro feature)
+    const handlePasteDay = async () => {
+        if (!isProUser || !copiedDate) return;
+        
+        const targetDateStr = formatDateForAPI(currentDate);
+        if (copiedDate === targetDateStr) {
+            return; // Cannot paste to same day
+        }
+        
+        setIsPasting(true);
+        try {
+            const response = await fetch("/api/food-tracking/copy-day", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    sourceDate: copiedDate,
+                    targetDate: targetDateStr,
+                    timezone: userTimezone
+                })
+            });
+            
+            if (response.ok) {
+                await fetchFoods(currentDate);
+            } else {
+                const error = await response.json();
+                console.error("Error pasting day:", error);
+            }
+        } catch (error) {
+            console.error("Error pasting day:", error);
+        } finally {
+            setIsPasting(false);
+        }
+    };
+    
+    // Copy week (Pro feature)
+    const handleCopyWeek = async () => {
+        if (!isProUser || !copyWeekSourceStart || !copyWeekTargetStart) return;
+        
+        if (copyWeekSourceStart === copyWeekTargetStart) {
+            return; // Cannot copy to same week
+        }
+        
+        setIsCopyingWeek(true);
+        try {
+            const response = await fetch("/api/food-tracking/copy-week", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    sourceWeekStart: copyWeekSourceStart,
+                    targetWeekStart: copyWeekTargetStart,
+                    timezone: userTimezone
+                })
+            });
+            
+            if (response.ok) {
+                setIsCopyWeekDialogOpen(false);
+                setCopyWeekSourceStart("");
+                setCopyWeekTargetStart("");
+                // Refresh current view if it falls within the target week
+                await fetchFoods(currentDate);
+            } else {
+                const error = await response.json();
+                console.error("Error copying week:", error);
+            }
+        } catch (error) {
+            console.error("Error copying week:", error);
+        } finally {
+            setIsCopyingWeek(false);
+        }
+    };
+    
+    // Drag and drop handlers (Pro feature)
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, food: LoggedFood) => {
+        if (!isProUser) {
+            e.preventDefault();
+            return;
+        }
+        setDraggedFood(food);
+        e.dataTransfer.effectAllowed = "move";
+    };
+    
+    const handleDragEnd = () => {
+        setDraggedFood(null);
+        setDragOverCategory(null);
+    };
+    
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>, category: string) => {
+        if (!isProUser || !draggedFood) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        setDragOverCategory(category);
+    };
+    
+    const handleDragLeave = () => {
+        setDragOverCategory(null);
+    };
+    
+    const handleDrop = async (e: React.DragEvent<HTMLDivElement>, targetCategory: string) => {
+        e.preventDefault();
+        if (!isProUser || !draggedFood) return;
+        
+        // Don't do anything if dropping on same category
+        if (draggedFood.category === targetCategory) {
+            setDraggedFood(null);
+            setDragOverCategory(null);
+            return;
+        }
+        
+        // Store the food ID for the API call
+        const foodId = draggedFood.id;
+        const previousCategory = draggedFood.category;
+        
+        // Optimistic update - update local state immediately to prevent scroll reset
+        setFoods(prevFoods => 
+            prevFoods.map(food => 
+                food.id === foodId 
+                    ? { ...food, category: targetCategory }
+                    : food
+            )
+        );
+        
+        // Clear drag state immediately for responsive feel
+        setDraggedFood(null);
+        setDragOverCategory(null);
+        
+        try {
+            const response = await fetch(`/api/food-tracking/${foodId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    category: targetCategory
+                })
+            });
+            
+            // If the API call failed, revert the optimistic update
+            if (!response.ok) {
+                setFoods(prevFoods => 
+                    prevFoods.map(food => 
+                        food.id === foodId 
+                            ? { ...food, category: previousCategory }
+                            : food
+                    )
+                );
+            }
+        } catch (error) {
+            console.error("Error moving food:", error);
+            // Revert optimistic update on error
+            setFoods(prevFoods => 
+                prevFoods.map(food => 
+                    food.id === foodId 
+                        ? { ...food, category: previousCategory }
+                        : food
+                )
+            );
+        }
+    };
+
     // Group foods by category
     const foodsByCategory = foods.reduce((acc, food) => {
         if (!acc[food.category]) {
@@ -686,8 +905,9 @@ const FoodTracking: React.FC = () => {
                 </div>
 
                 {/* Date Navigation */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3">
+                <div className="space-y-3">
+                    {/* Date picker row - on desktop includes Today button and Add Food for non-pro users */}
+                    <div className="flex items-center gap-2">
                         <Button onClick={handlePreviousDay} outline>
                             <ChevronLeft className="h-5 w-5" />
                         </Button>
@@ -695,24 +915,119 @@ const FoodTracking: React.FC = () => {
                             type="date"
                             value={formatDateForAPI(currentDate)}
                             onChange={handleDateChange}
-                            className="w-auto"
+                            max={!isProUser ? formatDateForAPI(new Date()) : undefined}
+                            className="flex-1 sm:flex-none sm:w-auto"
                             aria-label="Select date"
                         />
-                        <Button onClick={handleNextDay} outline>
+                        <Button 
+                            onClick={handleNextDay} 
+                            outline
+                            disabled={!isProUser && !canNavigateToDate(new Date(currentDate.getTime() + 86400000))}
+                            title={!isProUser && !canNavigateToDate(new Date(currentDate.getTime() + 86400000)) ? "Pro feature: Plan meals for future days" : "Next day"}
+                        >
                             <ChevronRight className="h-5 w-5" />
                         </Button>
-                        <Button onClick={handleToday} outline>
-                            Today
+                        {/* Today button - hidden on mobile, shown on desktop */}
+                        <div className="hidden sm:block">
+                            <Button onClick={handleToday} outline>
+                                Today
+                            </Button>
+                        </div>
+                        {/* For non-pro users: Add Food button on same row on desktop */}
+                        {!isProUser && (
+                            <>
+                                <div className="hidden sm:block sm:flex-1" />
+                                <div className="hidden sm:block">
+                                    <Button 
+                                        onClick={() => {
+                                            resetAddDialog();
+                                            setIsAddDialogOpen(true);
+                                        }}
+                                    >
+                                        <Plus className="h-4 w-4" data-slot="icon" />
+                                        Add Food
+                                    </Button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                    
+                    {/* Action buttons - stacked on mobile, row on desktop */}
+                    {/* For non-pro users on mobile: Today and Add Food buttons */}
+                    {/* For pro users: Today + Pro buttons + Add Food */}
+                    <div className={`grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center ${!isProUser ? "sm:hidden" : ""}`}>
+                        {/* Today button - shown on mobile only */}
+                        <div className="sm:hidden">
+                            <Button onClick={handleToday} outline className="w-full">
+                                Today
+                            </Button>
+                        </div>
+                        {/* Copy/Paste Day buttons - Pro feature */}
+                        {isProUser && (
+                            <>
+                                <Button 
+                                    onClick={handleCopyDay} 
+                                    outline
+                                    className="w-full sm:w-auto"
+                                    disabled={foods.length === 0}
+                                    title="Copy this day's meals"
+                                >
+                                    <Copy className="h-4 w-4" data-slot="icon" />
+                                    Copy Day
+                                </Button>
+                                <Button 
+                                    onClick={handlePasteDay} 
+                                    outline
+                                    className="w-full sm:w-auto"
+                                    disabled={!copiedDate || copiedDate === formatDateForAPI(currentDate) || isPasting}
+                                    title={copiedDate ? `Paste meals from ${copiedDate}` : "Copy a day first"}
+                                >
+                                    <ClipboardPaste className="h-4 w-4" data-slot="icon" />
+                                    {isPasting ? "Pasting..." : "Paste Day"}
+                                </Button>
+                                <Button 
+                                    onClick={() => setIsCopyWeekDialogOpen(true)} 
+                                    outline
+                                    className="w-full sm:w-auto"
+                                    title="Copy a week's meals to another week"
+                                >
+                                    <Calendar className="h-4 w-4" data-slot="icon" />
+                                    Copy Week
+                                </Button>
+                                {/* Spacer to push Add Food to the right on desktop */}
+                                <div className="hidden sm:block sm:flex-1" />
+                            </>
+                        )}
+                        {/* Add Food button */}
+                        <Button 
+                            onClick={() => {
+                                resetAddDialog();
+                                setIsAddDialogOpen(true);
+                            }}
+                            className="w-full sm:w-auto"
+                        >
+                            <Plus className="h-4 w-4" data-slot="icon" />
+                            Add Food
                         </Button>
                     </div>
-                    <Button onClick={() => {
-                        resetAddDialog();
-                        setIsAddDialogOpen(true);
-                    }}>
-                        <Plus className="h-4 w-4" data-slot="icon" />
-                        Add Food
-                    </Button>
                 </div>
+                
+                {/* Copied date indicator */}
+                {isProUser && copiedDate && (
+                    <div className="flex items-center gap-2">
+                        <Badge color="blue">
+                            <Copy className="h-3 w-3 mr-1" />
+                            Day copied: {copiedDate}
+                        </Badge>
+                        <Button 
+                            plain 
+                            onClick={() => setCopiedDate(null)}
+                            className="text-xs"
+                        >
+                            Clear
+                        </Button>
+                    </div>
+                )}
 
                 {/* Grand Totals */}
                 {foods.length > 0 && (
@@ -762,93 +1077,138 @@ const FoodTracking: React.FC = () => {
                     <div className="space-y-6">
                         {CATEGORIES.map((category) => {
                             const categoryFoods = foodsByCategory[category] || [];
-                            if (categoryFoods.length === 0) return null;
-
                             const totals = calculateTotals(categoryFoods);
+                            const isDragOver = dragOverCategory === category;
+                            
+                            // Non-pro users should not see empty categories
+                            if (categoryFoods.length === 0 && !isProUser) {
+                                return null;
+                            }
 
                             return (
-                                <div key={category} className="space-y-4">
+                                <div 
+                                    key={category} 
+                                    className={`space-y-4 rounded-lg p-4 transition-colors ${
+                                        isDragOver 
+                                            ? "bg-blue-50 ring-2 ring-blue-400 dark:bg-blue-900/20" 
+                                            : ""
+                                    }`}
+                                    onDragOver={(e) => handleDragOver(e, category)}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={(e) => handleDrop(e, category)}
+                                >
                                     <div className="flex items-center justify-between">
                                         <Heading level={2} className="text-lg">
                                             {category}
                                         </Heading>
-                                        <div className="flex gap-4 text-sm text-zinc-600 dark:text-zinc-400">
-                                            <span>{totals.calories.toFixed(0)} kcal</span>
-                                            <span>{totals.protein.toFixed(1)}g protein</span>
-                                        </div>
+                                        {categoryFoods.length > 0 && (
+                                            <div className="flex gap-4 text-sm text-zinc-600 dark:text-zinc-400">
+                                                <span>{totals.calories.toFixed(0)} kcal</span>
+                                                <span>{totals.protein.toFixed(1)}g protein</span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="space-y-3">
-                                        {categoryFoods.map((food) => {
-                                            const nutrients = food.nutrients || {};
-                                            const quantityDisplay = food.measure_label
-                                                ? `${formatQuantity(food.quantity)} ${food.measure_label}`
-                                                : formatQuantity(food.quantity);
+                                    {categoryFoods.length === 0 ? (
+                                        <div className={`rounded-lg border-2 border-dashed p-4 text-center ${
+                                            isDragOver 
+                                                ? "border-blue-400 bg-blue-100/50 dark:border-blue-500 dark:bg-blue-900/30" 
+                                                : "border-zinc-200 dark:border-zinc-700"
+                                        }`}>
+                                            <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                                                {isProUser && draggedFood 
+                                                    ? "Drop here to move to " + category
+                                                    : `No ${category.toLowerCase()} logged`
+                                                }
+                                            </Text>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {categoryFoods.map((food) => {
+                                                const nutrients = food.nutrients || {};
+                                                const quantityDisplay = food.measure_label
+                                                    ? `${formatQuantity(food.quantity)} ${food.measure_label}`
+                                                    : formatQuantity(food.quantity);
+                                                const isDragging = draggedFood?.id === food.id;
 
-                                            return (
-                                                <div
-                                                    key={food.id}
-                                                    className="group rounded-lg border border-zinc-950/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-800/50"
-                                                >
-                                                    <div className="flex items-start justify-between">
-                                                        <div
-                                                            className="flex-1 cursor-pointer"
-                                                            onClick={() => handleFoodClick(food)}
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                <Text className="font-medium">{food.food_label}</Text>
-                                                                {food.item_type === "recipe" && (
-                                                                    <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-400/10 dark:text-blue-400">
-                                                                        Recipe
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                                                                {quantityDisplay}
-                                                            </Text>
-                                                            <div className="mt-2 flex gap-4 text-sm text-zinc-600 dark:text-zinc-400">
-                                                                {nutrients.ENERC_KCAL !== undefined && (
-                                                                    <span>{nutrients.ENERC_KCAL.toFixed(0)} kcal</span>
-                                                                )}
-                                                                {nutrients.PROCNT !== undefined && (
-                                                                    <span>{nutrients.PROCNT.toFixed(1)}g protein</span>
-                                                                )}
-                                                                {nutrients.CHOCDF !== undefined && (
-                                                                    <span>{nutrients.CHOCDF.toFixed(1)}g carbs</span>
-                                                                )}
-                                                                {nutrients.FAT !== undefined && (
-                                                                    <span>{nutrients.FAT.toFixed(1)}g fat</span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <Button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleEditFood(food);
-                                                                }}
-                                                                outline
-                                                                className="h-9 w-9 p-0 flex items-center justify-center"
-                                                                title="Edit"
+                                                return (
+                                                    <div
+                                                        key={food.id}
+                                                        className={`group rounded-lg border bg-white p-4 dark:bg-zinc-800/50 ${
+                                                            isDragging 
+                                                                ? "border-blue-400 opacity-50 dark:border-blue-500" 
+                                                                : "border-zinc-950/10 dark:border-white/10"
+                                                        } ${isProUser ? "cursor-grab active:cursor-grabbing" : ""}`}
+                                                        draggable={isProUser}
+                                                        onDragStart={(e) => handleDragStart(e, food)}
+                                                        onDragEnd={handleDragEnd}
+                                                    >
+                                                        <div className="flex items-start justify-between">
+                                                            {/* Drag handle for Pro users */}
+                                                            {isProUser && (
+                                                                <div className="mr-3 flex items-center self-center text-zinc-400 dark:text-zinc-500">
+                                                                    <GripVertical className="h-5 w-5" />
+                                                                </div>
+                                                            )}
+                                                            <div
+                                                                className="flex-1 cursor-pointer"
+                                                                onClick={() => handleFoodClick(food)}
                                                             >
-                                                                <Pencil className="h-4 w-4 stroke-2" />
-                                                            </Button>
-                                                            <Button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleDeleteFood(food);
-                                                                }}
-                                                                outline
-                                                                className="h-9 w-9 p-0 flex items-center justify-center text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                                                                title="Delete"
-                                                            >
-                                                                <Trash2 className="h-4 w-4 stroke-2" />
-                                                            </Button>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Text className="font-medium">{food.food_label}</Text>
+                                                                    {food.item_type === "recipe" && (
+                                                                        <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-400/10 dark:text-blue-400">
+                                                                            Recipe
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                                                                    {quantityDisplay}
+                                                                </Text>
+                                                                <div className="mt-2 flex gap-4 text-sm text-zinc-600 dark:text-zinc-400">
+                                                                    {nutrients.ENERC_KCAL !== undefined && (
+                                                                        <span>{nutrients.ENERC_KCAL.toFixed(0)} kcal</span>
+                                                                    )}
+                                                                    {nutrients.PROCNT !== undefined && (
+                                                                        <span>{nutrients.PROCNT.toFixed(1)}g protein</span>
+                                                                    )}
+                                                                    {nutrients.CHOCDF !== undefined && (
+                                                                        <span>{nutrients.CHOCDF.toFixed(1)}g carbs</span>
+                                                                    )}
+                                                                    {nutrients.FAT !== undefined && (
+                                                                        <span>{nutrients.FAT.toFixed(1)}g fat</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <Button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleEditFood(food);
+                                                                    }}
+                                                                    outline
+                                                                    className="h-9 w-9 p-0 flex items-center justify-center"
+                                                                    title="Edit"
+                                                                >
+                                                                    <Pencil className="h-4 w-4 stroke-2" />
+                                                                </Button>
+                                                                <Button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteFood(food);
+                                                                    }}
+                                                                    outline
+                                                                    className="h-9 w-9 p-0 flex items-center justify-center text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                                                    title="Delete"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4 stroke-2" />
+                                                                </Button>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
@@ -1240,6 +1600,75 @@ const FoodTracking: React.FC = () => {
                     </Button>
                     <Button onClick={handleConfirmDelete} color="red" disabled={isDeleting}>
                         {isDeleting ? "Deleting..." : "Delete"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            
+            {/* Copy Week Dialog (Pro feature) */}
+            <Dialog open={isCopyWeekDialogOpen} onClose={(open) => {
+                setIsCopyWeekDialogOpen(open);
+                if (!open) {
+                    setCopyWeekSourceStart("");
+                    setCopyWeekTargetStart("");
+                }
+            }}>
+                <DialogTitle>
+                    <div className="flex items-center gap-2">
+                        <Crown className="h-5 w-5 text-amber-500" />
+                        Copy Week
+                    </div>
+                </DialogTitle>
+                <DialogDescription>
+                    Copy all meals from one week to another. Select the Monday of each week.
+                </DialogDescription>
+                <DialogBody>
+                    <div className="space-y-4">
+                        <Field>
+                            <FieldLabel>Source Week Start (Monday)</FieldLabel>
+                            <Input
+                                type="date"
+                                value={copyWeekSourceStart}
+                                onChange={(e) => setCopyWeekSourceStart(e.target.value)}
+                                disabled={isCopyingWeek}
+                            />
+                            <Description>
+                                Select the Monday of the week you want to copy from.
+                            </Description>
+                        </Field>
+                        <Field>
+                            <FieldLabel>Target Week Start (Monday)</FieldLabel>
+                            <Input
+                                type="date"
+                                value={copyWeekTargetStart}
+                                onChange={(e) => setCopyWeekTargetStart(e.target.value)}
+                                disabled={isCopyingWeek}
+                            />
+                            <Description>
+                                Select the Monday of the week you want to copy to.
+                            </Description>
+                        </Field>
+                        <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                            Note: Existing meals on the target week will not be removed. The copied meals will be added alongside them.
+                        </Text>
+                    </div>
+                </DialogBody>
+                <DialogActions>
+                    <Button 
+                        plain 
+                        onClick={() => {
+                            setIsCopyWeekDialogOpen(false);
+                            setCopyWeekSourceStart("");
+                            setCopyWeekTargetStart("");
+                        }}
+                        disabled={isCopyingWeek}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleCopyWeek} 
+                        disabled={!copyWeekSourceStart || !copyWeekTargetStart || copyWeekSourceStart === copyWeekTargetStart || isCopyingWeek}
+                    >
+                        {isCopyingWeek ? "Copying..." : "Copy Week"}
                     </Button>
                 </DialogActions>
             </Dialog>

@@ -38,7 +38,9 @@ import {
     handleLogFood,
     handleUpdateFoodTracking,
     handleDeleteFoodTracking,
-    handleGetRecentFoods
+    handleGetRecentFoods,
+    handleCopyDay,
+    handleCopyWeek
 } from "./api/handlers/foodTrackingHandler.js";
 import {
     handleGetProgressTracking,
@@ -124,6 +126,8 @@ class App {
         this.router.put("/food-tracking/:id", handleUpdateFoodTracking);
         this.router.delete("/food-tracking/:id", handleDeleteFoodTracking);
         this.router.get("/food-tracking/recent", handleGetRecentFoods);
+        this.router.post("/food-tracking/copy-day", handleCopyDay);
+        this.router.post("/food-tracking/copy-week", handleCopyWeek);
         
         // Progress tracking endpoints
         this.router.get("/progress-tracking", handleGetProgressTracking);

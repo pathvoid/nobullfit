@@ -28,6 +28,31 @@ vi.mock("../DashboardSidebar", () => ({
 // Mock fetch for API calls
 global.fetch = vi.fn();
 
+// Helper to create router with loader data
+const createFoodTrackingRouter = (userData: { subscribed?: boolean } = {}) => {
+    return createMemoryRouter([
+        {
+            path: "/dashboard/food-tracking",
+            element: <FoodTracking />,
+            loader: async () => ({
+                title: "Food Tracking - NoBullFit",
+                meta: [{ name: "description", content: "Track your daily food intake and nutrition" }],
+                user: { 
+                    id: 1, 
+                    email: "test@example.com", 
+                    full_name: "Test User",
+                    subscribed: userData.subscribed ?? false
+                },
+                initialFoods: [],
+                initialDate: null,
+                initialTimezone: null
+            })
+        }
+    ], {
+        initialEntries: ["/dashboard/food-tracking"]
+    });
+};
+
 describe("FoodTracking", () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -38,23 +63,7 @@ describe("FoodTracking", () => {
     });
 
     it("should render the food tracking page", async () => {
-        const router = createMemoryRouter([
-            {
-                path: "/dashboard/food-tracking",
-                element: <FoodTracking />,
-                loader: async () => ({
-                    title: "Food Tracking - NoBullFit",
-                    meta: [{ name: "description", content: "Track your daily food intake and nutrition" }],
-                    user: { id: 1, email: "test@example.com", full_name: "Test User" },
-                    initialFoods: [],
-                    initialDate: null,
-                    initialTimezone: null
-                })
-            }
-        ], {
-            initialEntries: ["/dashboard/food-tracking"]
-        });
-
+        const router = createFoodTrackingRouter();
         render(<RouterProvider router={router} />);
 
         // Wait for loader to complete
@@ -65,23 +74,7 @@ describe("FoodTracking", () => {
     });
 
     it("should display date navigation controls", async () => {
-        const router = createMemoryRouter([
-            {
-                path: "/dashboard/food-tracking",
-                element: <FoodTracking />,
-                loader: async () => ({
-                    title: "Food Tracking - NoBullFit",
-                    meta: [{ name: "description", content: "Track your daily food intake and nutrition" }],
-                    user: { id: 1, email: "test@example.com", full_name: "Test User" },
-                    initialFoods: [],
-                    initialDate: null,
-                    initialTimezone: null
-                })
-            }
-        ], {
-            initialEntries: ["/dashboard/food-tracking"]
-        });
-
+        const router = createFoodTrackingRouter();
         render(<RouterProvider router={router} />);
 
         await screen.findByRole("heading", { name: /food tracking/i });
@@ -89,5 +82,59 @@ describe("FoodTracking", () => {
         // Check for date input
         const dateInput = screen.getByLabelText(/date/i) || screen.getByDisplayValue(/\d{4}-\d{2}-\d{2}/);
         expect(dateInput).toBeInTheDocument();
+    });
+
+    describe("Free User Features", () => {
+        it("should not show Copy Day/Paste Day buttons for free users", async () => {
+            const router = createFoodTrackingRouter({ subscribed: false });
+            render(<RouterProvider router={router} />);
+
+            await screen.findByRole("heading", { name: /food tracking/i });
+
+            // Copy Day button should not be present for free users
+            expect(screen.queryByRole("button", { name: /copy day/i })).not.toBeInTheDocument();
+        });
+
+        it("should not show Copy Week button for free users", async () => {
+            const router = createFoodTrackingRouter({ subscribed: false });
+            render(<RouterProvider router={router} />);
+
+            await screen.findByRole("heading", { name: /food tracking/i });
+
+            // Copy Week button should not be present for free users
+            expect(screen.queryByRole("button", { name: /copy week/i })).not.toBeInTheDocument();
+        });
+    });
+
+    describe("Pro User Features", () => {
+        it("should show Copy Day button for pro users", async () => {
+            const router = createFoodTrackingRouter({ subscribed: true });
+            render(<RouterProvider router={router} />);
+
+            await screen.findByRole("heading", { name: /food tracking/i });
+
+            // Copy Day button should be present for pro users
+            expect(screen.getByRole("button", { name: /copy day/i })).toBeInTheDocument();
+        });
+
+        it("should show Paste Day button for pro users", async () => {
+            const router = createFoodTrackingRouter({ subscribed: true });
+            render(<RouterProvider router={router} />);
+
+            await screen.findByRole("heading", { name: /food tracking/i });
+
+            // Paste Day button should be present for pro users
+            expect(screen.getByRole("button", { name: /paste day/i })).toBeInTheDocument();
+        });
+
+        it("should show Copy Week button for pro users", async () => {
+            const router = createFoodTrackingRouter({ subscribed: true });
+            render(<RouterProvider router={router} />);
+
+            await screen.findByRole("heading", { name: /food tracking/i });
+
+            // Copy Week button should be present for pro users
+            expect(screen.getByRole("button", { name: /copy week/i })).toBeInTheDocument();
+        });
     });
 });

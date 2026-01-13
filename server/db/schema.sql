@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     country VARCHAR(100),
     terms_accepted BOOLEAN NOT NULL DEFAULT false,
     terms_accepted_at TIMESTAMP,
+    subscribed BOOLEAN NOT NULL DEFAULT false,
+    subscribed_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
