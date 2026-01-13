@@ -49,22 +49,40 @@ function setCachedStatus(status: MaintenanceStatus): void {
 }
 
 export function MaintenanceBanner() {
-    // Initialize with cached status to avoid animation on page transitions
-    const cachedStatus = getCachedStatus();
-    const dismissedKey = typeof window !== "undefined" ? localStorage.getItem("maintenance_dismissed") : null;
-    const initialDismissed = cachedStatus?.maintenance && dismissedKey === cachedStatus.maintenance.startTime;
-    const initialShouldShow = cachedStatus?.maintenance && (!initialDismissed || cachedStatus.isInProgress);
-
-    const [status, setStatus] = useState<MaintenanceStatus | null>(cachedStatus);
-    const [dismissed, setDismissed] = useState(!!initialDismissed);
-    const [isVisible, setIsVisible] = useState(!!initialShouldShow);
+    // Initialize with null/false to match server render and avoid hydration mismatch
+    const [status, setStatus] = useState<MaintenanceStatus | null>(null);
+    const [dismissed, setDismissed] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
+    const [hasMounted, setHasMounted] = useState(false);
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Determine if banner should be shown
     const shouldShow = status?.maintenance && (!dismissed || status.isInProgress);
 
+    // On mount, check cache immediately to restore state without animation
+    useEffect(() => {
+        setHasMounted(true);
+        
+        const cachedStatus = getCachedStatus();
+        const dismissedKey = localStorage.getItem("maintenance_dismissed");
+        const wasDismissed = cachedStatus?.maintenance && dismissedKey === cachedStatus.maintenance.startTime;
+        const cachedShouldShow = cachedStatus?.maintenance && (!wasDismissed || cachedStatus.isInProgress);
+
+        if (cachedStatus) {
+            setStatus(cachedStatus);
+        }
+        if (wasDismissed) {
+            setDismissed(true);
+        }
+        if (cachedShouldShow) {
+            setIsVisible(true);
+        }
+    }, []);
+
     // Update CSS variable for sidebar offset when banner visibility changes
     useEffect(() => {
+        if (!hasMounted) return;
+
         if (shouldShow && contentRef.current) {
             const height = contentRef.current.offsetHeight || 0;
             document.documentElement.style.setProperty("--maintenance-banner-height", `${height}px`);
@@ -73,8 +91,7 @@ export function MaintenanceBanner() {
             document.documentElement.style.setProperty("--maintenance-banner-height", "0px");
             setIsVisible(false);
         }
-        // No cleanup - we don't want to reset on unmount as it causes the sidebar to jump
-    }, [shouldShow]);
+    }, [shouldShow, hasMounted]);
 
     useEffect(() => {
         async function fetchMaintenanceStatus() {
@@ -117,10 +134,13 @@ export function MaintenanceBanner() {
     const maintenance = status?.maintenance;
     const isInProgress = status?.isInProgress;
 
+    // Use suppressHydrationWarning on dynamic elements to avoid warnings
+    // The server always renders collapsed, client expands after mount
     return (
         <div
             className="overflow-hidden transition-all duration-300 ease-in-out"
             style={{ maxHeight: isVisible ? "100px" : "0px" }}
+            suppressHydrationWarning
         >
             <div
                 ref={contentRef}
@@ -129,8 +149,9 @@ export function MaintenanceBanner() {
                         ? "bg-amber-500 text-white"
                         : "bg-blue-500 text-white"
                 }`}
+                suppressHydrationWarning
             >
-                <span className="text-center">
+                <span className="text-center" suppressHydrationWarning>
                     {isInProgress ? (
                         <>
                             <strong>Maintenance in progress</strong> — The website may be temporarily unavailable.

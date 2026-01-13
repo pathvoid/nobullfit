@@ -57,6 +57,7 @@ describe("maintenanceHandler", () => {
             const futureDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000); // 2 days from now
             const endDate = new Date(futureDate.getTime() + 2 * 60 * 60 * 1000); // 2 hours later
 
+            // First query: get maintenance schedules
             mockPool.query.mockResolvedValueOnce({
                 rows: [{
                     id: 1,
@@ -64,6 +65,10 @@ describe("maintenanceHandler", () => {
                     end_time: endDate,
                     is_active: true
                 }]
+            });
+            // Second query: check if in progress
+            mockPool.query.mockResolvedValueOnce({
+                rows: [{ is_in_progress: false }]
             });
 
             await handleGetMaintenanceStatus(mockRequest as Request, mockResponse as Response);
@@ -83,6 +88,7 @@ describe("maintenanceHandler", () => {
             const pastDate = new Date(Date.now() - 1 * 60 * 60 * 1000); // 1 hour ago
             const futureDate = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour from now
 
+            // First query: get maintenance schedules
             mockPool.query.mockResolvedValueOnce({
                 rows: [{
                     id: 1,
@@ -90,6 +96,10 @@ describe("maintenanceHandler", () => {
                     end_time: futureDate,
                     is_active: true
                 }]
+            });
+            // Second query: check if in progress
+            mockPool.query.mockResolvedValueOnce({
+                rows: [{ is_in_progress: true }]
             });
 
             await handleGetMaintenanceStatus(mockRequest as Request, mockResponse as Response);
@@ -127,21 +137,22 @@ describe("maintenanceHandler", () => {
             });
         });
 
-        it("should query for maintenance within the next 5 days", async () => {
+        it("should query using PostgreSQL NOW() for timezone consistency", async () => {
             mockPool.query.mockResolvedValueOnce({ rows: [] });
 
             await handleGetMaintenanceStatus(mockRequest as Request, mockResponse as Response);
 
-            // Verify the query was called with correct parameters
+            // Verify the query was called
             expect(mockPool.query).toHaveBeenCalledTimes(1);
-            const [query, params] = mockPool.query.mock.calls[0];
+            const [query] = mockPool.query.mock.calls[0];
             
             // Query should select from maintenance_schedules
             expect(query).toContain("maintenance_schedules");
             expect(query).toContain("is_active = true");
             
-            // Should have 2 date parameters (now and 5 days from now)
-            expect(params).toHaveLength(2);
+            // Should use PostgreSQL's NOW() function for consistent timezone handling
+            expect(query).toContain("NOW()");
+            expect(query).toContain("INTERVAL '5 days'");
         });
     });
 });

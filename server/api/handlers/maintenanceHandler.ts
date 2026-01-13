@@ -26,22 +26,17 @@ export async function handleGetMaintenanceStatus(req: Request, res: Response): P
             return;
         }
 
-        const now = new Date();
-        // Look for maintenance within the next 5 days
-        const fiveDaysFromNow = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
-
-        // Get the most relevant maintenance schedule:
+        // Get the most relevant maintenance schedule using PostgreSQL's NOW() to avoid timezone issues:
         // 1. Currently in progress (start_time <= now <= end_time)
         // 2. Upcoming within 5 days (now < start_time <= 5 days from now)
         const result = await pool.query<MaintenanceSchedule>(
             `SELECT id, start_time, end_time, is_active
              FROM maintenance_schedules
              WHERE is_active = true
-               AND end_time > $1
-               AND start_time <= $2
+               AND end_time > NOW()
+               AND start_time <= NOW() + INTERVAL '5 days'
              ORDER BY start_time ASC
-             LIMIT 1`,
-            [now.toISOString(), fiveDaysFromNow.toISOString()]
+             LIMIT 1`
         );
 
         if (result.rows.length === 0) {
@@ -57,7 +52,13 @@ export async function handleGetMaintenanceStatus(req: Request, res: Response): P
         const maintenance = result.rows[0];
         const startTime = new Date(maintenance.start_time);
         const endTime = new Date(maintenance.end_time);
-        const isInProgress = now >= startTime && now <= endTime;
+        
+        // Check if in progress using PostgreSQL's comparison result
+        const inProgressResult = await pool.query<{ is_in_progress: boolean }>(
+            "SELECT NOW() >= $1 AND NOW() <= $2 AS is_in_progress",
+            [startTime, endTime]
+        );
+        const isInProgress = inProgressResult.rows[0]?.is_in_progress ?? false;
 
         const status: MaintenanceStatus = {
             hasUpcoming: !isInProgress,
