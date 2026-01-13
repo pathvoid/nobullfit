@@ -81,6 +81,12 @@ export async function handleSignUp(req: Request, res: Response): Promise<void> {
 
         const newUser = result.rows[0];
 
+        // Create default user settings
+        await pool.query(
+            "INSERT INTO user_settings (user_id, quick_add_days) VALUES ($1, 30)",
+            [newUser.id]
+        );
+
         // Send welcome email (don't wait for it to complete)
         sendWelcomeEmail(email, name).catch((error) => {
             console.error("Failed to send welcome email:", error);

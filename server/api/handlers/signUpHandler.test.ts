@@ -64,6 +64,8 @@ describe("signUpHandler", () => {
         mockPool.query.mockResolvedValueOnce({
             rows: [{ id: 1, email: "newuser@example.com", full_name: "New User", created_at: new Date() }]
         });
+        // Create default user settings
+        mockPool.query.mockResolvedValueOnce({ rows: [] });
 
         (bcrypt.hash as ReturnType<typeof vi.fn>).mockResolvedValue("hashed_password");
         (sendWelcomeEmail as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
@@ -71,6 +73,12 @@ describe("signUpHandler", () => {
         await handleSignUp(mockRequest as Request, mockResponse as Response);
 
         expect(bcrypt.hash).toHaveBeenCalledWith("password123", 10);
+        expect(mockPool.query).toHaveBeenCalledTimes(3);
+        // Verify user_settings was created with default 30 days
+        expect(mockPool.query).toHaveBeenCalledWith(
+            "INSERT INTO user_settings (user_id, quick_add_days) VALUES ($1, 30)",
+            [1]
+        );
         expect(mockResponse.status).toHaveBeenCalledWith(200);
         expect(mockResponse.json).toHaveBeenCalledWith({
             success: true,
