@@ -108,7 +108,7 @@ describe("exportDataHandler", () => {
 
         // Mock all required queries in order:
         // 1. User, 2. Recipes, 3. Favorites, 4. Grocery Lists, 5. Grocery List Items (for each list)
-        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking, 9. TDEE
+        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking, 9. TDEE, 10. User Settings
         mockPool.query
             .mockResolvedValueOnce({ rows: [mockUser] })
             .mockResolvedValueOnce({ rows: mockRecipes })
@@ -118,7 +118,8 @@ describe("exportDataHandler", () => {
             .mockResolvedValueOnce({ rows: [] }) // food_tracking
             .mockResolvedValueOnce({ rows: [] }) // progress_tracking
             .mockResolvedValueOnce({ rows: [] }) // weight_tracking
-            .mockResolvedValueOnce({ rows: [] }); // tdee
+            .mockResolvedValueOnce({ rows: [] }) // tdee
+            .mockResolvedValueOnce({ rows: [{ quick_add_days: 30 }] }); // user_settings
 
         await handleExportData(mockRequest as Request, mockResponse as Response);
 
@@ -134,6 +135,9 @@ describe("exportDataHandler", () => {
                 user: expect.objectContaining({
                     id: 1,
                     email: "test@example.com"
+                }),
+                settings: expect.objectContaining({
+                    quick_add_days: 30
                 }),
                 recipes: expect.any(Array),
                 favorites: expect.any(Array),
@@ -218,7 +222,7 @@ describe("exportDataHandler", () => {
 
         // Mock all required queries in order:
         // 1. User, 2. Recipes, 3. Favorites, 4. Grocery Lists, 5. Grocery List Items (for each list)
-        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking, 9. TDEE
+        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking, 9. TDEE, 10. User Settings
         mockPool.query
             .mockResolvedValueOnce({ rows: [mockUser] })
             .mockResolvedValueOnce({ rows: [] }) // recipes
@@ -228,7 +232,8 @@ describe("exportDataHandler", () => {
             .mockResolvedValueOnce({ rows: [] }) // food_tracking
             .mockResolvedValueOnce({ rows: [] }) // progress_tracking
             .mockResolvedValueOnce({ rows: [] }) // weight_tracking
-            .mockResolvedValueOnce({ rows: [] }); // tdee
+            .mockResolvedValueOnce({ rows: [] }) // tdee
+            .mockResolvedValueOnce({ rows: [{ quick_add_days: 30 }] }); // user_settings
 
         await handleExportData(mockRequest as Request, mockResponse as Response);
 

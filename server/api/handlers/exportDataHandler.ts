@@ -135,6 +135,20 @@ export async function handleExportData(req: Request, res: Response) {
             tdee: parseFloat(String(tdeeResult.rows[0].tdee))
         } : null;
 
+        // Get user settings
+        const settingsResult = await pool.query(
+            "SELECT quick_add_days, created_at, updated_at FROM user_settings WHERE user_id = $1",
+            [userId]
+        );
+
+        const settings = settingsResult.rows.length > 0 ? {
+            quick_add_days: settingsResult.rows[0].quick_add_days,
+            created_at: settingsResult.rows[0].created_at,
+            updated_at: settingsResult.rows[0].updated_at
+        } : {
+            quick_add_days: 30 // Default value if no settings exist
+        };
+
         // Compile all data
         const exportData = {
             export_date: new Date().toISOString(),
@@ -150,6 +164,7 @@ export async function handleExportData(req: Request, res: Response) {
                 account_created_at: user.created_at,
                 last_updated_at: user.updated_at
             },
+            settings: settings,
             recipes: recipes,
             favorites: favorites,
             grocery_lists: groceryLists,
