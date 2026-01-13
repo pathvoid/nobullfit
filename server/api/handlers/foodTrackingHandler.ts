@@ -531,6 +531,23 @@ export async function handleGetRecentFoods(req: Request, res: Response): Promise
             return;
         }
 
+        // Get user's quick_add_days preference (default to 30 if not set)
+        const settingsResult = await pool.query(
+            "SELECT quick_add_days FROM user_settings WHERE user_id = $1",
+            [userId]
+        );
+        const quickAddDays = settingsResult.rows.length > 0 ? settingsResult.rows[0].quick_add_days : 30;
+
+        // Build the date filter condition based on user preference
+        // 0 = All Time (no date filter)
+        // Inner filter is for the subquery (no alias), outer filter is for the main query (ft alias)
+        const innerDateFilter = quickAddDays > 0 
+            ? `AND created_at >= CURRENT_TIMESTAMP - INTERVAL '${quickAddDays} days'`
+            : "";
+        const outerDateFilter = quickAddDays > 0 
+            ? `AND ft.created_at >= CURRENT_TIMESTAMP - INTERVAL '${quickAddDays} days'`
+            : "";
+
         // Get unique food items and recipes with their most recent data
         // For manual entries (food_id starts with "manual_"), group by food_label to avoid duplicates
         // For non-manual entries, group by food_id
@@ -547,7 +564,7 @@ export async function handleGetRecentFoods(req: Request, res: Response): Promise
                      END as grouping_key,
                      MAX(created_at) as max_created_at
                  FROM food_tracking
-                 WHERE user_id = $1
+                 WHERE user_id = $1 ${innerDateFilter}
                  GROUP BY item_type, 
                      CASE 
                          WHEN food_id LIKE 'manual_%' THEN food_label
@@ -559,7 +576,7 @@ export async function handleGetRecentFoods(req: Request, res: Response): Promise
                          OR (ft.food_id NOT LIKE 'manual_%' AND ft.food_id = latest.grouping_key)
                      )
                      AND ft.created_at = latest.max_created_at
-             WHERE ft.user_id = $1
+             WHERE ft.user_id = $1 ${outerDateFilter}
              ORDER BY ft.created_at DESC
              LIMIT 50`,
             [userId]

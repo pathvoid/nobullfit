@@ -1,6 +1,6 @@
 import useHelmet from "@hooks/useHelmet";
 import { useLoaderData } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { SidebarLayout } from "@components/sidebar-layout";
 import { Navbar, NavbarSection, NavbarSpacer } from "@components/navbar";
 import { Logo } from "@components/logo";
@@ -53,6 +53,12 @@ const Settings: React.FC = () => {
     const [deleteDataError, setDeleteDataError] = useState<string | null>(null);
     const [deleteDataSuccess, setDeleteDataSuccess] = useState<string | null>(null);
     const [isDeletingData, setIsDeletingData] = useState(false);
+    
+    // User preferences state
+    const [quickAddDays, setQuickAddDays] = useState<number>(30);
+    const [preferencesError, setPreferencesError] = useState<string | null>(null);
+    const [preferencesSuccess, setPreferencesSuccess] = useState<string | null>(null);
+    const [isSavingPreferences, setIsSavingPreferences] = useState(false);
 
     // Set helmet values
     if (loaderData?.title) {
@@ -61,6 +67,57 @@ const Settings: React.FC = () => {
     if (loaderData?.meta) {
         helmet.setMeta(loaderData.meta as Parameters<typeof helmet.setMeta>[0]);
     }
+
+    // Fetch user preferences on mount
+    const fetchPreferences = useCallback(async () => {
+        try {
+            const response = await fetch("/api/settings/preferences", {
+                credentials: "include"
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setQuickAddDays(data.quick_add_days ?? 30);
+            }
+        } catch (error) {
+            console.error("Error fetching preferences:", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchPreferences();
+    }, [fetchPreferences]);
+
+    // Handle preferences save
+    const handleSavePreferences = async () => {
+        setPreferencesError(null);
+        setPreferencesSuccess(null);
+        setIsSavingPreferences(true);
+
+        try {
+            const response = await fetch("/api/settings/preferences", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({ quick_add_days: quickAddDays })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setPreferencesError(data.error || "Failed to save preferences.");
+                setIsSavingPreferences(false);
+                return;
+            }
+
+            setPreferencesSuccess("Preferences saved successfully.");
+            setIsSavingPreferences(false);
+        } catch (error) {
+            setPreferencesError("An error occurred. Please try again.");
+            setIsSavingPreferences(false);
+        }
+    };
 
     const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -359,6 +416,53 @@ const Settings: React.FC = () => {
                         </Button>
                     </div>
                 </form>
+
+                <div className="border-t border-zinc-950/10 dark:border-white/10 pt-8">
+                    <div className="space-y-6">
+                        <div>
+                            <Heading level={2} className="text-lg font-semibold">
+                                Preferences
+                            </Heading>
+                            <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                                Customize your NoBullFit experience.
+                            </Text>
+                        </div>
+
+                        {preferencesError && (
+                            <FormAlert variant="error">
+                                {preferencesError}
+                            </FormAlert>
+                        )}
+                        {preferencesSuccess && (
+                            <FormAlert variant="success">
+                                {preferencesSuccess}
+                            </FormAlert>
+                        )}
+
+                        <Field>
+                            <Label>Quick Add History</Label>
+                            <Description>
+                                Choose how far back to show previously logged foods and recipes in the Quick Add dropdown on the Food Tracking page.
+                            </Description>
+                            <Select
+                                value={quickAddDays.toString()}
+                                onChange={(e) => setQuickAddDays(parseInt(e.target.value, 10))}
+                            >
+                                <option value="30">Last 30 days</option>
+                                <option value="60">Last 60 days</option>
+                                <option value="90">Last 90 days</option>
+                                <option value="120">Last 120 days</option>
+                                <option value="0">All Time</option>
+                            </Select>
+                        </Field>
+
+                        <div className="flex justify-end">
+                            <Button onClick={handleSavePreferences} disabled={isSavingPreferences}>
+                                {isSavingPreferences ? "Saving..." : "Save Preferences"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
 
                 <div className="border-t border-zinc-950/10 dark:border-white/10 pt-8">
                     <form onSubmit={handlePasswordSubmit} className="space-y-8">

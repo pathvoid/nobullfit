@@ -63,6 +63,7 @@ import {
 import { handleGetDashboardStats } from "./api/handlers/dashboardHandler.js";
 import { handleGenerateDashboardReport } from "./api/handlers/reportsHandler.js";
 import { handleGetMaintenanceStatus } from "./api/handlers/maintenanceHandler.js";
+import { handleGetUserPreferences, handleUpdateUserPreferences } from "./api/handlers/userPreferencesHandler.js";
 
 // API router class - handles all /api routes
 class App {
@@ -89,6 +90,8 @@ class App {
         this.router.get("/settings/export-data", handleExportData);
         this.router.post("/settings/delete-data", handleDeleteData);
         this.router.post("/settings/delete-account", handleDeleteAccount);
+        this.router.get("/settings/preferences", handleGetUserPreferences);
+        this.router.put("/settings/preferences", handleUpdateUserPreferences);
         
         // Food database endpoints
         this.router.get("/food-database/search", handleFoodDatabaseSearch);

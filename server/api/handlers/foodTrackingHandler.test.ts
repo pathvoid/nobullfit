@@ -421,7 +421,10 @@ describe("foodTrackingHandler", () => {
                 }
             ];
 
-            mockPool.query.mockResolvedValue({ rows: mockFoods });
+            // First query: get user settings (no settings found, use default 30 days)
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [] })
+                .mockResolvedValueOnce({ rows: mockFoods });
 
             await handleGetRecentFoods(mockRequest as Request, mockResponse as Response);
 
@@ -443,6 +446,100 @@ describe("foodTrackingHandler", () => {
 
             expect(mockResponse.status).toHaveBeenCalledWith(500);
             expect(mockResponse.json).toHaveBeenCalledWith({ error: "Database connection not available" });
+        });
+
+        it("should use default 30 days filter when user has no settings", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+
+            // First query returns no settings
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [] })
+                .mockResolvedValueOnce({ rows: [] });
+
+            await handleGetRecentFoods(mockRequest as Request, mockResponse as Response);
+
+            // Verify settings query was called first
+            expect(mockPool.query).toHaveBeenCalledTimes(2);
+            const settingsQuery = mockPool.query.mock.calls[0][0];
+            expect(settingsQuery).toContain("user_settings");
+
+            // Verify main query includes date filter (30 days default)
+            const mainQuery = mockPool.query.mock.calls[1][0];
+            expect(mainQuery).toContain("INTERVAL '30 days'");
+        });
+
+        it("should use user's quick_add_days setting when available", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+
+            // First query returns user's setting of 60 days
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [{ quick_add_days: 60 }] })
+                .mockResolvedValueOnce({ rows: [] });
+
+            await handleGetRecentFoods(mockRequest as Request, mockResponse as Response);
+
+            // Verify main query uses 60 days filter
+            const mainQuery = mockPool.query.mock.calls[1][0];
+            expect(mainQuery).toContain("INTERVAL '60 days'");
+        });
+
+        it("should use 90 days filter when user setting is 90", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [{ quick_add_days: 90 }] })
+                .mockResolvedValueOnce({ rows: [] });
+
+            await handleGetRecentFoods(mockRequest as Request, mockResponse as Response);
+
+            const mainQuery = mockPool.query.mock.calls[1][0];
+            expect(mainQuery).toContain("INTERVAL '90 days'");
+        });
+
+        it("should use 120 days filter when user setting is 120", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [{ quick_add_days: 120 }] })
+                .mockResolvedValueOnce({ rows: [] });
+
+            await handleGetRecentFoods(mockRequest as Request, mockResponse as Response);
+
+            const mainQuery = mockPool.query.mock.calls[1][0];
+            expect(mainQuery).toContain("INTERVAL '120 days'");
+        });
+
+        it("should not apply date filter when quick_add_days is 0 (All Time)", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+
+            // First query returns user's setting of 0 (All Time)
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [{ quick_add_days: 0 }] })
+                .mockResolvedValueOnce({ rows: [] });
+
+            await handleGetRecentFoods(mockRequest as Request, mockResponse as Response);
+
+            // Verify main query does NOT include date filter
+            const mainQuery = mockPool.query.mock.calls[1][0];
+            expect(mainQuery).not.toContain("INTERVAL");
+            expect(mainQuery).not.toContain("created_at >=");
+        });
+
+        it("should handle database error when fetching user settings gracefully", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+
+            mockPool.query.mockRejectedValueOnce(new Error("Database error"));
+
+            await handleGetRecentFoods(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(500);
+            expect(mockResponse.json).toHaveBeenCalledWith({ error: "Internal server error" });
         });
     });
 });

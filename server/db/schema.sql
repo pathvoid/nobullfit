@@ -245,3 +245,16 @@ CREATE INDEX IF NOT EXISTS idx_maintenance_schedules_start_time ON maintenance_s
 CREATE INDEX IF NOT EXISTS idx_maintenance_schedules_end_time ON maintenance_schedules(end_time);
 CREATE INDEX IF NOT EXISTS idx_maintenance_schedules_is_active ON maintenance_schedules(is_active);
 
+-- User settings table - stores user preferences
+CREATE TABLE IF NOT EXISTS user_settings (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    quick_add_days INTEGER NOT NULL DEFAULT 30,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id)
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
+
