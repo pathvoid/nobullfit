@@ -70,6 +70,13 @@ const GroceryLists: React.FC = () => {
         message: "",
         isError: false
     });
+    
+    // Add custom item state
+    const [addItemDialogListId, setAddItemDialogListId] = useState<number | null>(null);
+    const [newItemName, setNewItemName] = useState("");
+    const [newItemQuantity, setNewItemQuantity] = useState("1");
+    const [newItemUnit, setNewItemUnit] = useState("");
+    const [isAddingItem, setIsAddingItem] = useState(false);
 
     // Set helmet values
     helmet.setTitle(loaderData.title);
@@ -326,6 +333,67 @@ const GroceryLists: React.FC = () => {
         }
     };
 
+    const handleAddCustomItem = async (listId: number) => {
+        if (!newItemName.trim()) return;
+
+        setIsAddingItem(true);
+        try {
+            const response = await fetch(`/api/grocery-lists/${listId}/items`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    items: [{
+                        foodLabel: newItemName.trim(),
+                        quantity: parseFloat(newItemQuantity) || 1,
+                        unit: newItemUnit.trim() || null
+                    }]
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Update the list with new/updated items
+                setLists(prev =>
+                    prev.map(list => {
+                        if (list.id !== listId) return list;
+                        
+                        // Check if the item was updated (already existed) or inserted
+                        const updatedItems = [...list.items];
+                        for (const newItem of data.items) {
+                            const existingIndex = updatedItems.findIndex(
+                                item => item.id === newItem.id
+                            );
+                            if (existingIndex >= 0) {
+                                // Update existing item
+                                updatedItems[existingIndex] = newItem;
+                            } else {
+                                // Add new item
+                                updatedItems.push(newItem);
+                            }
+                        }
+                        // Sort alphabetically
+                        updatedItems.sort((a, b) => 
+                            a.food_label.toLowerCase().localeCompare(b.food_label.toLowerCase())
+                        );
+                        return { ...list, items: updatedItems };
+                    })
+                );
+                // Reset dialog state
+                setNewItemName("");
+                setNewItemQuantity("1");
+                setNewItemUnit("");
+                setAddItemDialogListId(null);
+            }
+        } catch (error) {
+            console.error("Error adding custom item:", error);
+        } finally {
+            setIsAddingItem(false);
+        }
+    };
+
     const handleSendEmail = async (listId: number) => {
         setSendingEmailListId(listId);
         try {
@@ -438,7 +506,7 @@ const GroceryLists: React.FC = () => {
                                     className="overflow-hidden rounded-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-900"
                                 >
                                     {/* List Header - Always Visible */}
-                                    <div className="flex items-center justify-between p-4">
+                                    <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                                         <button
                                             onClick={() => toggleListExpanded(list.id)}
                                             className="flex flex-1 items-center gap-3 text-left hover:opacity-80"
@@ -448,14 +516,14 @@ const GroceryLists: React.FC = () => {
                                             ) : (
                                                 <ChevronDown className="size-5 shrink-0 text-zinc-500 dark:text-zinc-400" />
                                             )}
-                                            <div className="flex-1">
-                                                <Heading level={2} className="text-lg">
+                                            <div className="flex-1 min-w-0">
+                                                <Heading level={2} className="text-lg truncate">
                                                     {list.name}
                                                 </Heading>
                                                 <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                                                     {list.items.length} item{list.items.length !== 1 ? "s" : ""}
                                                     {!isExpanded && list.items.length > 0 && (
-                                                        <span className="ml-2">
+                                                        <span className="ml-2 hidden sm:inline">
                                                             • {list.items.slice(0, 3).map(item => item.food_label).join(", ")}
                                                             {list.items.length > 3 && "..."}
                                                         </span>
@@ -463,28 +531,38 @@ const GroceryLists: React.FC = () => {
                                                 </Text>
                                             </div>
                                         </button>
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                             {isExpanded && listSelected.size > 0 && (
                                                 <Button
                                                     onClick={() => handleBulkRemoveItems(list.id)}
                                                     disabled={removingItemIds.size > 0}
                                                     color="red"
-                                                    className="text-sm"
+                                                    className="text-xs sm:text-sm"
                                                 >
                                                     Remove ({listSelected.size})
                                                 </Button>
                                             )}
                                             <Button
+                                                onClick={() => setAddItemDialogListId(list.id)}
+                                                outline
+                                                className="text-xs sm:text-sm"
+                                            >
+                                                <span className="inline-flex items-center">
+                                                    <Plus className="size-3.5 sm:size-4 mr-1" />
+                                                    Add Item
+                                                </span>
+                                            </Button>
+                                            <Button
                                                 onClick={() => handleSendEmail(list.id)}
                                                 disabled={sendingEmailListId === list.id || list.items.length === 0}
                                                 outline
-                                                className="text-sm"
+                                                className="text-xs sm:text-sm"
                                             >
                                                 {sendingEmailListId === list.id ? (
                                                     "Sending..."
                                                 ) : (
-                                                    <span className="flex items-center">
-                                                        <Mail className="size-4 mr-1.5" />
+                                                    <span className="inline-flex items-center">
+                                                        <Mail className="size-3.5 sm:size-4 mr-1" />
                                                         Email
                                                     </span>
                                                 )}
@@ -492,14 +570,14 @@ const GroceryLists: React.FC = () => {
                                             <Button
                                                 onClick={() => openRenameDialog(list)}
                                                 outline
-                                                className="text-sm"
+                                                className="text-xs sm:text-sm"
                                             >
                                                 Rename
                                             </Button>
                                             <Button
                                                 onClick={() => setIsDeleteDialogOpen(list.id)}
                                                 color="red"
-                                                className="text-sm"
+                                                className="text-xs sm:text-sm"
                                             >
                                                 Delete
                                             </Button>
@@ -516,7 +594,7 @@ const GroceryLists: React.FC = () => {
                                             {list.items.length === 0 ? (
                                                 <div className="rounded-lg border border-zinc-950/10 bg-zinc-50 p-4 dark:border-white/10 dark:bg-zinc-900/50">
                                                     <Text className="text-zinc-600 dark:text-zinc-400">
-                                                        This list is empty. Add items from the Food Database!
+                                                        This list is empty. Use the "Add Item" button to add custom items, or add items from the Food Database!
                                                     </Text>
                                                 </div>
                                             ) : (
@@ -546,7 +624,7 @@ const GroceryLists: React.FC = () => {
                                                                         />
                                                                     </TableCell>
                                                                     <TableCell>
-                                                                        {item.food_id.startsWith("ingredient_") ? (
+                                                                        {item.food_id.startsWith("ingredient_") || item.food_id.startsWith("custom_") ? (
                                                                             <span className="font-medium">
                                                                                 {item.food_label}
                                                                             </span>
@@ -725,6 +803,82 @@ const GroceryLists: React.FC = () => {
                     <DialogActions>
                         <Button onClick={() => setEmailResultDialog({ isOpen: false, message: "", isError: false })}>
                             OK
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Add Custom Item Dialog */}
+                <Dialog 
+                    open={addItemDialogListId !== null} 
+                    onClose={() => {
+                        setAddItemDialogListId(null);
+                        setNewItemName("");
+                        setNewItemQuantity("1");
+                        setNewItemUnit("");
+                    }}
+                >
+                    <DialogTitle>Add Item to List</DialogTitle>
+                    <DialogDescription>
+                        Add a custom item to your grocery list. If an item with the same name already exists, the quantity will be added to it.
+                    </DialogDescription>
+                    <DialogBody>
+                        <div className="space-y-4">
+                            <Field>
+                                <FieldLabel>Item Name</FieldLabel>
+                                <Input
+                                    type="text"
+                                    value={newItemName}
+                                    onChange={(e) => setNewItemName(e.target.value)}
+                                    placeholder="e.g., Milk, Eggs, Bread"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && addItemDialogListId !== null) {
+                                            handleAddCustomItem(addItemDialogListId);
+                                        }
+                                    }}
+                                />
+                            </Field>
+                            <div className="grid grid-cols-2 gap-4">
+                                <Field>
+                                    <FieldLabel>Quantity</FieldLabel>
+                                    <Input
+                                        type="number"
+                                        min="0.01"
+                                        step="0.01"
+                                        value={newItemQuantity}
+                                        onChange={(e) => setNewItemQuantity(e.target.value)}
+                                        placeholder="1"
+                                    />
+                                </Field>
+                                <Field>
+                                    <FieldLabel>Unit (optional)</FieldLabel>
+                                    <Input
+                                        type="text"
+                                        value={newItemUnit}
+                                        onChange={(e) => setNewItemUnit(e.target.value)}
+                                        placeholder="e.g., lbs, oz, cups"
+                                    />
+                                </Field>
+                            </div>
+                        </div>
+                    </DialogBody>
+                    <DialogActions>
+                        <Button 
+                            plain 
+                            onClick={() => {
+                                setAddItemDialogListId(null);
+                                setNewItemName("");
+                                setNewItemQuantity("1");
+                                setNewItemUnit("");
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            onClick={() => addItemDialogListId !== null && handleAddCustomItem(addItemDialogListId)} 
+                            disabled={isAddingItem || !newItemName.trim()}
+                        >
+                            {isAddingItem ? "Adding..." : "Add Item"}
                         </Button>
                     </DialogActions>
                 </Dialog>

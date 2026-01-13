@@ -273,6 +273,126 @@ describe("groceryListsHandler", () => {
             });
         });
 
+        it("should add custom item without foodId", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+            mockRequest.params = { listId: "1" };
+            mockRequest.body = {
+                items: [
+                    { foodLabel: "Milk", quantity: 2, unit: "gallons" }
+                ]
+            };
+
+            // Verify list belongs to user
+            mockPool.query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+            // Check if item exists by label (it doesn't)
+            mockPool.query.mockResolvedValueOnce({ rows: [] });
+            // Insert item - should generate custom_ ID and capitalize label
+            mockPool.query.mockResolvedValueOnce({
+                rows: [{ id: 1, food_id: "custom_123", food_label: "Milk", quantity: 2, unit: "gallons" }]
+            });
+            // Update list timestamp
+            mockPool.query.mockResolvedValueOnce({ rows: [] });
+
+            await handleAddGroceryListItems(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(201);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                items: expect.any(Array)
+            });
+        });
+
+        it("should capitalize custom item labels", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+            mockRequest.params = { listId: "1" };
+            mockRequest.body = {
+                items: [
+                    { foodLabel: "whole wheat bread", quantity: 1 }
+                ]
+            };
+
+            // Verify list belongs to user
+            mockPool.query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+            // Check if item exists by label (it doesn't)
+            mockPool.query.mockResolvedValueOnce({ rows: [] });
+            // Insert item - label should be capitalized
+            mockPool.query.mockResolvedValueOnce({
+                rows: [{ id: 1, food_id: "custom_123", food_label: "Whole Wheat Bread", quantity: 1 }]
+            });
+            // Update list timestamp
+            mockPool.query.mockResolvedValueOnce({ rows: [] });
+
+            await handleAddGroceryListItems(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(201);
+            // Verify the INSERT was called with capitalized label
+            expect(mockPool.query).toHaveBeenCalledWith(
+                expect.stringContaining("INSERT INTO grocery_list_items"),
+                expect.arrayContaining(["Whole Wheat Bread"])
+            );
+        });
+
+        it("should merge custom items with same label and unit", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+            mockRequest.params = { listId: "1" };
+            mockRequest.body = {
+                items: [
+                    { foodLabel: "milk", quantity: 2, unit: "gallons" }
+                ]
+            };
+
+            // Verify list belongs to user
+            mockPool.query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+            // Check if item exists by label and unit - it does
+            mockPool.query.mockResolvedValueOnce({
+                rows: [{ id: 10, quantity: 1, unit: "gallons" }]
+            });
+            // Update item quantity (1 + 2 = 3)
+            mockPool.query.mockResolvedValueOnce({
+                rows: [{ id: 10, food_id: "custom_abc", food_label: "Milk", quantity: 3, unit: "gallons" }]
+            });
+            // Update list timestamp
+            mockPool.query.mockResolvedValueOnce({ rows: [] });
+
+            await handleAddGroceryListItems(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(201);
+        });
+
+        it("should keep custom items with different units separate", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+            mockRequest.params = { listId: "1" };
+            mockRequest.body = {
+                items: [
+                    { foodLabel: "salt", quantity: 2, unit: "tbsp" }
+                ]
+            };
+
+            // Verify list belongs to user
+            mockPool.query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+            // Check if item exists by label and unit - it doesn't (different unit)
+            mockPool.query.mockResolvedValueOnce({ rows: [] });
+            // Insert new item (2 tbsp salt as separate from existing 1 tsp salt)
+            mockPool.query.mockResolvedValueOnce({
+                rows: [{ id: 2, food_id: "custom_xyz", food_label: "Salt", quantity: 2, unit: "tbsp" }]
+            });
+            // Update list timestamp
+            mockPool.query.mockResolvedValueOnce({ rows: [] });
+
+            await handleAddGroceryListItems(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(201);
+            // Should have inserted a new item, not updated
+            expect(mockPool.query).toHaveBeenCalledWith(
+                expect.stringContaining("INSERT INTO grocery_list_items"),
+                expect.any(Array)
+            );
+        });
+
         it("should return 400 if items array is missing", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
             mockRequest.headers = { authorization: "Bearer token" };
@@ -284,6 +404,25 @@ describe("groceryListsHandler", () => {
             expect(mockResponse.status).toHaveBeenCalledWith(400);
             expect(mockResponse.json).toHaveBeenCalledWith({
                 error: "Items array is required"
+            });
+        });
+
+        it("should return 400 if foodLabel is missing", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer token" };
+            mockRequest.params = { listId: "1" };
+            mockRequest.body = {
+                items: [{ quantity: 2 }]
+            };
+
+            // Verify list belongs to user
+            mockPool.query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+
+            await handleAddGroceryListItems(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                error: "Each item must have foodLabel"
             });
         });
 

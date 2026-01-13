@@ -245,7 +245,18 @@ export async function handleGetGroceryListItems(req: Request, res: Response): Pr
     }
 }
 
-// Add items to grocery list (supports multiple items for recipes)
+// Helper function to capitalize food labels properly
+function capitalizeLabel(label: string): string {
+    if (!label) return label;
+    // Capitalize first letter of each word, handle special cases
+    return label
+        .toLowerCase()
+        .split(" ")
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+}
+
+// Add items to grocery list (supports multiple items for recipes and custom items)
 export async function handleAddGroceryListItems(req: Request, res: Response): Promise<void> {
     try {
         const userId = await getUserIdFromRequest(req);
@@ -279,10 +290,10 @@ export async function handleAddGroceryListItems(req: Request, res: Response): Pr
             return;
         }
 
-        // Validate items
+        // Validate items - foodLabel is required, foodId is optional for custom items
         for (const item of items) {
-            if (!item.foodId || !item.foodLabel) {
-                res.status(400).json({ error: "Each item must have foodId and foodLabel" });
+            if (!item.foodLabel) {
+                res.status(400).json({ error: "Each item must have foodLabel" });
                 return;
             }
         }
@@ -290,22 +301,57 @@ export async function handleAddGroceryListItems(req: Request, res: Response): Pr
         // Insert or update items (increment quantity if item already exists)
         const insertedItems = [];
         for (const item of items) {
+            // Capitalize the food label properly
+            const capitalizedLabel = capitalizeLabel(item.foodLabel);
+            
+            // For custom items without foodId, generate a unique ID
+            const foodId = item.foodId || `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const isCustomItem = !item.foodId || item.foodId.startsWith("custom_");
+            
             // Check if item already exists in this list
-            const existingResult = await pool.query(
-                "SELECT id, quantity, unit FROM grocery_list_items WHERE list_id = $1 AND food_id = $2",
-                [listId, item.foodId]
-            );
+            // For custom items, check by label (case-insensitive) and unit
+            // For food database items, check by food_id and unit
+            // Items with different units should be kept separate
+            const itemUnit = item.unit || null;
+            let existingResult;
+            if (isCustomItem) {
+                // For custom items, check by label (case-insensitive) and unit
+                if (itemUnit) {
+                    existingResult = await pool.query(
+                        "SELECT id, quantity, unit FROM grocery_list_items WHERE list_id = $1 AND LOWER(food_label) = LOWER($2) AND LOWER(unit) = LOWER($3)",
+                        [listId, capitalizedLabel, itemUnit]
+                    );
+                } else {
+                    existingResult = await pool.query(
+                        "SELECT id, quantity, unit FROM grocery_list_items WHERE list_id = $1 AND LOWER(food_label) = LOWER($2) AND unit IS NULL",
+                        [listId, capitalizedLabel]
+                    );
+                }
+            } else {
+                // For food database items, check by food_id and unit
+                if (itemUnit) {
+                    existingResult = await pool.query(
+                        "SELECT id, quantity, unit FROM grocery_list_items WHERE list_id = $1 AND food_id = $2 AND LOWER(unit) = LOWER($3)",
+                        [listId, foodId, itemUnit]
+                    );
+                } else {
+                    existingResult = await pool.query(
+                        "SELECT id, quantity, unit FROM grocery_list_items WHERE list_id = $1 AND food_id = $2 AND unit IS NULL",
+                        [listId, foodId]
+                    );
+                }
+            }
 
             if (existingResult.rows.length > 0) {
-                // Item exists, increment quantity
+                // Item exists with same unit, increment quantity and update label to proper capitalization
                 const existingItem = existingResult.rows[0];
                 const newQuantity = parseFloat(existingItem.quantity) + (item.quantity || 1);
                 const updateResult = await pool.query(
                     `UPDATE grocery_list_items 
-                     SET quantity = $1, unit = COALESCE($2, unit), food_data = COALESCE($3, food_data)
+                     SET quantity = $1, food_label = $2, food_data = COALESCE($3, food_data)
                      WHERE id = $4
                      RETURNING id, food_id, food_label, food_data, quantity, unit, notes, created_at`,
-                    [newQuantity, item.unit || null, item.foodData || null, existingItem.id]
+                    [newQuantity, capitalizedLabel, item.foodData || null, existingItem.id]
                 );
                 insertedItems.push(updateResult.rows[0]);
             } else {
@@ -316,8 +362,8 @@ export async function handleAddGroceryListItems(req: Request, res: Response): Pr
                      RETURNING id, food_id, food_label, food_data, quantity, unit, notes, created_at`,
                     [
                         listId,
-                        item.foodId,
-                        item.foodLabel,
+                        foodId,
+                        capitalizedLabel,
                         item.foodData || null,
                         item.quantity || 1,
                         item.unit || null,
@@ -715,7 +761,7 @@ export async function handleAddRecipeIngredientsToGroceryList(req: Request, res:
             } else {
                 aggregatedIngredients.set(foodId, {
                     foodId,
-                    foodLabel: ingredient.name,
+                    foodLabel: capitalizeLabel(ingredient.name),
                     quantity: ingredientQty,
                     unit: ingredientUnit,
                     notes: []
@@ -777,9 +823,9 @@ export async function handleAddRecipeIngredientsToGroceryList(req: Request, res:
 
                         await pool.query(
                             `UPDATE grocery_list_items 
-                             SET quantity = $1, unit = $2, food_data = $3
-                             WHERE id = $4`,
-                            [addResult.quantity, addResult.unit || null, JSON.stringify(newFoodData), existingItem.id]
+                             SET quantity = $1, unit = $2, food_data = $3, food_label = $4
+                             WHERE id = $5`,
+                            [addResult.quantity, addResult.unit || null, JSON.stringify(newFoodData), foodLabel, existingItem.id]
                         );
 
                         updatedItems.push({
@@ -824,9 +870,9 @@ export async function handleAddRecipeIngredientsToGroceryList(req: Request, res:
 
                     await pool.query(
                         `UPDATE grocery_list_items 
-                         SET quantity = $1, unit = $2, food_data = $3
-                         WHERE id = $4`,
-                        [newQty, newUnit || null, JSON.stringify(newFoodData), existingItem.id]
+                         SET quantity = $1, unit = $2, food_data = $3, food_label = $4
+                         WHERE id = $5`,
+                        [newQty, newUnit || null, JSON.stringify(newFoodData), foodLabel, existingItem.id]
                     );
 
                     updatedItems.push({
