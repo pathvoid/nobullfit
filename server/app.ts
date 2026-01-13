@@ -62,6 +62,7 @@ import {
 } from "./api/handlers/tdeeHandler.js";
 import { handleGetDashboardStats } from "./api/handlers/dashboardHandler.js";
 import { handleGenerateDashboardReport } from "./api/handlers/reportsHandler.js";
+import { handleGetMaintenanceStatus } from "./api/handlers/maintenanceHandler.js";
 
 // API router class - handles all /api routes
 class App {
@@ -152,6 +153,9 @@ class App {
         
         // Reports
         this.router.post("/reports/dashboard", handleGenerateDashboardReport);
+        
+        // Maintenance status (public endpoint)
+        this.router.get("/maintenance/status", handleGetMaintenanceStatus);
     }
 }
 

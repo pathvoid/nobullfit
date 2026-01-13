@@ -11,6 +11,11 @@ vi.mock("@hooks/useHelmet", () => ({
     })
 }));
 
+// Mock MaintenanceBanner to prevent fetch interference
+vi.mock("@components/maintenance-banner", () => ({
+    MaintenanceBanner: () => null
+}));
+
 // Mock AuthContext
 const mockUser = { id: 1, email: "test@example.com", full_name: "Test User" };
 vi.mock("@core/contexts/AuthContext", () => ({

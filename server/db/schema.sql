@@ -230,3 +230,18 @@ CREATE TABLE IF NOT EXISTS user_tdee (
 -- Index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_user_tdee_user_id ON user_tdee(user_id);
 
+-- Maintenance schedules table - stores scheduled maintenance windows
+CREATE TABLE IF NOT EXISTS maintenance_schedules (
+    id SERIAL PRIMARY KEY,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_maintenance_schedules_start_time ON maintenance_schedules(start_time);
+CREATE INDEX IF NOT EXISTS idx_maintenance_schedules_end_time ON maintenance_schedules(end_time);
+CREATE INDEX IF NOT EXISTS idx_maintenance_schedules_is_active ON maintenance_schedules(is_active);
+

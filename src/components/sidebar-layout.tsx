@@ -4,6 +4,7 @@ import * as Headless from "@headlessui/react";
 import { useState } from "react";
 import { NavbarItem } from "./navbar";
 import { X } from "lucide-react";
+import { MaintenanceBanner } from "./maintenance-banner";
 
 // CSS-based hamburger menu icon to avoid SVG rendering artifacts
 function HamburgerIcon({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
@@ -53,31 +54,36 @@ export function SidebarLayout({
   const [showSidebar, setShowSidebar] = useState(false);
 
   return (
-    <div className="relative isolate flex min-h-svh w-full bg-white max-lg:flex-col lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950">
-      {/* Sidebar on desktop */}
-      <div className="fixed inset-y-0 left-0 w-64 max-lg:hidden">{sidebar}</div>
+    <div className="relative isolate flex min-h-svh w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950">
+      {/* Maintenance banner - appears at very top */}
+      <MaintenanceBanner />
+      
+      <div className="flex flex-1 max-lg:flex-col">
+        {/* Sidebar on desktop - top offset accounts for maintenance banner */}
+        <div className="fixed left-0 w-64 max-lg:hidden" style={{ top: "var(--maintenance-banner-height, 0px)", bottom: 0 }}>{sidebar}</div>
 
-      {/* Sidebar on mobile */}
-      <MobileSidebar open={showSidebar} close={() => setShowSidebar(false)}>
-        {sidebar}
-      </MobileSidebar>
+        {/* Sidebar on mobile */}
+        <MobileSidebar open={showSidebar} close={() => setShowSidebar(false)}>
+          {sidebar}
+        </MobileSidebar>
 
-      {/* Navbar on mobile */}
-      <header className="flex items-center px-4 lg:hidden">
-        <div className="py-2.5 mr-3">
-          <NavbarItem onClick={() => setShowSidebar(true)} aria-label="Open navigation">
-            <HamburgerIcon data-slot="icon" />
-          </NavbarItem>
-        </div>
-        <div className="min-w-0 flex-1">{navbar}</div>
-      </header>
+        {/* Navbar on mobile */}
+        <header className="flex items-center px-4 lg:hidden">
+          <div className="py-2.5 mr-3">
+            <NavbarItem onClick={() => setShowSidebar(true)} aria-label="Open navigation">
+              <HamburgerIcon data-slot="icon" />
+            </NavbarItem>
+          </div>
+          <div className="min-w-0 flex-1">{navbar}</div>
+        </header>
 
-      {/* Content */}
-      <main className="flex flex-1 flex-col pb-2 lg:min-w-0 lg:pt-2 lg:pr-2 lg:pl-64">
-        <div className="grow p-6 lg:rounded-lg lg:bg-white lg:p-10 lg:shadow-xs lg:ring-1 lg:ring-zinc-950/5 dark:lg:bg-zinc-900 dark:lg:ring-white/10">
-          <div className="mx-auto max-w-6xl">{children}</div>
-        </div>
-      </main>
+        {/* Content */}
+        <main className="flex flex-1 flex-col pb-2 lg:min-w-0 lg:pt-2 lg:pr-2 lg:pl-64">
+          <div className="grow p-6 lg:rounded-lg lg:bg-white lg:p-10 lg:shadow-xs lg:ring-1 lg:ring-zinc-950/5 dark:lg:bg-zinc-900 dark:lg:ring-white/10">
+            <div className="mx-auto max-w-6xl">{children}</div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

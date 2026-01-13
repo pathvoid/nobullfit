@@ -11,6 +11,11 @@ vi.mock("@hooks/useHelmet", () => ({
     })
 }));
 
+// Mock MaintenanceBanner to prevent fetch interference
+vi.mock("@components/maintenance-banner", () => ({
+    MaintenanceBanner: () => null
+}));
+
 // Mock DashboardSidebar
 vi.mock("../DashboardSidebar", () => ({
     default: ({ currentPath }: { currentPath: string }) => <div data-testid="dashboard-sidebar">Sidebar ({currentPath})</div>,
