@@ -57,7 +57,7 @@ export async function handleGetGroceryLists(req: Request, res: Response): Promis
         const lists = await Promise.all(
             listsResult.rows.map(async (list) => {
                 const itemsResult = await pool.query(
-                    "SELECT id, food_id, food_label, food_data, quantity, unit, notes, created_at FROM grocery_list_items WHERE list_id = $1 ORDER BY created_at ASC",
+                    "SELECT id, food_id, food_label, food_data, quantity, unit, notes, created_at FROM grocery_list_items WHERE list_id = $1 ORDER BY LOWER(food_label) ASC",
                     [list.id]
                 );
                 return {
@@ -232,7 +232,7 @@ export async function handleGetGroceryListItems(req: Request, res: Response): Pr
         }
 
         const itemsResult = await pool.query(
-            "SELECT id, food_id, food_label, food_data, quantity, notes, created_at FROM grocery_list_items WHERE list_id = $1 ORDER BY created_at ASC",
+            "SELECT id, food_id, food_label, food_data, quantity, notes, created_at FROM grocery_list_items WHERE list_id = $1 ORDER BY LOWER(food_label) ASC",
             [listId]
         );
 
@@ -571,7 +571,7 @@ export async function handleSendGroceryListEmail(req: Request, res: Response): P
 
         // Get items for the list
         const itemsResult = await pool.query(
-            "SELECT food_label, food_data, quantity, unit FROM grocery_list_items WHERE list_id = $1 ORDER BY created_at ASC",
+            "SELECT food_label, food_data, quantity, unit FROM grocery_list_items WHERE list_id = $1 ORDER BY LOWER(food_label) ASC",
             [listId]
         );
 

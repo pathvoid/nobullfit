@@ -70,7 +70,7 @@ export async function handleExportData(req: Request, res: Response) {
         const groceryLists = await Promise.all(
             groceryListsResult.rows.map(async (list) => {
                 const itemsResult = await pool.query(
-                    "SELECT id, food_id, food_label, food_data, quantity, unit, notes, created_at FROM grocery_list_items WHERE list_id = $1 ORDER BY created_at ASC",
+                    "SELECT id, food_id, food_label, food_data, quantity, unit, notes, created_at FROM grocery_list_items WHERE list_id = $1 ORDER BY LOWER(food_label) ASC",
                     [list.id]
                 );
 
