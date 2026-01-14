@@ -119,7 +119,7 @@ describe("exportDataHandler", () => {
             .mockResolvedValueOnce({ rows: [] }) // progress_tracking
             .mockResolvedValueOnce({ rows: [] }) // weight_tracking
             .mockResolvedValueOnce({ rows: [] }) // tdee
-            .mockResolvedValueOnce({ rows: [{ quick_add_days: 30 }] }); // user_settings
+            .mockResolvedValueOnce({ rows: [{ quick_add_days: 30, weight_goal: "lose", target_weight: "75.00", target_weight_unit: "kg" }] }); // user_settings
 
         await handleExportData(mockRequest as Request, mockResponse as Response);
 
@@ -137,7 +137,10 @@ describe("exportDataHandler", () => {
                     email: "test@example.com"
                 }),
                 settings: expect.objectContaining({
-                    quick_add_days: 30
+                    quick_add_days: 30,
+                    weight_goal: "lose",
+                    target_weight: 75,
+                    target_weight_unit: "kg"
                 }),
                 recipes: expect.any(Array),
                 favorites: expect.any(Array),
@@ -233,7 +236,7 @@ describe("exportDataHandler", () => {
             .mockResolvedValueOnce({ rows: [] }) // progress_tracking
             .mockResolvedValueOnce({ rows: [] }) // weight_tracking
             .mockResolvedValueOnce({ rows: [] }) // tdee
-            .mockResolvedValueOnce({ rows: [{ quick_add_days: 30 }] }); // user_settings
+            .mockResolvedValueOnce({ rows: [{ quick_add_days: 30, weight_goal: null, target_weight: null, target_weight_unit: null }] }); // user_settings
 
         await handleExportData(mockRequest as Request, mockResponse as Response);
 

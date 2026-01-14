@@ -416,4 +416,255 @@ describe("TDEE", () => {
         expect(screen.getByText(/2000 calories\/day/i)).toBeInTheDocument();
         expect(screen.getByText(/3100 calories\/day/i)).toBeInTheDocument();
     });
+
+    // Pro feature: Weight Goal tests
+    it("should display weight goal section for Pro users with TDEE data", async () => {
+        (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+            ok: true,
+            json: async () => ({ weight: { weight: 70, unit: "kg" } })
+        });
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/tdee",
+                element: <TDEE />,
+                loader: async () => ({
+                    title: "TDEE Calculator - NoBullFit",
+                    meta: [{ name: "description", content: "Calculate your Total Daily Energy Expenditure (TDEE)" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User", subscribed: true },
+                    hasWeight: true,
+                    weightData: { weight: 70, unit: "kg" as const },
+                    tdeeData: {
+                        id: 1,
+                        age: 30,
+                        gender: "male" as const,
+                        height_cm: 180,
+                        activity_level: "moderately_active" as const,
+                        bmr: 2000,
+                        tdee: 3100,
+                        created_at: "2024-01-01T00:00:00Z",
+                        updated_at: "2024-01-01T00:00:00Z"
+                    },
+                    preferences: { quick_add_days: 30, weight_goal: null, target_weight: null, target_weight_unit: null }
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/tdee"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await waitFor(() => {
+            expect(screen.getByRole("heading", { name: /weight goal/i })).toBeInTheDocument();
+        });
+
+        expect(screen.getByLabelText(/objective/i)).toBeInTheDocument();
+    });
+
+    it("should not display weight goal section for non-Pro users", async () => {
+        (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+            ok: true,
+            json: async () => ({ weight: { weight: 70, unit: "kg" } })
+        });
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/tdee",
+                element: <TDEE />,
+                loader: async () => ({
+                    title: "TDEE Calculator - NoBullFit",
+                    meta: [{ name: "description", content: "Calculate your Total Daily Energy Expenditure (TDEE)" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User", subscribed: false },
+                    hasWeight: true,
+                    weightData: { weight: 70, unit: "kg" as const },
+                    tdeeData: {
+                        id: 1,
+                        age: 30,
+                        gender: "male" as const,
+                        height_cm: 180,
+                        activity_level: "moderately_active" as const,
+                        bmr: 2000,
+                        tdee: 3100,
+                        created_at: "2024-01-01T00:00:00Z",
+                        updated_at: "2024-01-01T00:00:00Z"
+                    },
+                    preferences: null
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/tdee"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await waitFor(() => {
+            expect(screen.getByText(/your tdee results/i)).toBeInTheDocument();
+        });
+
+        // Weight Goal section should not be present for non-Pro users
+        expect(screen.queryByText(/weight goal/i)).not.toBeInTheDocument();
+    });
+
+    it("should allow Pro users to save weight goal", async () => {
+        (global.fetch as ReturnType<typeof vi.fn>)
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({ weight: { weight: 70, unit: "kg" } })
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({ 
+                    message: "Preferences updated successfully",
+                    quick_add_days: 30,
+                    weight_goal: "lose",
+                    target_weight: null, target_weight_unit: null
+                })
+            });
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/tdee",
+                element: <TDEE />,
+                loader: async () => ({
+                    title: "TDEE Calculator - NoBullFit",
+                    meta: [{ name: "description", content: "Calculate your Total Daily Energy Expenditure (TDEE)" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User", subscribed: true },
+                    hasWeight: true,
+                    weightData: { weight: 70, unit: "kg" as const },
+                    tdeeData: {
+                        id: 1,
+                        age: 30,
+                        gender: "male" as const,
+                        height_cm: 180,
+                        activity_level: "moderately_active" as const,
+                        bmr: 2000,
+                        tdee: 3100,
+                        created_at: "2024-01-01T00:00:00Z",
+                        updated_at: "2024-01-01T00:00:00Z"
+                    },
+                    preferences: { quick_add_days: 30, weight_goal: null, target_weight: null, target_weight_unit: null }
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/tdee"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/objective/i)).toBeInTheDocument();
+        });
+
+        // Select weight goal
+        const objectiveSelect = screen.getByLabelText(/objective/i);
+        fireEvent.change(objectiveSelect, { target: { value: "lose" } });
+
+        // Click save button
+        const saveButton = screen.getByRole("button", { name: /save goal/i });
+        fireEvent.click(saveButton);
+
+        await waitFor(() => {
+            expect(global.fetch).toHaveBeenCalledWith(
+                "/api/settings/preferences",
+                expect.objectContaining({
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" }
+                })
+            );
+        });
+    });
+
+    it("should display target weight input when lose or gain goal is selected", async () => {
+        (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+            ok: true,
+            json: async () => ({ weight: { weight: 70, unit: "kg" } })
+        });
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/tdee",
+                element: <TDEE />,
+                loader: async () => ({
+                    title: "TDEE Calculator - NoBullFit",
+                    meta: [{ name: "description", content: "Calculate your Total Daily Energy Expenditure (TDEE)" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User", subscribed: true },
+                    hasWeight: true,
+                    weightData: { weight: 70, unit: "kg" as const },
+                    tdeeData: {
+                        id: 1,
+                        age: 30,
+                        gender: "male" as const,
+                        height_cm: 180,
+                        activity_level: "moderately_active" as const,
+                        bmr: 2000,
+                        tdee: 3100,
+                        created_at: "2024-01-01T00:00:00Z",
+                        updated_at: "2024-01-01T00:00:00Z"
+                    },
+                    preferences: { quick_add_days: 30, weight_goal: null, target_weight: null, target_weight_unit: null }
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/tdee"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/objective/i)).toBeInTheDocument();
+        });
+
+        // Target weight input should not be visible initially
+        expect(screen.queryByLabelText(/target weight/i)).not.toBeInTheDocument();
+
+        // Select lose weight goal
+        const objectiveSelect = screen.getByLabelText(/objective/i);
+        fireEvent.change(objectiveSelect, { target: { value: "lose" } });
+
+        // Target weight input should now be visible
+        await waitFor(() => {
+            expect(screen.getByLabelText(/target weight/i)).toBeInTheDocument();
+        });
+    });
+
+    it("should show clear button when goal is already set", async () => {
+        (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+            ok: true,
+            json: async () => ({ weight: { weight: 70, unit: "kg" } })
+        });
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/tdee",
+                element: <TDEE />,
+                loader: async () => ({
+                    title: "TDEE Calculator - NoBullFit",
+                    meta: [{ name: "description", content: "Calculate your Total Daily Energy Expenditure (TDEE)" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User", subscribed: true },
+                    hasWeight: true,
+                    weightData: { weight: 70, unit: "kg" as const },
+                    tdeeData: {
+                        id: 1,
+                        age: 30,
+                        gender: "male" as const,
+                        height_cm: 180,
+                        activity_level: "moderately_active" as const,
+                        bmr: 2000,
+                        tdee: 3100,
+                        created_at: "2024-01-01T00:00:00Z",
+                        updated_at: "2024-01-01T00:00:00Z"
+                    },
+                    preferences: { quick_add_days: 30, weight_goal: "lose", target_weight: 65, target_weight_unit: "kg" }
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/tdee"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await waitFor(() => {
+            expect(screen.getByRole("button", { name: /clear goal/i })).toBeInTheDocument();
+        });
+    });
 });

@@ -25,7 +25,7 @@ import {
     Legend,
     ResponsiveContainer
 } from "recharts";
-import { TrendingUp, TrendingDown, Activity, UtensilsCrossed, Flame, FileDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, UtensilsCrossed, Flame, FileDown, Calendar } from "lucide-react";
 
 interface DashboardStats {
     today: {
@@ -80,23 +80,77 @@ interface DashboardStats {
     } | null;
 }
 
+interface GoalInsights {
+    weightGoal: "lose" | "maintain" | "gain";
+    targetWeight: number | null;
+    currentWeight: number | null;
+    weightUnit: string;
+    tdee: number;
+    recommendedCalories: number;
+    calorieAdjustment: number;
+    macros: {
+        protein: number;
+        carbs: number;
+        fat: number;
+        proteinGrams: number;
+        carbsGrams: number;
+        fatGrams: number;
+    };
+    weeklyProgress: Array<{
+        weekStart: string;
+        weekEnd: string;
+        startWeight: number | null;
+        endWeight: number | null;
+        weightChange: number | null;
+        avgCaloriesConsumed: number;
+        avgCaloriesBurned: number;
+        avgNetCalories: number;
+    }>;
+    projectedWeeksToGoal: number | null;
+    projectedDate: string | null;
+    weeklyTargetChange: number;
+    actualWeeklyChange: number | null;
+}
+
+interface GoalInsightsResponse {
+    hasGoal: boolean;
+    hasTdee?: boolean;
+    hasWeight?: boolean;
+    message?: string;
+    insights?: GoalInsights;
+}
+
+interface User {
+    id: number;
+    email: string;
+    full_name: string;
+    subscribed?: boolean;
+}
+
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
 const Dashboard: React.FC = () => {
     const loaderData = useLoaderData() as {
         title: string;
         meta: unknown[];
-        user?: unknown;
+        user?: User;
         stats?: DashboardStats | null;
     };
     const navigate = useNavigate();
     const helmet = useHelmet();
     const { user, isLoading } = useAuth();
 
+    // Check if user is Pro
+    const isProUser = loaderData.user?.subscribed === true;
+
     const [stats, setStats] = useState<DashboardStats | null>(loaderData.stats || null);
     const [period, setPeriod] = useState<"week" | "month" | "all">("week");
     const [isLoadingStats, setIsLoadingStats] = useState(false);
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+    
+    // Pro feature: Goal insights
+    const [goalInsights, setGoalInsights] = useState<GoalInsightsResponse | null>(null);
+    const [isLoadingGoalInsights, setIsLoadingGoalInsights] = useState(false);
 
     // Generate PDF report
     const handleGenerateReport = async () => {
@@ -179,6 +233,34 @@ const Dashboard: React.FC = () => {
     useEffect(() => {
         fetchStats(period);
     }, [period, fetchStats]);
+
+    // Pro feature: Fetch goal insights
+    const fetchGoalInsights = useCallback(async () => {
+        if (!isProUser) return;
+
+        setIsLoadingGoalInsights(true);
+        try {
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const response = await fetch(`/api/dashboard/goal-insights?timezone=${encodeURIComponent(userTimezone)}`, {
+                credentials: "include"
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setGoalInsights(data);
+            }
+        } catch (error) {
+            console.error("Error fetching goal insights:", error);
+        } finally {
+            setIsLoadingGoalInsights(false);
+        }
+    }, [isProUser]);
+
+    useEffect(() => {
+        if (isProUser) {
+            fetchGoalInsights();
+        }
+    }, [isProUser, fetchGoalInsights]);
 
     // Set helmet values
     helmet.setTitle(loaderData.title);
@@ -290,6 +372,125 @@ const Dashboard: React.FC = () => {
                                 className="ml-4 shrink-0"
                             >
                                 View Details
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Pro Feature: Goal Insights */}
+                {isProUser && goalInsights?.hasGoal && goalInsights.insights && (
+                    <div className="rounded-lg border border-zinc-950/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-800/50">
+                        <Heading level={2} className="mb-4 text-lg font-semibold">
+                            Goal: {goalInsights.insights.weightGoal === "lose" ? "Lose Weight" : goalInsights.insights.weightGoal === "gain" ? "Gain Weight" : "Maintain Weight"}
+                        </Heading>
+
+                        {/* Recommended Calories & Macros */}
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                            <div className="space-y-4">
+                                <div>
+                                    <Text className="text-sm text-zinc-600 dark:text-zinc-400">Recommended Daily Calories</Text>
+                                    <Text className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                        {goalInsights.insights.recommendedCalories} cal
+                                        <span className="ml-2 text-sm font-normal text-zinc-500">
+                                            ({goalInsights.insights.calorieAdjustment > 0 ? "+" : ""}{goalInsights.insights.calorieAdjustment} from TDEE)
+                                        </span>
+                                    </Text>
+                                </div>
+                                <div>
+                                    <Text className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2">Macro Recommendations</Text>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">
+                                            <Text className="text-xs text-zinc-500 dark:text-zinc-400">Protein</Text>
+                                            <Text className="text-lg font-semibold">{goalInsights.insights.macros.proteinGrams}g</Text>
+                                            <Text className="text-xs text-zinc-400">{goalInsights.insights.macros.protein}%</Text>
+                                        </div>
+                                        <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">
+                                            <Text className="text-xs text-zinc-500 dark:text-zinc-400">Carbs</Text>
+                                            <Text className="text-lg font-semibold">{goalInsights.insights.macros.carbsGrams}g</Text>
+                                            <Text className="text-xs text-zinc-400">{goalInsights.insights.macros.carbs}%</Text>
+                                        </div>
+                                        <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">
+                                            <Text className="text-xs text-zinc-500 dark:text-zinc-400">Fat</Text>
+                                            <Text className="text-lg font-semibold">{goalInsights.insights.macros.fatGrams}g</Text>
+                                            <Text className="text-xs text-zinc-400">{goalInsights.insights.macros.fat}%</Text>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                {/* Progress Tracking */}
+                                <div>
+                                    <Text className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2">Progress</Text>
+                                    <div className="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-900/50 space-y-2">
+                                        <div className="flex justify-between">
+                                            <Text className="text-sm text-zinc-500">Current Weight</Text>
+                                            <Text className="text-sm font-semibold">
+                                                {goalInsights.insights.currentWeight} {goalInsights.insights.weightUnit}
+                                            </Text>
+                                        </div>
+                                        {goalInsights.insights.targetWeight && (
+                                            <div className="flex justify-between">
+                                                <Text className="text-sm text-zinc-500">Target Weight</Text>
+                                                <Text className="text-sm font-semibold">
+                                                    {goalInsights.insights.targetWeight} {goalInsights.insights.weightUnit}
+                                                </Text>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between">
+                                            <Text className="text-sm text-zinc-500">Est. Weekly Change</Text>
+                                            <Text className="text-sm font-semibold">
+                                                {goalInsights.insights.weeklyTargetChange > 0 ? "+" : ""}
+                                                {goalInsights.insights.weeklyTargetChange.toFixed(1)} {goalInsights.insights.weightUnit}/week
+                                            </Text>
+                                        </div>
+                                        {goalInsights.insights.actualWeeklyChange !== null && (
+                                            <div className="flex justify-between">
+                                                <Text className="text-sm text-zinc-500">Actual Avg. Change</Text>
+                                                <Text className={`text-sm font-semibold ${
+                                                    (goalInsights.insights.weightGoal === "lose" && goalInsights.insights.actualWeeklyChange < 0) ||
+                                                    (goalInsights.insights.weightGoal === "gain" && goalInsights.insights.actualWeeklyChange > 0)
+                                                        ? "text-green-600 dark:text-green-400"
+                                                        : "text-zinc-900 dark:text-zinc-100"
+                                                }`}>
+                                                    {goalInsights.insights.actualWeeklyChange > 0 ? "+" : ""}
+                                                    {goalInsights.insights.actualWeeklyChange.toFixed(2)} {goalInsights.insights.weightUnit}/week
+                                                </Text>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Projected Timeline */}
+                                {goalInsights.insights.targetWeight && goalInsights.insights.projectedDate && (
+                                    <div className="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-900/50">
+                                        <div className="flex items-center gap-2">
+                                            <Calendar className="h-4 w-4 text-zinc-500" />
+                                            <Text className="text-sm text-zinc-500">Projected Goal Date</Text>
+                                        </div>
+                                        <Text className="text-lg font-semibold mt-1">
+                                            {new Date(goalInsights.insights.projectedDate).toLocaleDateString("en-US", {
+                                                weekday: "short",
+                                                year: "numeric",
+                                                month: "short",
+                                                day: "numeric"
+                                            })}
+                                        </Text>
+                                        <Text className="text-xs text-zinc-400">
+                                            ~{goalInsights.insights.projectedWeeksToGoal} weeks from now
+                                        </Text>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                            <Button
+                                type="button"
+                                outline
+                                onClick={() => navigate("/dashboard/tdee")}
+                            >
+                                Adjust Goal
                             </Button>
                         </div>
                     </div>

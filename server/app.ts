@@ -64,6 +64,7 @@ import { handleGetDashboardStats } from "./api/handlers/dashboardHandler.js";
 import { handleGenerateDashboardReport } from "./api/handlers/reportsHandler.js";
 import { handleGetMaintenanceStatus } from "./api/handlers/maintenanceHandler.js";
 import { handleGetUserPreferences, handleUpdateUserPreferences } from "./api/handlers/userPreferencesHandler.js";
+import { handleGetGoalInsights } from "./api/handlers/goalInsightsHandler.js";
 
 // API router class - handles all /api routes
 class App {
@@ -153,6 +154,7 @@ class App {
         
         // Dashboard stats
         this.router.get("/dashboard/stats", handleGetDashboardStats);
+        this.router.get("/dashboard/goal-insights", handleGetGoalInsights);
         
         // Reports
         this.router.post("/reports/dashboard", handleGenerateDashboardReport);

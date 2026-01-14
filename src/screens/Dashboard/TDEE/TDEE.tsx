@@ -12,7 +12,7 @@ import { Select } from "@components/select";
 import { Field, Label } from "@components/fieldset";
 import { FormAlert } from "@components/form-alert";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Target } from "lucide-react";
 
 interface TDEEData {
     id: number;
@@ -31,16 +31,35 @@ interface WeightData {
     unit: "kg" | "lbs";
 }
 
+interface User {
+    id: number;
+    email: string;
+    full_name: string;
+    subscribed: boolean;
+}
+
+interface Preferences {
+    quick_add_days: number;
+    weight_goal: "lose" | "maintain" | "gain" | null;
+    target_weight: number | null;
+    target_weight_unit: "kg" | "lbs" | null;
+}
+
 const TDEE: React.FC = () => {
     const loaderData = useLoaderData() as {
         title: string;
         meta: unknown[];
+        user?: User;
         hasWeight: boolean;
         weightData?: WeightData | null;
         tdeeData?: TDEEData | null;
+        preferences?: Preferences | null;
     };
     const helmet = useHelmet();
     const navigate = useNavigate();
+
+    // Check if user is Pro
+    const isProUser = loaderData.user?.subscribed === true;
 
     const [age, setAge] = useState<string>(loaderData.tdeeData?.age.toString() || "");
     const [gender, setGender] = useState<"male" | "female">(loaderData.tdeeData?.gender || "male");
@@ -58,6 +77,37 @@ const TDEE: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
     const previousWeightRef = useRef<WeightData | null>(loaderData.weightData || null);
+
+    // Pro feature: Weight goal states
+    const [weightGoal, setWeightGoal] = useState<"lose" | "maintain" | "gain" | "">(
+        loaderData.preferences?.weight_goal || ""
+    );
+    // Convert target weight to current user's unit if different from stored unit
+    const getInitialTargetWeight = (): string => {
+        const storedWeight = loaderData.preferences?.target_weight;
+        if (storedWeight === null || storedWeight === undefined) return "";
+        
+        const storedUnit = loaderData.preferences?.target_weight_unit;
+        const currentUnit = loaderData.weightData?.unit;
+        
+        // If units match or no conversion needed, return as-is
+        if (!storedUnit || !currentUnit || storedUnit === currentUnit) {
+            return storedWeight.toString();
+        }
+        
+        // Convert between units
+        if (storedUnit === "lbs" && currentUnit === "kg") {
+            return (Math.round(storedWeight * 0.453592 * 10) / 10).toString();
+        } else if (storedUnit === "kg" && currentUnit === "lbs") {
+            return (Math.round(storedWeight * 2.20462 * 10) / 10).toString();
+        }
+        
+        return storedWeight.toString();
+    };
+    const [targetWeight, setTargetWeight] = useState<string>(getInitialTargetWeight());
+    const [isSavingGoal, setIsSavingGoal] = useState(false);
+    const [goalError, setGoalError] = useState<string | null>(null);
+    const [goalSuccess, setGoalSuccess] = useState<string | null>(null);
 
     // Convert height from feet/inches to cm when unit changes or values change
     useEffect(() => {
@@ -261,6 +311,106 @@ const TDEE: React.FC = () => {
         moderately_active: "Moderately Active (moderate exercise 3-5 days/week)",
         very_active: "Very Active (hard exercise 6-7 days/week)",
         extremely_active: "Extremely Active (very hard exercise, physical job)"
+    };
+
+    const weightGoalLabels: Record<string, string> = {
+        lose: "Lose Weight",
+        maintain: "Maintain Weight",
+        gain: "Gain Weight"
+    };
+
+    // Pro feature: Save weight goal
+    const handleSaveGoal = async () => {
+        if (!isProUser) return;
+
+        setGoalError(null);
+        setGoalSuccess(null);
+
+        if (!weightGoal) {
+            setGoalError("Please select a weight goal");
+            return;
+        }
+
+        // Validate target weight if provided
+        if (targetWeight) {
+            const weight = parseFloat(targetWeight);
+            if (isNaN(weight) || weight <= 0) {
+                setGoalError("Please enter a valid target weight");
+                return;
+            }
+        }
+
+        setIsSavingGoal(true);
+        try {
+            const response = await fetch("/api/settings/preferences", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    weight_goal: weightGoal,
+                    target_weight: targetWeight ? parseFloat(targetWeight) : null,
+                    target_weight_unit: targetWeight ? currentWeight?.unit : null
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setGoalError(data.error || "Failed to save weight goal");
+                return;
+            }
+
+            setGoalSuccess("Weight goal saved successfully!");
+            setTimeout(() => setGoalSuccess(null), 3000);
+        } catch (err) {
+            console.error("Error saving weight goal:", err);
+            setGoalError("An error occurred while saving your goal. Please try again.");
+        } finally {
+            setIsSavingGoal(false);
+        }
+    };
+
+    // Pro feature: Clear weight goal
+    const handleClearGoal = async () => {
+        if (!isProUser) return;
+
+        setGoalError(null);
+        setGoalSuccess(null);
+        setIsSavingGoal(true);
+
+        try {
+            const response = await fetch("/api/settings/preferences", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    weight_goal: null,
+                    target_weight: null,
+                    target_weight_unit: null
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setGoalError(data.error || "Failed to clear weight goal");
+                return;
+            }
+
+            setWeightGoal("");
+            setTargetWeight("");
+            setGoalSuccess("Weight goal cleared!");
+            setTimeout(() => setGoalSuccess(null), 3000);
+        } catch (err) {
+            console.error("Error clearing weight goal:", err);
+            setGoalError("An error occurred while clearing your goal. Please try again.");
+        } finally {
+            setIsSavingGoal(false);
+        }
     };
 
     return (
@@ -486,6 +636,81 @@ const TDEE: React.FC = () => {
                                 </Text>
                             </div>
                         )}
+
+                        {/* Pro Feature: Weight Goal */}
+                        {isProUser && tdeeResult && (
+                            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    <Heading level={2}>
+                                        Weight Goal
+                                    </Heading>
+                                </div>
+                                <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                                    Set your weight goal to get personalized macro recommendations and progress tracking on your dashboard.
+                                </Text>
+                                <div className="space-y-4">
+                                    <Field>
+                                        <Label>Objective</Label>
+                                        <Select
+                                            value={weightGoal}
+                                            onChange={(e) => setWeightGoal(e.target.value as "lose" | "maintain" | "gain" | "")}
+                                        >
+                                            <option value="">Select your goal...</option>
+                                            {Object.entries(weightGoalLabels).map(([value, label]) => (
+                                                <option key={value} value={value}>
+                                                    {label}
+                                                </option>
+                                            ))}
+                                        </Select>
+                                    </Field>
+
+                                    {weightGoal && weightGoal !== "maintain" && currentWeight && (
+                                        <Field>
+                                            <Label>Target Weight ({currentWeight.unit})</Label>
+                                            <Input
+                                                type="number"
+                                                value={targetWeight}
+                                                onChange={(e) => setTargetWeight(e.target.value)}
+                                                placeholder={`Target weight in ${currentWeight.unit}`}
+                                                min="1"
+                                                step="0.1"
+                                            />
+                                            <Text className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                                Optional: Set a target to see projected timeline on your dashboard.
+                                            </Text>
+                                        </Field>
+                                    )}
+
+                                    {goalError && (
+                                        <Text className="text-sm text-red-600 dark:text-red-400">{goalError}</Text>
+                                    )}
+                                    {goalSuccess && (
+                                        <Text className="text-sm text-green-600 dark:text-green-400">{goalSuccess}</Text>
+                                    )}
+
+                                    <div className="flex gap-2">
+                                        <Button
+                                            type="button"
+                                            onClick={handleSaveGoal}
+                                            disabled={isSavingGoal || !weightGoal}
+                                        >
+                                            {isSavingGoal ? "Saving..." : "Save Goal"}
+                                        </Button>
+                                        {(loaderData.preferences?.weight_goal || weightGoal) && (
+                                            <Button
+                                                type="button"
+                                                onClick={handleClearGoal}
+                                                disabled={isSavingGoal}
+                                                outline
+                                            >
+                                                Clear Goal
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -498,4 +723,3 @@ const TDEE: React.FC = () => {
 };
 
 export default TDEE;
-

@@ -52,6 +52,16 @@ Pro users will have access to advanced meal planning capabilities:
 - **Copy Week**: Copy an entire week's worth of meals to another week — ideal for maintaining consistent meal plans.
 - **Drag-and-Drop Organization**: Reorganize meals between categories (Breakfast, Lunch, Dinner, Snack, Other) by simply dragging and dropping. Pro users also see all meal categories for easy organization.
 
+### Weight Goal Tracking (TDEE & Dashboard Enhancements)
+Pro users can set personalized weight goals with intelligent insights:
+
+- **Weight Objective Setting**: Set your goal to lose, maintain, or gain weight in the TDEE Calculator page. Optionally specify a target weight.
+- **Automatic Macro Recommendations**: Receive personalized macro ratio recommendations based on your goal (e.g., higher protein for weight loss to preserve muscle, balanced ratios for maintenance, higher carbs/protein for muscle building).
+- **Recommended Daily Calories**: Automatic calorie adjustments based on your TDEE and goal (deficit for weight loss, surplus for muscle gain).
+- **Weekly Target Adjustments**: Track your weekly progress with recommended weight change targets.
+- **Progress Tracking**: See your actual weekly weight change compared to your target, with visual feedback on whether you're on track.
+- **Goal Timeline Projection**: If a target weight is set, see a projected date for reaching your goal based on your current progress.
+
 ## Technology Stack
 
 NoBullFit is built with modern web technologies:

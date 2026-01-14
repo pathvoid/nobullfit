@@ -137,16 +137,22 @@ export async function handleExportData(req: Request, res: Response) {
 
         // Get user settings
         const settingsResult = await pool.query(
-            "SELECT quick_add_days, created_at, updated_at FROM user_settings WHERE user_id = $1",
+            "SELECT quick_add_days, weight_goal, target_weight, target_weight_unit, created_at, updated_at FROM user_settings WHERE user_id = $1",
             [userId]
         );
 
         const settings = settingsResult.rows.length > 0 ? {
             quick_add_days: settingsResult.rows[0].quick_add_days,
+            weight_goal: settingsResult.rows[0].weight_goal,
+            target_weight: settingsResult.rows[0].target_weight ? parseFloat(String(settingsResult.rows[0].target_weight)) : null,
+            target_weight_unit: settingsResult.rows[0].target_weight_unit,
             created_at: settingsResult.rows[0].created_at,
             updated_at: settingsResult.rows[0].updated_at
         } : {
-            quick_add_days: 30 // Default value if no settings exist
+            quick_add_days: 30, // Default value if no settings exist
+            weight_goal: null,
+            target_weight: null,
+            target_weight_unit: null
         };
 
         // Compile all data

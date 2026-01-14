@@ -11,6 +11,7 @@ const tdeeLoader = async (args: LoaderFunctionArgs) => {
     let hasWeight = false;
     let weightData = null;
     let tdeeData = null;
+    let preferences = null;
     
     try {
         // Get auth token
@@ -61,6 +62,16 @@ const tdeeLoader = async (args: LoaderFunctionArgs) => {
                 tdeeData = tdeeResult.tdee;
             }
         }
+
+        // Get user preferences (for weight goal - Pro feature)
+        const preferencesResponse = await fetch(`${url.origin}/api/settings/preferences`, {
+            headers,
+            credentials: "include"
+        });
+        
+        if (preferencesResponse.ok) {
+            preferences = await preferencesResponse.json();
+        }
     } catch (error) {
         console.error("Error loading TDEE data:", error);
     }
@@ -76,7 +87,8 @@ const tdeeLoader = async (args: LoaderFunctionArgs) => {
         }),
         hasWeight,
         weightData,
-        tdeeData
+        tdeeData,
+        preferences
     };
 };
 

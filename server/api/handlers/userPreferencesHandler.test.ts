@@ -72,16 +72,33 @@ describe("userPreferencesHandler", () => {
             await handleGetUserPreferences(mockRequest as Request, mockResponse as Response);
 
             expect(mockResponse.status).toHaveBeenCalledWith(200);
-            expect(mockResponse.json).toHaveBeenCalledWith({ quick_add_days: 30 });
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                quick_add_days: 30,
+                weight_goal: null,
+                target_weight: null,
+                target_weight_unit: null
+            });
         });
 
         it("should return user settings when they exist", async () => {
-            mockPool.query.mockResolvedValueOnce({ rows: [{ quick_add_days: 60 }] });
+            mockPool.query.mockResolvedValueOnce({ 
+                rows: [{ 
+                    quick_add_days: 60,
+                    weight_goal: null,
+                    target_weight: null,
+                    target_weight_unit: null
+                }] 
+            });
 
             await handleGetUserPreferences(mockRequest as Request, mockResponse as Response);
 
             expect(mockResponse.status).toHaveBeenCalledWith(200);
-            expect(mockResponse.json).toHaveBeenCalledWith({ quick_add_days: 60 });
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                quick_add_days: 60,
+                weight_goal: null,
+                target_weight: null,
+                target_weight_unit: null
+            });
         });
 
         it("should handle database errors gracefully", async () => {
@@ -128,27 +145,47 @@ describe("userPreferencesHandler", () => {
 
         it("should update preferences successfully with valid quick_add_days", async () => {
             mockRequest.body = { quick_add_days: 60 };
-            mockPool.query.mockResolvedValueOnce({ rows: [{ quick_add_days: 60 }] });
+            mockPool.query.mockResolvedValueOnce({ 
+                rows: [{ 
+                    quick_add_days: 60,
+                    weight_goal: null,
+                    target_weight: null,
+                    target_weight_unit: null
+                }] 
+            });
 
             await handleUpdateUserPreferences(mockRequest as Request, mockResponse as Response);
 
             expect(mockResponse.status).toHaveBeenCalledWith(200);
             expect(mockResponse.json).toHaveBeenCalledWith({
                 message: "Preferences updated successfully",
-                quick_add_days: 60
+                quick_add_days: 60,
+                weight_goal: null,
+                target_weight: null,
+                target_weight_unit: null
             });
         });
 
         it("should accept 0 (All Time) as valid quick_add_days value", async () => {
             mockRequest.body = { quick_add_days: 0 };
-            mockPool.query.mockResolvedValueOnce({ rows: [{ quick_add_days: 0 }] });
+            mockPool.query.mockResolvedValueOnce({ 
+                rows: [{ 
+                    quick_add_days: 0,
+                    weight_goal: null,
+                    target_weight: null,
+                    target_weight_unit: null
+                }] 
+            });
 
             await handleUpdateUserPreferences(mockRequest as Request, mockResponse as Response);
 
             expect(mockResponse.status).toHaveBeenCalledWith(200);
             expect(mockResponse.json).toHaveBeenCalledWith({
                 message: "Preferences updated successfully",
-                quick_add_days: 0
+                quick_add_days: 0,
+                weight_goal: null,
+                target_weight: null,
+                target_weight_unit: null
             });
         });
 
