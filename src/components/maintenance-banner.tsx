@@ -53,7 +53,8 @@ export function MaintenanceBanner() {
     const [status, setStatus] = useState<MaintenanceStatus | null>(null);
     const [dismissed, setDismissed] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
-    const [hasMounted, setHasMounted] = useState(false);
+    const [skipTransition, setSkipTransition] = useState(false);
+    const [hasInitialized, setHasInitialized] = useState(false);
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Determine if banner should be shown
@@ -61,8 +62,6 @@ export function MaintenanceBanner() {
 
     // On mount, check cache immediately to restore state without animation
     useEffect(() => {
-        setHasMounted(true);
-        
         const cachedStatus = getCachedStatus();
         const dismissedKey = localStorage.getItem("maintenance_dismissed");
         const wasDismissed = cachedStatus?.maintenance && dismissedKey === cachedStatus.maintenance.startTime;
@@ -75,23 +74,39 @@ export function MaintenanceBanner() {
             setDismissed(true);
         }
         if (cachedShouldShow) {
+            // Skip transition and show immediately when loading from cache
+            setSkipTransition(true);
             setIsVisible(true);
+            // Set CSS variable immediately using a known height
+            document.documentElement.style.setProperty("--maintenance-banner-height", "40px");
         }
+        setHasInitialized(true);
     }, []);
 
     // Update CSS variable for sidebar offset when banner visibility changes
     useEffect(() => {
-        if (!hasMounted) return;
+        if (!hasInitialized) return;
 
         if (shouldShow && contentRef.current) {
-            const height = contentRef.current.offsetHeight || 0;
+            const height = contentRef.current.offsetHeight || 40;
             document.documentElement.style.setProperty("--maintenance-banner-height", `${height}px`);
             setIsVisible(true);
-        } else {
+        } else if (!shouldShow && hasInitialized) {
             document.documentElement.style.setProperty("--maintenance-banner-height", "0px");
             setIsVisible(false);
         }
-    }, [shouldShow, hasMounted]);
+    }, [shouldShow, hasInitialized]);
+
+    // Re-enable transitions after initial render
+    useEffect(() => {
+        if (skipTransition) {
+            // Wait for the next frame to re-enable transitions
+            const timer = requestAnimationFrame(() => {
+                setSkipTransition(false);
+            });
+            return () => cancelAnimationFrame(timer);
+        }
+    }, [skipTransition]);
 
     useEffect(() => {
         async function fetchMaintenanceStatus() {
@@ -138,7 +153,7 @@ export function MaintenanceBanner() {
     // The server always renders collapsed, client expands after mount
     return (
         <div
-            className="overflow-hidden transition-all duration-300 ease-in-out"
+            className={`overflow-hidden ${skipTransition ? "" : "transition-all duration-300 ease-in-out"}`}
             style={{ maxHeight: isVisible ? "100px" : "0px" }}
             suppressHydrationWarning
         >
