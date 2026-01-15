@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import FoodTracking from "./FoodTracking";
 
@@ -112,34 +112,55 @@ describe("FoodTracking", () => {
     });
 
     describe("Pro User Features", () => {
-        it("should show Copy Day button for pro users", async () => {
+        it("should show Copy Day option in dropdown menu for pro users", async () => {
             const router = createFoodTrackingRouter({ subscribed: true });
             render(<RouterProvider router={router} />);
 
             await screen.findByRole("heading", { name: /food tracking/i });
 
-            // Copy Day button should be present for pro users
-            expect(screen.getByRole("button", { name: /copy day/i })).toBeInTheDocument();
+            // Find and click any dropdown menu button (there are two - desktop and mobile)
+            const dropdownButtons = screen.getAllByRole("button", { name: /copy & paste/i });
+            expect(dropdownButtons.length).toBeGreaterThan(0);
+            fireEvent.click(dropdownButtons[0]);
+
+            // Copy Day option should be present in the menu for pro users
+            await waitFor(() => {
+                expect(screen.getByRole("menuitem", { name: /copy day/i })).toBeInTheDocument();
+            });
         });
 
-        it("should show Paste Day button for pro users", async () => {
+        it("should show Paste Day option in dropdown menu for pro users", async () => {
             const router = createFoodTrackingRouter({ subscribed: true });
             render(<RouterProvider router={router} />);
 
             await screen.findByRole("heading", { name: /food tracking/i });
 
-            // Paste Day button should be present for pro users
-            expect(screen.getByRole("button", { name: /paste day/i })).toBeInTheDocument();
+            // Find and click any dropdown menu button (there are two - desktop and mobile)
+            const dropdownButtons = screen.getAllByRole("button", { name: /copy & paste/i });
+            expect(dropdownButtons.length).toBeGreaterThan(0);
+            fireEvent.click(dropdownButtons[0]);
+
+            // Paste Day option should be present in the menu for pro users
+            await waitFor(() => {
+                expect(screen.getByRole("menuitem", { name: /paste day/i })).toBeInTheDocument();
+            });
         });
 
-        it("should show Copy Week button for pro users", async () => {
+        it("should show Copy Week option in dropdown menu for pro users", async () => {
             const router = createFoodTrackingRouter({ subscribed: true });
             render(<RouterProvider router={router} />);
 
             await screen.findByRole("heading", { name: /food tracking/i });
 
-            // Copy Week button should be present for pro users
-            expect(screen.getByRole("button", { name: /copy week/i })).toBeInTheDocument();
+            // Find and click any dropdown menu button (there are two - desktop and mobile)
+            const dropdownButtons = screen.getAllByRole("button", { name: /copy & paste/i });
+            expect(dropdownButtons.length).toBeGreaterThan(0);
+            fireEvent.click(dropdownButtons[0]);
+
+            // Copy Week option should be present in the menu for pro users
+            await waitFor(() => {
+                expect(screen.getByRole("menuitem", { name: /copy week/i })).toBeInTheDocument();
+            });
         });
     });
 });

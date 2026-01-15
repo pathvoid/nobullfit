@@ -74,7 +74,7 @@ describe("GroceryLists", () => {
         expect(screen.getByText(/create and manage your grocery lists/i)).toBeInTheDocument();
     });
 
-    it("should show Add Item button for each grocery list", async () => {
+    it("should show dropdown menu button for each grocery list", async () => {
         const router = createGroceryListsRouter([
             {
                 id: 1,
@@ -96,12 +96,12 @@ describe("GroceryLists", () => {
 
         await screen.findByRole("heading", { level: 1, name: /grocery lists/i });
 
-        // Both lists should have an Add Item button
-        const addItemButtons = screen.getAllByRole("button", { name: /add item/i });
-        expect(addItemButtons).toHaveLength(2);
+        // Both lists should have a dropdown menu button
+        const menuButtons = screen.getAllByRole("button", { name: /list options/i });
+        expect(menuButtons).toHaveLength(2);
     });
 
-    it("should open Add Item dialog when clicking Add Item button", async () => {
+    it("should open Add Item dialog when clicking Add Item from dropdown menu", async () => {
         const router = createGroceryListsRouter([
             {
                 id: 1,
@@ -116,9 +116,13 @@ describe("GroceryLists", () => {
 
         await screen.findByRole("heading", { level: 1, name: /grocery lists/i });
 
-        // Click the Add Item button
-        const addItemButton = screen.getByRole("button", { name: /add item/i });
-        fireEvent.click(addItemButton);
+        // Click the dropdown menu button
+        const menuButton = screen.getByRole("button", { name: /list options/i });
+        fireEvent.click(menuButton);
+
+        // Wait for menu to open, then click Add Item
+        const addItemOption = await screen.findByRole("menuitem", { name: /add item/i });
+        fireEvent.click(addItemOption);
 
         // Dialog should be open
         await waitFor(() => {
@@ -149,9 +153,14 @@ describe("GroceryLists", () => {
 
         await screen.findByRole("heading", { level: 1, name: /grocery lists/i });
 
-        // Open the dialog
-        const addItemButton = screen.getByRole("button", { name: /add item/i });
-        fireEvent.click(addItemButton);
+        // Open the dropdown menu and click Add Item
+        const menuButton = screen.getByRole("button", { name: /list options/i });
+        fireEvent.click(menuButton);
+
+        await waitFor(() => {
+            const addItemOption = screen.getByRole("menuitem", { name: /add item/i });
+            fireEvent.click(addItemOption);
+        });
 
         await waitFor(() => {
             expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -177,9 +186,14 @@ describe("GroceryLists", () => {
 
         await screen.findByRole("heading", { level: 1, name: /grocery lists/i });
 
-        // Open the dialog
-        const addItemButton = screen.getByRole("button", { name: /add item/i });
-        fireEvent.click(addItemButton);
+        // Open the dropdown menu and click Add Item
+        const menuButton = screen.getByRole("button", { name: /list options/i });
+        fireEvent.click(menuButton);
+
+        await waitFor(() => {
+            const addItemOption = screen.getByRole("menuitem", { name: /add item/i });
+            fireEvent.click(addItemOption);
+        });
 
         await waitFor(() => {
             expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -209,9 +223,14 @@ describe("GroceryLists", () => {
 
         await screen.findByRole("heading", { level: 1, name: /grocery lists/i });
 
-        // Open the dialog
-        const addItemButton = screen.getByRole("button", { name: /add item/i });
-        fireEvent.click(addItemButton);
+        // Open the dropdown menu and click Add Item
+        const menuButton = screen.getByRole("button", { name: /list options/i });
+        fireEvent.click(menuButton);
+
+        await waitFor(() => {
+            const addItemOption = screen.getByRole("menuitem", { name: /add item/i });
+            fireEvent.click(addItemOption);
+        });
 
         await waitFor(() => {
             expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -257,9 +276,14 @@ describe("GroceryLists", () => {
 
         await screen.findByRole("heading", { level: 1, name: /grocery lists/i });
 
-        // Open the dialog
-        const addItemButton = screen.getByRole("button", { name: /add item/i });
-        fireEvent.click(addItemButton);
+        // Open the dropdown menu and click Add Item
+        const menuButton = screen.getByRole("button", { name: /list options/i });
+        fireEvent.click(menuButton);
+
+        await waitFor(() => {
+            const addItemOption = screen.getByRole("menuitem", { name: /add item/i });
+            fireEvent.click(addItemOption);
+        });
 
         await waitFor(() => {
             expect(screen.getByRole("dialog")).toBeInTheDocument();
