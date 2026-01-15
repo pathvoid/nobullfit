@@ -2,6 +2,7 @@
 
 import * as Headless from "@headlessui/react";
 import { useState } from "react";
+import { useSwipeable } from "react-swipeable";
 import { NavbarItem } from "./navbar";
 import { X } from "lucide-react";
 
@@ -52,6 +53,18 @@ export function StackedLayout({
 }: React.PropsWithChildren<{ navbar: React.ReactNode; sidebar: React.ReactNode }>) {
   const [showSidebar, setShowSidebar] = useState(false);
 
+  // Swipe handler for mobile - opens sidebar when swiping right from left edge
+  const swipeHandlers = useSwipeable({
+    onSwipedRight: (eventData) => {
+      // Only open if swipe started near the left edge (within 20px) and sidebar is closed
+      if (!showSidebar && eventData.initial[0] < 20) {
+        setShowSidebar(true);
+      }
+    },
+    trackMouse: false, // Only track touch events
+    preventScrollOnSwipe: false
+  });
+
   return (
     <div className="relative isolate flex min-h-svh w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950">
       {/* Sidebar on mobile */}
@@ -69,8 +82,8 @@ export function StackedLayout({
         <div className="min-w-0 flex-1">{navbar}</div>
       </header>
 
-      {/* Content */}
-      <main className="flex flex-1 flex-col pb-2 lg:px-2">
+      {/* Content - swipeable on mobile */}
+      <main className="flex flex-1 flex-col pb-2 lg:px-2" {...swipeHandlers}>
         <div className="grow p-6 lg:rounded-lg lg:bg-white lg:p-10 lg:shadow-xs lg:ring-1 lg:ring-zinc-950/5 dark:lg:bg-zinc-900 dark:lg:ring-white/10">
           <div className="mx-auto max-w-6xl">{children}</div>
         </div>
