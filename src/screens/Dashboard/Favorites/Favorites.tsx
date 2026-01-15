@@ -68,7 +68,7 @@ const Favorites: React.FC = () => {
         <SidebarLayout
             navbar={
                 <Navbar>
-                    <Logo className="h-6 text-zinc-950 dark:text-white forced-colors:text-[CanvasText]" />
+                    <Logo className="text-zinc-950 dark:text-white forced-colors:text-[CanvasText]" />
                     <NavbarSpacer />
                     <NavbarSection>
                         <UserDropdown />

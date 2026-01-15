@@ -153,7 +153,7 @@ export function MaintenanceBanner() {
     // The server always renders collapsed, client expands after mount
     return (
         <div
-            className={`overflow-hidden ${skipTransition ? "" : "transition-all duration-300 ease-in-out"}`}
+            className={`sticky top-0 z-[60] overflow-hidden ${skipTransition ? "" : "transition-all duration-300 ease-in-out"} lg:relative lg:z-auto`}
             style={{ maxHeight: isVisible ? "100px" : "0px" }}
             suppressHydrationWarning
         >
