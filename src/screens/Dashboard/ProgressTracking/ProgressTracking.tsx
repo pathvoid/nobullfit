@@ -692,8 +692,9 @@ const ProgressTracking: React.FC = () => {
                 </div>
 
                 {/* Date Navigation */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3">
+                <div className="space-y-3">
+                    {/* Date picker row - on desktop includes Today button and action buttons */}
+                    <div className="flex items-center gap-2">
                         <Button onClick={handlePreviousDay} outline>
                             <ChevronLeft className="h-5 w-5" />
                         </Button>
@@ -701,25 +702,52 @@ const ProgressTracking: React.FC = () => {
                             type="date"
                             value={formatDateForAPI(currentDate)}
                             onChange={handleDateChange}
-                            className="w-auto"
+                            className="flex-1 sm:flex-none sm:w-auto"
                             aria-label="Select date"
                         />
                         <Button onClick={handleNextDay} outline>
                             <ChevronRight className="h-5 w-5" />
                         </Button>
-                        <Button onClick={handleToday} outline>
+                        {/* Today button - hidden on mobile, shown on desktop */}
+                        <div className="hidden sm:block">
+                            <Button onClick={handleToday} outline>
+                                Today
+                            </Button>
+                        </div>
+                        {/* Spacer to push buttons to the right */}
+                        <div className="hidden sm:block sm:flex-1" />
+                        {/* Action buttons on far right - desktop only */}
+                        <div className="hidden sm:flex sm:gap-2">
+                            <Button onClick={() => {
+                                resetAddDialog();
+                                setIsAddDialogOpen(true);
+                            }}>
+                                <Plus className="h-4 w-4" data-slot="icon" />
+                                Add Activity
+                            </Button>
+                            <Button onClick={handleOpenWeightDialog} outline>
+                                <Scale className="h-4 w-4" data-slot="icon" />
+                                {weightEntry ? "Update Weight" : "Add Weight"}
+                            </Button>
+                        </div>
+                    </div>
+                    
+                    {/* Action buttons - stacked on mobile, full width */}
+                    <div className="grid grid-cols-1 gap-2 sm:hidden">
+                        {/* Today button - shown on mobile only */}
+                        <Button onClick={handleToday} outline className="w-full">
                             Today
                         </Button>
-                    </div>
-                    <div className="flex gap-2">
+                        {/* Add Activity button - mobile only */}
                         <Button onClick={() => {
                             resetAddDialog();
                             setIsAddDialogOpen(true);
-                        }}>
+                        }} className="w-full">
                             <Plus className="h-4 w-4" data-slot="icon" />
                             Add Activity
                         </Button>
-                        <Button onClick={handleOpenWeightDialog} outline>
+                        {/* Add Weight button - mobile only */}
+                        <Button onClick={handleOpenWeightDialog} outline className="w-full">
                             <Scale className="h-4 w-4" data-slot="icon" />
                             {weightEntry ? "Update Weight" : "Add Weight"}
                         </Button>
