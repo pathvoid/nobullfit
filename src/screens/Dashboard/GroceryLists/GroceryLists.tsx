@@ -13,7 +13,8 @@ import { Checkbox } from "@components/checkbox";
 import { Link } from "@components/link";
 import { Dialog, DialogActions, DialogBody, DialogDescription, DialogTitle } from "@components/dialog";
 import { Field, Label as FieldLabel } from "@components/fieldset";
-import { ChevronDown, ChevronUp, Search, Plus, Minus, Mail } from "lucide-react";
+import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel, DropdownDivider } from "@components/dropdown";
+import { ChevronDown, ChevronUp, Search, Plus, Minus, Mail, Pencil, Trash2, MoreVertical } from "lucide-react";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 
 interface GroceryListItem {
@@ -506,10 +507,10 @@ const GroceryLists: React.FC = () => {
                                     className="overflow-hidden rounded-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-900"
                                 >
                                     {/* List Header - Always Visible */}
-                                    <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex items-center gap-3 p-4 justify-between">
                                         <button
                                             onClick={() => toggleListExpanded(list.id)}
-                                            className="flex flex-1 items-center gap-3 text-left hover:opacity-80"
+                                            className="flex flex-1 items-center gap-3 text-left hover:opacity-80 min-w-0"
                                         >
                                             {isExpanded ? (
                                                 <ChevronUp className="size-5 shrink-0 text-zinc-500 dark:text-zinc-400" />
@@ -531,7 +532,7 @@ const GroceryLists: React.FC = () => {
                                                 </Text>
                                             </div>
                                         </button>
-                                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                                             {isExpanded && listSelected.size > 0 && (
                                                 <Button
                                                     onClick={() => handleBulkRemoveItems(list.id)}
@@ -542,45 +543,46 @@ const GroceryLists: React.FC = () => {
                                                     Remove ({listSelected.size})
                                                 </Button>
                                             )}
-                                            <Button
-                                                onClick={() => setAddItemDialogListId(list.id)}
-                                                outline
-                                                className="text-xs sm:text-sm"
-                                            >
-                                                <span className="inline-flex items-center">
-                                                    <Plus className="size-3.5 sm:size-4 mr-1" />
-                                                    Add Item
-                                                </span>
-                                            </Button>
-                                            <Button
-                                                onClick={() => handleSendEmail(list.id)}
-                                                disabled={sendingEmailListId === list.id || list.items.length === 0}
-                                                outline
-                                                className="text-xs sm:text-sm"
-                                            >
-                                                {sendingEmailListId === list.id ? (
-                                                    "Sending..."
-                                                ) : (
-                                                    <span className="inline-flex items-center">
-                                                        <Mail className="size-3.5 sm:size-4 mr-1" />
-                                                        Email
-                                                    </span>
-                                                )}
-                                            </Button>
-                                            <Button
-                                                onClick={() => openRenameDialog(list)}
-                                                outline
-                                                className="text-xs sm:text-sm"
-                                            >
-                                                Rename
-                                            </Button>
-                                            <Button
-                                                onClick={() => setIsDeleteDialogOpen(list.id)}
-                                                color="red"
-                                                className="text-xs sm:text-sm"
-                                            >
-                                                Delete
-                                            </Button>
+                                            <Dropdown>
+                                                <DropdownButton 
+                                                    plain
+                                                    className="p-2"
+                                                    aria-label="List options"
+                                                >
+                                                    <MoreVertical className="h-5 w-5" />
+                                                </DropdownButton>
+                                                <DropdownMenu anchor="bottom end" className="min-w-40">
+                                                    <DropdownItem 
+                                                        onClick={() => setAddItemDialogListId(list.id)}
+                                                    >
+                                                        <Plus className="h-4 w-4" data-slot="icon" />
+                                                        <DropdownLabel>Add Item</DropdownLabel>
+                                                    </DropdownItem>
+                                                    <DropdownDivider />
+                                                    <DropdownItem 
+                                                        onClick={() => handleSendEmail(list.id)}
+                                                        disabled={sendingEmailListId === list.id || list.items.length === 0}
+                                                    >
+                                                        <Mail className="h-4 w-4" data-slot="icon" />
+                                                        <DropdownLabel>
+                                                            {sendingEmailListId === list.id ? "Sending..." : "Email"}
+                                                        </DropdownLabel>
+                                                    </DropdownItem>
+                                                    <DropdownItem 
+                                                        onClick={() => openRenameDialog(list)}
+                                                    >
+                                                        <Pencil className="h-4 w-4" data-slot="icon" />
+                                                        <DropdownLabel>Rename</DropdownLabel>
+                                                    </DropdownItem>
+                                                    <DropdownDivider />
+                                                    <DropdownItem 
+                                                        onClick={() => setIsDeleteDialogOpen(list.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" data-slot="icon" />
+                                                        <DropdownLabel>Delete</DropdownLabel>
+                                                    </DropdownItem>
+                                                </DropdownMenu>
+                                            </Dropdown>
                                         </div>
                                     </div>
 
@@ -648,9 +650,9 @@ const GroceryLists: React.FC = () => {
                                                                                 onClick={() => handleUpdateQuantity(list.id, item.id, -1)}
                                                                                 disabled={updatingQuantityIds.has(item.id) || parseFloat(String(item.quantity)) <= 1}
                                                                                 outline
-                                                                                className="h-8 w-8 p-0"
+                                                                                className="flex h-10 w-10 items-center justify-center p-0 sm:h-8 sm:w-8"
                                                                             >
-                                                                                <Minus className="size-4" />
+                                                                                <Minus className="size-7 sm:size-4" />
                                                                             </Button>
                                                                             <span className="min-w-[3rem] text-center font-medium">
                                                                                 {(() => {
@@ -662,9 +664,9 @@ const GroceryLists: React.FC = () => {
                                                                                 onClick={() => handleUpdateQuantity(list.id, item.id, 1)}
                                                                                 disabled={updatingQuantityIds.has(item.id)}
                                                                                 outline
-                                                                                className="h-8 w-8 p-0"
+                                                                                className="flex h-10 w-10 items-center justify-center p-0 sm:h-8 sm:w-8"
                                                                             >
-                                                                                <Plus className="size-4" />
+                                                                                <Plus className="size-7 sm:size-4" />
                                                                             </Button>
                                                                             {(item.unit || item.food_data?.unit) && (
                                                                                 <span className="text-zinc-500 dark:text-zinc-400">
