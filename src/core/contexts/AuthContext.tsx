@@ -4,6 +4,7 @@ interface User {
     id: number;
     email: string;
     full_name: string;
+    plan: "free" | "pro" | null;
 }
 
 interface AuthContextType {

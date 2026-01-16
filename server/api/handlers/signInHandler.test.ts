@@ -50,7 +50,7 @@ describe("signInHandler", () => {
         };
     });
 
-    it("should sign in successfully with valid credentials", async () => {
+    it("should sign in successfully with valid credentials and redirect to dashboard if plan exists", async () => {
         mockRequest.body = {
             email: "test@example.com",
             password: "password123",
@@ -61,7 +61,8 @@ describe("signInHandler", () => {
             id: 1,
             email: "test@example.com",
             full_name: "Test User",
-            password_hash: "hashed_password"
+            password_hash: "hashed_password",
+            plan: "free"
         };
 
         mockPool.query.mockResolvedValue({ rows: [mockUser] });
@@ -79,10 +80,46 @@ describe("signInHandler", () => {
             user: {
                 id: 1,
                 email: "test@example.com",
-                full_name: "Test User"
+                full_name: "Test User",
+                plan: "free"
             },
             token: "mock_token",
             redirect: "/dashboard"
+        });
+    });
+
+    it("should redirect to choose-plan if user has no plan selected", async () => {
+        mockRequest.body = {
+            email: "test@example.com",
+            password: "password123",
+            remember: false
+        };
+
+        const mockUser = {
+            id: 1,
+            email: "test@example.com",
+            full_name: "Test User",
+            password_hash: "hashed_password",
+            plan: null
+        };
+
+        mockPool.query.mockResolvedValue({ rows: [mockUser] });
+        (bcrypt.compare as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+        (generateToken as ReturnType<typeof vi.fn>).mockReturnValue("mock_token");
+
+        await handleSignIn(mockRequest as Request, mockResponse as Response);
+
+        expect(mockResponse.status).toHaveBeenCalledWith(200);
+        expect(mockResponse.json).toHaveBeenCalledWith({
+            success: true,
+            user: {
+                id: 1,
+                email: "test@example.com",
+                full_name: "Test User",
+                plan: null
+            },
+            token: "mock_token",
+            redirect: "/choose-plan"
         });
     });
 

@@ -63,6 +63,11 @@ const dashboardLoader = async ({ request }: LoaderFunctionArgs) => {
             throw redirect(signInUrl.toString());
         }
 
+        // If user hasn't selected a plan yet, redirect to choose-plan
+        if (!data.user.plan) {
+            throw redirect("/choose-plan");
+        }
+
         // Fetch dashboard stats
         let stats = null;
         try {

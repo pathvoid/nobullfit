@@ -37,6 +37,8 @@ import ResetPassword from "@screens/ResetPassword/ResetPassword";
 import resetPasswordLoader from "@loaders/resetPasswordLoader";
 import ConfirmEmailChange from "@screens/ConfirmEmailChange/ConfirmEmailChange";
 import confirmEmailChangeLoader from "@loaders/confirmEmailChangeLoader";
+import ChoosePlan from "@screens/ChoosePlan/ChoosePlan";
+import choosePlanLoader from "@loaders/choosePlanLoader";
 import Dashboard from "@screens/Dashboard/Dashboard";
 import dashboardLoader from "@loaders/dashboardLoader";
 import Favorites from "@screens/Dashboard/Favorites/Favorites";
@@ -169,6 +171,12 @@ const routes: RouteObject[] = [
         path: "confirm-email-change",
         element: <ConfirmEmailChange />,
         loader: confirmEmailChangeLoader,
+        errorElement: <Error />
+    },
+    {
+        path: "choose-plan",
+        element: <ChoosePlan />,
+        loader: choosePlanLoader,
         errorElement: <Error />
     },
     {

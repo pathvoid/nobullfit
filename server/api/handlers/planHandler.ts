@@ -2,8 +2,8 @@ import type { Request, Response } from "express";
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
 
-// Get current user from JWT token
-export async function handleGetMe(req: Request, res: Response): Promise<void> {
+// Save plan selection handler - saves user's chosen plan
+export async function handleSelectPlan(req: Request, res: Response): Promise<void> {
     try {
         // Check for token in Authorization header first
         let token: string | undefined;
@@ -30,6 +30,20 @@ export async function handleGetMe(req: Request, res: Response): Promise<void> {
             return;
         }
 
+        const { plan } = req.body;
+
+        // Validate plan value
+        if (!plan || !["free", "pro"].includes(plan)) {
+            res.status(400).json({ error: "Invalid plan. Must be 'free' or 'pro'." });
+            return;
+        }
+
+        // Pro plan is not available yet
+        if (plan === "pro") {
+            res.status(400).json({ error: "Pro plan is not available yet. Please select the Free plan." });
+            return;
+        }
+
         // Get database connection
         const pool = await getPool();
         if (!pool) {
@@ -37,37 +51,27 @@ export async function handleGetMe(req: Request, res: Response): Promise<void> {
             return;
         }
 
-        // Get user data from database
-        const userResult = await pool.query(
-            "SELECT id, email, full_name, plan, subscribed FROM users WHERE id = $1 AND email = $2",
-            [decoded.userId, decoded.email]
+        // Update user's plan
+        const result = await pool.query(
+            `UPDATE users 
+             SET plan = $1, plan_selected_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
+             WHERE id = $2 AND email = $3
+             RETURNING id, email, full_name, plan, subscribed`,
+            [plan, decoded.userId, decoded.email]
         );
 
-        if (userResult.rows.length === 0) {
-            res.status(401).json({ error: "User not found" });
+        if (result.rows.length === 0) {
+            res.status(404).json({ error: "User not found" });
             return;
         }
 
         res.status(200).json({
-            user: userResult.rows[0]
+            success: true,
+            user: result.rows[0],
+            redirect: "/dashboard"
         });
     } catch (error) {
-        console.error("Auth check error:", error);
-        res.status(500).json({ error: "Internal server error" });
+        console.error("Plan selection error:", error);
+        res.status(500).json({ error: "An error occurred while saving your plan selection." });
     }
-}
-
-// Logout handler - JWT tokens are stateless, so we just return success
-// In a more advanced setup, you could maintain a token blacklist
-export async function handleLogout(req: Request, res: Response): Promise<void> {
-    // Clear auth cookie
-    res.clearCookie("auth_token", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax"
-    });
-    
-    // JWT tokens are stateless, so logout is handled client-side by removing the token
-    // Optionally, you could maintain a token blacklist in the database
-    res.status(200).json({ success: true });
 }

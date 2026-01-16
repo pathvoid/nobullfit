@@ -37,7 +37,7 @@ export async function handleSignIn(req: Request, res: Response): Promise<void> {
 
         // Find user by email (case-insensitive)
         const userResult = await pool.query(
-            "SELECT id, email, full_name, password_hash FROM users WHERE LOWER(email) = LOWER($1)",
+            "SELECT id, email, full_name, password_hash, plan FROM users WHERE LOWER(email) = LOWER($1)",
             [email]
         );
 
@@ -75,15 +75,19 @@ export async function handleSignIn(req: Request, res: Response): Promise<void> {
 
         res.cookie("auth_token", token, cookieOptions);
 
+        // Determine redirect based on whether user has selected a plan
+        const redirectUrl = user.plan ? "/dashboard" : "/choose-plan";
+
         res.status(200).json({
             success: true,
             user: {
                 id: user.id,
                 email: user.email,
-                full_name: user.full_name
+                full_name: user.full_name,
+                plan: user.plan
             },
             token: token,
-            redirect: "/dashboard"
+            redirect: redirectUrl
         });
 
     } catch (error) {

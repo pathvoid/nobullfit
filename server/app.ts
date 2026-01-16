@@ -2,6 +2,7 @@ import express, { Router } from "express";
 import { handleSignUp } from "./api/handlers/signUpHandler.js";
 import { handleSignIn } from "./api/handlers/signInHandler.js";
 import { handleGetMe, handleLogout } from "./api/handlers/authHandler.js";
+import { handleSelectPlan } from "./api/handlers/planHandler.js";
 import { handleForgotPassword } from "./api/handlers/forgotPasswordHandler.js";
 import { handleResetPassword } from "./api/handlers/resetPasswordHandler.js";
 import { handleChangeEmailRequest, handleConfirmEmailChange } from "./api/handlers/changeEmailHandler.js";
@@ -81,6 +82,7 @@ class App {
         this.router.post("/sign-in", handleSignIn);
         this.router.get("/auth/me", handleGetMe);
         this.router.post("/auth/logout", handleLogout);
+        this.router.post("/auth/select-plan", handleSelectPlan);
         this.router.post("/forgot-password", handleForgotPassword);
         this.router.post("/reset-password", handleResetPassword);
         
