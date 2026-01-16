@@ -14,7 +14,7 @@ import { Field, Label as FieldLabel, Description } from "@components/fieldset";
 import { Badge } from "@components/badge";
 import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel } from "@components/dropdown";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
-import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Copy, ClipboardPaste, Calendar, GripVertical, Crown, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Copy, ClipboardPaste, Calendar, GripVertical, Crown, ChevronDown, MoreVertical } from "lucide-react";
 
 interface LoggedFood {
     id: number;
@@ -1140,7 +1140,7 @@ const FoodTracking: React.FC = () => {
                             return (
                                 <div 
                                     key={category} 
-                                    className={`space-y-4 rounded-lg p-4 transition-colors ${
+                                    className={`space-y-4 rounded-lg transition-colors ${
                                         isDragOver 
                                             ? "bg-blue-50 ring-2 ring-blue-400 dark:bg-blue-900/20" 
                                             : ""
@@ -1231,29 +1231,37 @@ const FoodTracking: React.FC = () => {
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            <div className="flex gap-2">
-                                                                <Button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleEditFood(food);
-                                                                    }}
-                                                                    outline
-                                                                    className="h-9 w-9 p-0 flex items-center justify-center"
-                                                                    title="Edit"
-                                                                >
-                                                                    <Pencil className="h-4 w-4 stroke-2" />
-                                                                </Button>
-                                                                <Button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleDeleteFood(food);
-                                                                    }}
-                                                                    outline
-                                                                    className="h-9 w-9 p-0 flex items-center justify-center text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                                                                    title="Delete"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4 stroke-2" />
-                                                                </Button>
+                                                            <div className="flex justify-end">
+                                                                <Dropdown>
+                                                                    <DropdownButton
+                                                                        plain
+                                                                        className="p-2"
+                                                                        aria-label="Food item options"
+                                                                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+                                                                    >
+                                                                        <MoreVertical className="h-5 w-5" />
+                                                                    </DropdownButton>
+                                                                    <DropdownMenu anchor="bottom end" className="min-w-40">
+                                                                        <DropdownItem
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleEditFood(food);
+                                                                            }}
+                                                                        >
+                                                                            <Pencil className="h-4 w-4" data-slot="icon" />
+                                                                            <DropdownLabel>Edit</DropdownLabel>
+                                                                        </DropdownItem>
+                                                                        <DropdownItem
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleDeleteFood(food);
+                                                                            }}
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" data-slot="icon" />
+                                                                            <DropdownLabel>Delete</DropdownLabel>
+                                                                        </DropdownItem>
+                                                                    </DropdownMenu>
+                                                                </Dropdown>
                                                             </div>
                                                         </div>
                                                     </div>

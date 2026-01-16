@@ -11,8 +11,9 @@ import { Input } from "@components/input";
 import { Select } from "@components/select";
 import { Dialog, DialogActions, DialogBody, DialogDescription, DialogTitle } from "@components/dialog";
 import { Field, Label as FieldLabel } from "@components/fieldset";
+import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel } from "@components/dropdown";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
-import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Scale } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Scale, MoreVertical } from "lucide-react";
 import { ActivityType, ACTIVITY_TYPES, getActivityTypeConfig, type ActivityTypeConfig } from "@utils/activityTypes";
 import { formatFieldValue } from "@utils/activityFormatters";
 
@@ -841,23 +842,30 @@ const ProgressTracking: React.FC = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="flex gap-2">
-                                            <Button
-                                                onClick={() => handleEditActivity(activity)}
-                                                outline
-                                                className="h-9 w-9 p-0 flex items-center justify-center"
-                                                title="Edit"
-                                            >
-                                                <Pencil className="h-4 w-4 stroke-2" />
-                                            </Button>
-                                            <Button
-                                                onClick={() => handleDeleteActivity(activity)}
-                                                outline
-                                                className="h-9 w-9 p-0 flex items-center justify-center border-red-300 text-red-600 hover:border-red-400 hover:text-red-700 dark:border-red-700 dark:text-red-400 dark:hover:border-red-600 dark:hover:text-red-300"
-                                                title="Delete"
-                                            >
-                                                <Trash2 className="h-4 w-4 stroke-2" />
-                                            </Button>
+                                        <div className="flex justify-end">
+                                            <Dropdown>
+                                                <DropdownButton
+                                                    plain
+                                                    className="p-2"
+                                                    aria-label="Activity options"
+                                                >
+                                                    <MoreVertical className="h-5 w-5" />
+                                                </DropdownButton>
+                                                <DropdownMenu anchor="bottom end" className="min-w-40">
+                                                    <DropdownItem
+                                                        onClick={() => handleEditActivity(activity)}
+                                                    >
+                                                        <Pencil className="h-4 w-4" data-slot="icon" />
+                                                        <DropdownLabel>Edit</DropdownLabel>
+                                                    </DropdownItem>
+                                                    <DropdownItem
+                                                        onClick={() => handleDeleteActivity(activity)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" data-slot="icon" />
+                                                        <DropdownLabel>Delete</DropdownLabel>
+                                                    </DropdownItem>
+                                                </DropdownMenu>
+                                            </Dropdown>
                                         </div>
                                     </div>
                                 </div>
