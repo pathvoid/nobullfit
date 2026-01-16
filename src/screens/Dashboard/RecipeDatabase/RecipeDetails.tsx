@@ -266,7 +266,7 @@ const RecipeDetails: React.FC = () => {
                 Object.keys(macros).forEach((key) => {
                     const value = macros[key as keyof typeof macros];
                     if (value !== undefined && value !== null) {
-                        // Map recipe macro keys to Edamam nutrient codes
+                        // Map recipe macro keys to nutrient codes
                         const nutrientKey = key === "calories" ? "ENERC_KCAL" :
                                           key === "protein" ? "PROCNT" :
                                           key === "carbohydrates" ? "CHOCDF" :

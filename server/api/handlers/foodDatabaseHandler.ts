@@ -1,59 +1,33 @@
 import type { Request, Response } from "express";
+import { searchFoods } from "../utils/openFoodFactsService.js";
 
-// Handler for food database search using Edamam API v2
+// Handler for food database search using OpenFoodFacts local database
 export async function handleFoodDatabaseSearch(req: Request, res: Response): Promise<void> {
     try {
-        const { query, nextUrl } = req.query;
+        const { query, offset, limit } = req.query;
 
         // Validate query parameter
-        if (!query && !nextUrl) {
-            res.status(400).json({ error: "Query parameter 'query' or 'nextUrl' is required" });
+        if (!query || typeof query !== "string") {
+            res.status(400).json({ error: "Query parameter 'query' is required" });
             return;
         }
 
-        const appId = process.env.EDAMAM_APP_ID;
-        const appKey = process.env.EDAMAM_APP_KEY;
+        // Parse pagination parameters
+        const offsetNum = offset ? parseInt(offset as string, 10) : 0;
+        const limitNum = limit ? parseInt(limit as string, 10) : 20;
 
-        if (!appId || !appKey) {
-            res.status(500).json({ error: "Edamam API credentials not configured" });
+        // Validate pagination
+        if (isNaN(offsetNum) || offsetNum < 0) {
+            res.status(400).json({ error: "Invalid offset parameter" });
+            return;
+        }
+        if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+            res.status(400).json({ error: "Invalid limit parameter (must be 1-100)" });
             return;
         }
 
-        let apiUrl: string;
-
-        if (nextUrl && typeof nextUrl === "string") {
-            // Use the next URL from pagination
-            apiUrl = nextUrl;
-        } else {
-            // Build the initial search URL
-            const baseUrl = "https://api.edamam.com/api/food-database/v2/parser";
-            const params = new URLSearchParams({
-                app_id: appId,
-                app_key: appKey,
-                ingr: query as string,
-                categoryLabel: "food"
-            });
-            apiUrl = `${baseUrl}?${params.toString()}`;
-        }
-
-        // Make request to Edamam API
-        const response = await fetch(apiUrl, {
-            headers: {
-                Accept: "application/json",
-                "Accept-Encoding": "gzip"
-            }
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            res.status(response.status).json({ 
-                error: "Failed to fetch from Edamam API",
-                details: errorText 
-            });
-            return;
-        }
-
-        const data = await response.json();
+        // Search using OpenFoodFacts service
+        const data = await searchFoods(query, limitNum, offsetNum);
         res.json(data);
     } catch (error) {
         console.error("Error in food database search:", error);

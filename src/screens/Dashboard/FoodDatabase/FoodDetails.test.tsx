@@ -29,7 +29,7 @@ global.fetch = mockFetch;
 describe("FoodDetails", () => {
     const mockFoodData = {
         food: {
-            foodId: "food_123",
+            foodId: "3017620422003",
             label: "Apple",
             knownAs: "Fresh Apple",
             brand: "Local Farm",
@@ -44,8 +44,8 @@ describe("FoodDetails", () => {
                 SUGAR: 10
             },
             measures: [
-                { uri: "http://www.edamam.com/ontologies/edamam.owl#Measure_unit", label: "Whole", weight: 182 },
-                { uri: "http://www.edamam.com/ontologies/edamam.owl#Measure_gram", label: "Gram", weight: 1 }
+                { uri: "off://serving", label: "Serving", weight: 182 },
+                { uri: "off://gram", label: "Gram", weight: 1 }
             ]
         }
     };
@@ -76,7 +76,7 @@ describe("FoodDetails", () => {
                 })
             }
         ], {
-            initialEntries: ["/dashboard/food-database/food_123"]
+            initialEntries: ["/dashboard/food-database/3017620422003"]
         });
 
         render(<RouterProvider router={router} />);
@@ -121,7 +121,7 @@ describe("FoodDetails", () => {
                 })
             }
         ], {
-            initialEntries: ["/dashboard/food-database/food_123"]
+            initialEntries: ["/dashboard/food-database/3017620422003"]
         });
 
         render(<RouterProvider router={router} />);
@@ -146,7 +146,7 @@ describe("FoodDetails", () => {
                 })
             }
         ], {
-            initialEntries: ["/dashboard/food-database/food_123"]
+            initialEntries: ["/dashboard/food-database/3017620422003"]
         });
 
         render(<RouterProvider router={router} />);
@@ -174,7 +174,7 @@ describe("FoodDetails", () => {
                 })
             }
         ], {
-            initialEntries: ["/dashboard/food-database/food_123"]
+            initialEntries: ["/dashboard/food-database/3017620422003"]
         });
 
         render(<RouterProvider router={router} />);
@@ -201,7 +201,7 @@ describe("FoodDetails", () => {
                 })
             }
         ], {
-            initialEntries: ["/dashboard/food-database/food_123"]
+            initialEntries: ["/dashboard/food-database/3017620422003"]
         });
 
         render(<RouterProvider router={router} />);
@@ -223,7 +223,7 @@ describe("FoodDetails", () => {
                 })
             }
         ], {
-            initialEntries: ["/dashboard/food-database/food_123"]
+            initialEntries: ["/dashboard/food-database/3017620422003"]
         });
 
         render(<RouterProvider router={router} />);
@@ -250,7 +250,7 @@ describe("FoodDetails", () => {
                 })
             }
         ], {
-            initialEntries: ["/dashboard/food-database/food_123"]
+            initialEntries: ["/dashboard/food-database/3017620422003"]
         });
 
         render(<RouterProvider router={router} />);
@@ -266,28 +266,6 @@ describe("FoodDetails", () => {
         });
     });
 
-    it("should have edamam attribution link", async () => {
-        const router = createMemoryRouter([
-            {
-                path: "/dashboard/food-database/:foodId",
-                element: <FoodDetails />,
-                loader: async () => ({
-                    title: "Apple - NoBullFit",
-                    meta: [],
-                    foodData: mockFoodData
-                })
-            }
-        ], {
-            initialEntries: ["/dashboard/food-database/food_123"]
-        });
-
-        render(<RouterProvider router={router} />);
-
-        await waitFor(() => {
-            expect(screen.getByTitle(/powered by edamam/i)).toBeInTheDocument();
-        });
-    });
-
     it("should display fiber and sugar if available", async () => {
         const router = createMemoryRouter([
             {
@@ -300,7 +278,7 @@ describe("FoodDetails", () => {
                 })
             }
         ], {
-            initialEntries: ["/dashboard/food-database/food_123"]
+            initialEntries: ["/dashboard/food-database/3017620422003"]
         });
 
         render(<RouterProvider router={router} />);

@@ -13,11 +13,13 @@
     "build:client": "vite build --outDir dist/app/client",
     "build:server": "tsc -p tsconfig.server.json && vite build --ssr src/entry-server.tsx --outDir dist/entry",
     "clean": "rimraf dist",
-    "serve": "cross-env NODE_ENV=production node ./dist/app/server"
+    "serve": "cross-env NODE_ENV=production node ./dist/app/server",
+    "setup:off-database": "tsx scripts/setup-off-database.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.955.0",
     "@aws-sdk/client-ses": "^3.955.0",
+    "@duckdb/node-api": "1.4.3-r.3",
     "@headlessui/react": "^2.2.9",
     "@loadable/component": "^5.16.4",
     "@tailwindcss/vite": "^4.1.18",

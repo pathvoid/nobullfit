@@ -27,7 +27,7 @@ function getDefaultCategory(): string {
 
 const CATEGORIES = ["Breakfast", "Lunch", "Dinner", "Snack", "Other"];
 
-interface EdamamFood {
+interface OFFFood {
     foodId: string;
     label: string;
     knownAs?: string;
@@ -75,7 +75,7 @@ interface EdamamFood {
 }
 
 interface FoodDetailsData {
-    food: EdamamFood;
+    food: OFFFood;
 }
 
 interface GroceryList {
@@ -287,8 +287,8 @@ const FoodDetails: React.FC = () => {
             measureLabel = foodData.food.measures[0].label;
         } else if (!measureUri) {
             // Default to grams if no measure is available
-            measureUri = "http://www.edamam.com/ontologies/edamam.owl#Measure_gram";
-            measureLabel = measureLabel || "g";
+            measureUri = "off://gram";
+            measureLabel = measureLabel || "Gram";
         }
 
         setIsLoggingFood(true);
@@ -668,22 +668,7 @@ const FoodDetails: React.FC = () => {
                         </section>
                     )}
                 </div>
-                
-                {/* Edamam Attribution */}
-                <div className="flex justify-end">
-                    <a 
-                        href="https://www.edamam.com" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        title="Powered by Edamam"
-                    >
-                        <img 
-                            src="https://developer.edamam.com/images/transparent.svg" 
-                            alt="Powered by Edamam"
-                            className="h-6"
-                        />
-                    </a>
-                </div>
+
             </div>
 
             {/* Add to Grocery List Dialog */}

@@ -2,17 +2,19 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { Request, Response } from "express";
 import { handleFoodDatabaseSearch } from "./foodDatabaseHandler";
 
+// Mock the OpenFoodFacts service
+vi.mock("../utils/openFoodFactsService", () => ({
+    searchFoods: vi.fn()
+}));
+
+import { searchFoods } from "../utils/openFoodFactsService.js";
+
 describe("foodDatabaseHandler", () => {
     let mockRequest: Partial<Request>;
     let mockResponse: Partial<Response>;
-    const originalEnv = { ...process.env };
 
     beforeEach(() => {
         vi.clearAllMocks();
-
-        // Set environment variables for Edamam API
-        process.env.EDAMAM_APP_ID = "test_app_id";
-        process.env.EDAMAM_APP_KEY = "test_app_key";
 
         mockRequest = {
             query: {}
@@ -22,13 +24,9 @@ describe("foodDatabaseHandler", () => {
             status: vi.fn().mockReturnThis(),
             json: vi.fn().mockReturnThis()
         };
-
-        // Mock global fetch
-        global.fetch = vi.fn();
     });
 
     afterEach(() => {
-        process.env = originalEnv;
         vi.restoreAllMocks();
     });
 
@@ -36,97 +34,83 @@ describe("foodDatabaseHandler", () => {
         it("should search for foods successfully", async () => {
             mockRequest.query = { query: "apple" };
 
-            const mockApiResponse = {
-                parsed: [{ food: { foodId: "food1", label: "Apple" } }],
-                hints: [{ food: { foodId: "food2", label: "Green Apple" } }]
+            const mockSearchResult = {
+                text: "apple",
+                count: 100,
+                parsed: [],
+                hints: [{ food: { foodId: "3017620422003", label: "Apple" }, measures: [] }]
             };
 
-            (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-                ok: true,
-                json: () => Promise.resolve(mockApiResponse)
-            });
+            (searchFoods as ReturnType<typeof vi.fn>).mockResolvedValue(mockSearchResult);
 
             await handleFoodDatabaseSearch(mockRequest as Request, mockResponse as Response);
 
-            expect(global.fetch).toHaveBeenCalledWith(
-                expect.stringContaining("api.edamam.com/api/food-database/v2/parser"),
-                expect.any(Object)
-            );
-            expect(mockResponse.json).toHaveBeenCalledWith(mockApiResponse);
+            expect(searchFoods).toHaveBeenCalledWith("apple", 20, 0);
+            expect(mockResponse.json).toHaveBeenCalledWith(mockSearchResult);
         });
 
-        it("should handle pagination with nextUrl", async () => {
-            const nextUrl = "https://api.edamam.com/api/food-database/v2/parser?session=abc123";
-            mockRequest.query = { nextUrl };
+        it("should handle pagination with offset", async () => {
+            mockRequest.query = { query: "apple", offset: "20", limit: "10" };
 
-            const mockApiResponse = {
-                hints: [{ food: { foodId: "food3", label: "Another Food" } }]
+            const mockSearchResult = {
+                text: "apple",
+                count: 100,
+                parsed: [],
+                hints: [{ food: { foodId: "3017620422003", label: "Apple" }, measures: [] }]
             };
 
-            (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-                ok: true,
-                json: () => Promise.resolve(mockApiResponse)
-            });
+            (searchFoods as ReturnType<typeof vi.fn>).mockResolvedValue(mockSearchResult);
 
             await handleFoodDatabaseSearch(mockRequest as Request, mockResponse as Response);
 
-            expect(global.fetch).toHaveBeenCalledWith(nextUrl, expect.any(Object));
-            expect(mockResponse.json).toHaveBeenCalledWith(mockApiResponse);
+            expect(searchFoods).toHaveBeenCalledWith("apple", 10, 20);
+            expect(mockResponse.json).toHaveBeenCalledWith(mockSearchResult);
         });
 
-        it("should return 400 if query and nextUrl are missing", async () => {
+        it("should return 400 if query is missing", async () => {
             mockRequest.query = {};
 
             await handleFoodDatabaseSearch(mockRequest as Request, mockResponse as Response);
 
             expect(mockResponse.status).toHaveBeenCalledWith(400);
             expect(mockResponse.json).toHaveBeenCalledWith({
-                error: "Query parameter 'query' or 'nextUrl' is required"
+                error: "Query parameter 'query' is required"
             });
         });
 
-        it("should return 500 if Edamam credentials are not configured", async () => {
-            delete process.env.EDAMAM_APP_ID;
-            delete process.env.EDAMAM_APP_KEY;
-            mockRequest.query = { query: "apple" };
+        it("should return 400 if offset is invalid", async () => {
+            mockRequest.query = { query: "apple", offset: "-1" };
 
             await handleFoodDatabaseSearch(mockRequest as Request, mockResponse as Response);
 
-            expect(mockResponse.status).toHaveBeenCalledWith(500);
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
             expect(mockResponse.json).toHaveBeenCalledWith({
-                error: "Edamam API credentials not configured"
+                error: "Invalid offset parameter"
             });
         });
 
-        it("should handle Edamam API error", async () => {
-            mockRequest.query = { query: "apple" };
-
-            (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-                ok: false,
-                status: 429,
-                text: () => Promise.resolve("Rate limit exceeded")
-            });
+        it("should return 400 if limit is invalid", async () => {
+            mockRequest.query = { query: "apple", limit: "200" };
 
             await handleFoodDatabaseSearch(mockRequest as Request, mockResponse as Response);
 
-            expect(mockResponse.status).toHaveBeenCalledWith(429);
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
             expect(mockResponse.json).toHaveBeenCalledWith({
-                error: "Failed to fetch from Edamam API",
-                details: "Rate limit exceeded"
+                error: "Invalid limit parameter (must be 1-100)"
             });
         });
 
-        it("should handle fetch error", async () => {
+        it("should handle search error", async () => {
             mockRequest.query = { query: "apple" };
 
-            (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Network error"));
+            (searchFoods as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Database error"));
 
             await handleFoodDatabaseSearch(mockRequest as Request, mockResponse as Response);
 
             expect(mockResponse.status).toHaveBeenCalledWith(500);
             expect(mockResponse.json).toHaveBeenCalledWith({
                 error: "Internal server error",
-                message: "Network error"
+                message: "Database error"
             });
         });
     });

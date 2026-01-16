@@ -15,6 +15,11 @@ yarn.lock
 package-lock.json
 pnpm-lock.yaml
 
+# Data files (OpenFoodFacts database)
+data/openfoodfacts/*.parquet
+data/openfoodfacts/*.duckdb
+data/openfoodfacts/*.duckdb.wal
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

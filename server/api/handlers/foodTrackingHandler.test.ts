@@ -17,14 +17,13 @@ vi.mock("../utils/jwt", () => ({
     verifyToken: vi.fn()
 }));
 
-vi.mock("../utils/edamamNutrients", () => ({
-    calculateNutrientsForFood: vi.fn(),
-    convertEdamamNutrientsToOurFormat: vi.fn()
+vi.mock("../utils/openFoodFactsNutrients", () => ({
+    calculateNutrientsForFood: vi.fn()
 }));
 
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
-import { calculateNutrientsForFood, convertEdamamNutrientsToOurFormat } from "../utils/edamamNutrients.js";
+import { calculateNutrientsForFood } from "../utils/openFoodFactsNutrients.js";
 
 describe("foodTrackingHandler", () => {
     let mockRequest: Partial<Request>;
@@ -166,12 +165,12 @@ describe("foodTrackingHandler", () => {
             mockRequest.headers = { authorization: "Bearer token" };
             mockRequest.body = {
                 itemType: "food",
-                foodId: "food_123",
+                foodId: "3017620422003",
                 foodLabel: "Apple",
-                foodData: { id: "food_123", nutrients: { ENERC_KCAL: 52 } },
+                foodData: { id: "3017620422003", nutrients: { ENERC_KCAL: 52 } },
                 quantity: 1,
-                measureUri: "http://www.edamam.com/ontologies/edamam.owl#Measure_unit",
-                measureLabel: "whole",
+                measureUri: "off://serving",
+                measureLabel: "Serving",
                 category: "Breakfast",
                 date: "2024-01-15",
                 timezone: "UTC",
@@ -181,7 +180,7 @@ describe("foodTrackingHandler", () => {
             const insertedFood = {
                 id: 1,
                 item_type: "food",
-                food_id: "food_123",
+                food_id: "3017620422003",
                 food_label: "Apple",
                 quantity: 1
             };
@@ -227,25 +226,25 @@ describe("foodTrackingHandler", () => {
             expect(mockResponse.json).toHaveBeenCalledWith({ food: insertedFood });
         });
 
-        it("should calculate nutrients from Edamam API if not provided", async () => {
+        it("should calculate nutrients from food data if not provided", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
-            (calculateNutrientsForFood as ReturnType<typeof vi.fn>).mockResolvedValue({
-                calories: 100,
-                totalNutrients: { ENERC_KCAL: { quantity: 100 } }
-            });
-            (convertEdamamNutrientsToOurFormat as ReturnType<typeof vi.fn>).mockReturnValue({
+            (calculateNutrientsForFood as ReturnType<typeof vi.fn>).mockReturnValue({
                 ENERC_KCAL: 100
             });
 
             mockRequest.headers = { authorization: "Bearer token" };
             mockRequest.body = {
                 itemType: "food",
-                foodId: "food_123",
+                foodId: "3017620422003",
                 foodLabel: "Apple",
-                foodData: { id: "food_123" },
+                foodData: { 
+                    id: "3017620422003",
+                    nutrients: { ENERC_KCAL: 52 },
+                    measures: [{ uri: "off://serving", label: "Serving", weight: 182 }]
+                },
                 quantity: 1,
-                measureUri: "http://www.edamam.com/ontologies/edamam.owl#Measure_unit",
-                measureLabel: "whole",
+                measureUri: "off://serving",
+                measureLabel: "Serving",
                 category: "Breakfast",
                 date: "2024-01-15",
                 timezone: "UTC"
@@ -254,7 +253,7 @@ describe("foodTrackingHandler", () => {
             const insertedFood = {
                 id: 1,
                 item_type: "food",
-                food_id: "food_123",
+                food_id: "3017620422003",
                 food_label: "Apple"
             };
 

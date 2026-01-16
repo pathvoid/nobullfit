@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
-import { calculateNutrientsForFood, convertEdamamNutrientsToOurFormat } from "../utils/edamamNutrients.js";
+import { calculateNutrientsForFood } from "../utils/openFoodFactsNutrients.js";
 
 // Helper function to get user ID from request
 async function getUserIdFromRequest(req: Request): Promise<number | null> {
@@ -103,29 +103,17 @@ export async function handleLogFood(req: Request, res: Response): Promise<void> 
 
         // Calculate nutrients if not provided (for food items)
         let nutrients = providedNutrients;
-        if (!nutrients && itemType === "food" && measureUri) {
-            const edamamResponse = await calculateNutrientsForFood(foodId, quantity, measureUri);
-            if (edamamResponse) {
-                nutrients = convertEdamamNutrientsToOurFormat(edamamResponse);
-            } else {
-                // Fallback: calculate from base nutrients if available
-                const foodDataObj = typeof foodData === "string" ? JSON.parse(foodData) : foodData;
-                if (foodDataObj.nutrients) {
-                    // Find the measure weight
-                    const measure = foodDataObj.measures?.find((m: { uri: string }) => m.uri === measureUri);
-                    const measureWeight = measure?.weight || 100;
-                    const multiplier = (quantity * measureWeight) / 100;
-                    
-                    nutrients = {};
-                    Object.keys(foodDataObj.nutrients).forEach((key) => {
-                        if (foodDataObj.nutrients[key] !== undefined) {
-                            nutrients[key] = foodDataObj.nutrients[key] * multiplier;
-                        }
-                    });
-                } else {
-                    res.status(400).json({ error: "Unable to calculate nutrients" });
-                    return;
-                }
+        if (!nutrients && itemType === "food") {
+            // Calculate from base nutrients in food data
+            const foodDataObj = typeof foodData === "string" ? JSON.parse(foodData) : foodData;
+            
+            if (foodDataObj.nutrients) {
+                nutrients = calculateNutrientsForFood(foodDataObj, quantity, measureUri || "off://100g");
+            }
+            
+            if (!nutrients) {
+                res.status(400).json({ error: "Unable to calculate nutrients - food has no nutrient data" });
+                return;
             }
         }
 

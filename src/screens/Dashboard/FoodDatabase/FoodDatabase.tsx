@@ -20,8 +20,8 @@ import {
 } from "@components/pagination";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 
-// Types for Edamam API response
-interface EdamamFood {
+// Types for OpenFoodFacts API response
+interface OFFFood {
     foodId: string;
     label: string;
     knownAs?: string;
@@ -38,8 +38,8 @@ interface EdamamFood {
     image?: string;
 }
 
-interface EdamamHint {
-    food: EdamamFood;
+interface OFFHint {
+    food: OFFFood;
     measures: Array<{
         uri: string;
         label: string;
@@ -47,19 +47,13 @@ interface EdamamHint {
     }>;
 }
 
-interface EdamamResponse {
+interface OFFResponse {
     text: string;
     count: number;
     parsed: Array<{
-        food: EdamamFood;
-        quantity?: number;
-        measure?: {
-            uri: string;
-            label: string;
-            weight: number;
-        };
+        food: OFFFood;
     }>;
-    hints: EdamamHint[];
+    hints: OFFHint[];
     _links?: {
         next?: {
             href: string;
@@ -78,17 +72,17 @@ const FoodDatabase: React.FC = () => {
 
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
-    const [searchResults, setSearchResults] = useState<EdamamResponse | null>(null);
+    const [searchResults, setSearchResults] = useState<OFFResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [nextUrl, setNextUrl] = useState<string | null>(null);
     const [originalQuery, setOriginalQuery] = useState<string>("");
     const [totalCount, setTotalCount] = useState<number | null>(null);
 
-    const handleSearch = async (e: FormEvent, url?: string) => {
+    const handleSearch = async (e: FormEvent, offset?: number) => {
         e.preventDefault();
         
-        if (!searchQuery.trim() && !url) {
+        if (!searchQuery.trim() && offset === undefined) {
             return;
         }
 
@@ -97,13 +91,11 @@ const FoodDatabase: React.FC = () => {
 
         try {
             const params = new URLSearchParams();
-            if (url) {
-                // Extract the next URL query params
-                const urlObj = new URL(url);
-                params.append("nextUrl", url);
-            } else {
-                params.append("query", searchQuery.trim());
+            params.append("query", originalQuery || searchQuery.trim());
+            if (offset !== undefined) {
+                params.append("offset", offset.toString());
             }
+            params.append("limit", "20");
 
             const response = await fetch(`/api/food-database/search?${params.toString()}`);
             
@@ -112,13 +104,13 @@ const FoodDatabase: React.FC = () => {
                 throw new Error(errorData.error || "Failed to search food database");
             }
 
-            const data: EdamamResponse = await response.json();
+            const data: OFFResponse = await response.json();
             setSearchResults(data);
             
             // Update pagination state
-            if (url) {
-                // We're navigating to a paginated page - increment page number
-                setCurrentPage(currentPage + 1);
+            if (offset !== undefined && offset > 0) {
+                // Calculate page from offset
+                setCurrentPage(Math.floor(offset / 20) + 1);
             } else {
                 // New search, reset pagination and store original query and total count
                 setCurrentPage(1);
@@ -138,17 +130,18 @@ const FoodDatabase: React.FC = () => {
     const handleNextPage = async (e: React.MouseEvent) => {
         e.preventDefault();
         if (nextUrl) {
-            await handleSearch(e as unknown as FormEvent, nextUrl);
+            // Calculate offset from current page
+            const newOffset = currentPage * 20;
+            await handleSearch(e as unknown as FormEvent, newOffset);
         }
     };
 
     const handlePreviousPage = async (e: React.MouseEvent) => {
         e.preventDefault();
         if (originalQuery && currentPage > 1) {
-            // Go back to the original search (page 1) by redoing the search
-            setCurrentPage(1);
-            setSearchQuery(originalQuery);
-            await handleSearch(e as unknown as FormEvent);
+            // Calculate offset for previous page
+            const newOffset = (currentPage - 2) * 20;
+            await handleSearch(e as unknown as FormEvent, newOffset);
         }
     };
 
@@ -229,34 +222,18 @@ const FoodDatabase: React.FC = () => {
                 </div>
 
                 <form onSubmit={handleSearch} className="space-y-4">
-                    <div className="flex flex-col gap-4">
-                        <div className="flex gap-4">
-                            <Input
-                                type="text"
-                                placeholder="Search for food (e.g., apple, chicken, pasta)"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1"
-                                disabled={isSearching}
-                            />
-                            <Button type="submit" disabled={isSearching || !searchQuery.trim()}>
-                                {isSearching ? "Searching..." : "Search"}
-                            </Button>
-                        </div>
-                        <div className="flex justify-end">
-                            <a 
-                                href="https://www.edamam.com" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                title="Powered by Edamam"
-                            >
-                                <img 
-                                    src="https://developer.edamam.com/images/transparent.svg" 
-                                    alt="Powered by Edamam"
-                                    className="h-6"
-                                />
-                            </a>
-                        </div>
+                    <div className="flex gap-4">
+                        <Input
+                            type="text"
+                            placeholder="Search for food (e.g., apple, chicken, pasta)"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="flex-1"
+                            disabled={isSearching}
+                        />
+                        <Button type="submit" disabled={isSearching || !searchQuery.trim()}>
+                            {isSearching ? "Searching..." : "Search"}
+                        </Button>
                     </div>
                 </form>
 
@@ -270,15 +247,6 @@ const FoodDatabase: React.FC = () => {
                     <div className="space-y-4">
                         {searchResults.hints.length > 0 ? (
                             <>
-                                <div>
-                                    <Text className="text-zinc-600 dark:text-zinc-400">
-                                        {totalCount !== null ? (
-                                            <>Found {totalCount.toLocaleString()} result{totalCount !== 1 ? "s" : ""}</>
-                                        ) : (
-                                            <>Showing {searchResults.hints.length} result{searchResults.hints.length !== 1 ? "s" : ""}</>
-                                        )}
-                                    </Text>
-                                </div>
                                 <div className="overflow-x-auto">
                                     <div className="inline-block min-w-full align-middle">
                                         <div className="overflow-hidden">

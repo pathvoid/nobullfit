@@ -11,7 +11,7 @@ We prioritize data privacy above all else. Your information belongs to you, and 
 ## Features
 
 ### Food Database
-Browse a comprehensive database of foods with detailed nutritional information powered by the Edamam API. Search for foods, view complete macronutrient and micronutrient breakdowns, and access measurement options for accurate tracking.
+Browse a comprehensive database of foods with detailed nutritional information powered by Open Food Facts. Search for foods, view complete macronutrient and micronutrient breakdowns, and access measurement options for accurate tracking.
 
 ### Food Tracking
 Log your daily meals and snacks with detailed nutritional tracking. Organize entries by meal categories (Breakfast, Lunch, Dinner, Snack, Other), track calories and macronutrients, and maintain a complete food diary. Support for both individual food items and recipe-based entries.
@@ -69,7 +69,7 @@ NoBullFit is built with modern web technologies:
 - **Backend**: Express.js with TypeScript
 - **Frontend**: React with Vite and Server-Side Rendering (SSR)
 - **Database**: PostgreSQL
-- **Food Data**: Edamam API integration
+- **Food Data**: Open Food Facts with DuckDB
 - **Data Visualization**: Recharts
 
 ## Development Status

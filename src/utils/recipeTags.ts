@@ -1,4 +1,4 @@
-// Recipe tags based on Edamam Food API categories
+// Recipe tags based on food categories
 // These tags will be used for filtering and searching recipes
 
 export const RECIPE_TAGS = {

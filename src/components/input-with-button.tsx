@@ -20,8 +20,8 @@ export const InputWithButton = forwardRef<HTMLInputElement, InputWithButtonProps
                     ref={ref}
                     className={clsx(
                         inputProps.className,
-                        // Add right padding to make room for the button
-                        "pr-[calc(var(--spacing(10))+var(--spacing(2.5)))] sm:pr-[calc(var(--spacing(9))+var(--spacing(2.5)))]"
+                        // Add right padding to make room for the button (10 + 2.5 = 12.5 spacing units)
+                        "pr-[calc(var(--spacing)*12.5)] sm:pr-[calc(var(--spacing)*11.5)]"
                     )}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center">
