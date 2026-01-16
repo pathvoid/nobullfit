@@ -27,6 +27,9 @@ const Layout: React.FC = () => {
                         <NavbarItem href="/about" current={location.pathname === "/about"} className="rounded-none p-0">
                             About
                         </NavbarItem>
+                        <NavbarItem href="/pricing" current={location.pathname === "/pricing"} className="rounded-none p-0">
+                            Pricing
+                        </NavbarItem>
                         <NavbarItem href="/contact" current={location.pathname === "/contact"} className="rounded-none p-0">
                             Contact
                         </NavbarItem>
@@ -59,6 +62,9 @@ const Layout: React.FC = () => {
                             </SidebarItem>
                             <SidebarItem href="/about" current={location.pathname === "/about"}>
                                 <SidebarLabel>About</SidebarLabel>
+                            </SidebarItem>
+                            <SidebarItem href="/pricing" current={location.pathname === "/pricing"}>
+                                <SidebarLabel>Pricing</SidebarLabel>
                             </SidebarItem>
                             <SidebarItem href="/contact" current={location.pathname === "/contact"}>
                                 <SidebarLabel>Contact</SidebarLabel>

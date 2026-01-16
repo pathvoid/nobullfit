@@ -6,6 +6,8 @@ import Home from "@screens/Home/Home";
 import homeLoader from "@loaders/homeLoader";
 import About from "@screens/About/About";
 import aboutLoader from "@loaders/aboutLoader";
+import Pricing from "@screens/Pricing/Pricing";
+import pricingLoader from "@loaders/pricingLoader";
 import contactLoader from "@loaders/contactLoader";
 import RefundPolicy from "@screens/RefundPolicy/RefundPolicy";
 import refundPolicyLoader from "@loaders/refundPolicyLoader";
@@ -81,6 +83,11 @@ const routes: RouteObject[] = [
                 path: "about",
                 element: <About />,
                 loader: aboutLoader
+            },
+            {
+                path: "pricing",
+                element: <Pricing />,
+                loader: pricingLoader
             },
             {
                 path: "contact",
