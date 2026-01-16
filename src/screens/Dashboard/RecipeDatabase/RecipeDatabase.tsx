@@ -7,6 +7,7 @@ import { Logo } from "@components/logo";
 import { Heading } from "@components/heading";
 import { Text } from "@components/text";
 import { Input } from "@components/input";
+import { InputWithButton } from "@components/input-with-button";
 import { Button } from "@components/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@components/table";
 import { Checkbox, CheckboxField, CheckboxGroup } from "@components/checkbox";
@@ -191,42 +192,42 @@ const RecipeDatabase: React.FC = () => {
 
                 <div className="space-y-4">
                     <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-zinc-400" />
-                            <Input
-                                type="text"
-                                placeholder="Search recipes by name or description..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10"
+                        <div className="flex gap-2 flex-1">
+                            <InputWithButton
+                                inputProps={{
+                                    type: "text",
+                                    placeholder: "Search recipes by name or description...",
+                                    value: searchQuery,
+                                    onChange: (e) => setSearchQuery(e.target.value)
+                                }}
+                                buttonProps={{
+                                    type: "button",
+                                    onClick: () => setShowFilters(!showFilters),
+                                    outline: true,
+                                    className: "flex items-center gap-1"
+                                }}
+                                buttonContent={
+                                    <>
+                                        <Filter className="size-4" />
+                                        {hasActiveFilters && (
+                                            <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
+                                                {(appliedSearchQuery.trim() ? 1 : 0) + selectedTags.length + (verifiedOnly ? 1 : 0) + (myRecipesOnly ? 1 : 0)}
+                                            </span>
+                                        )}
+                                    </>
+                                }
                             />
-                        </div>
-                        <div className="flex gap-2">
-                            <Button 
-                                type="button"
-                                onClick={() => setShowFilters(!showFilters)}
-                                outline
-                                className="flex items-center gap-2"
-                            >
-                                <Filter className="size-4" />
-                                Filters
-                                {hasActiveFilters && (
-                                    <span className="ml-1 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
-                                        {(appliedSearchQuery.trim() ? 1 : 0) + selectedTags.length + (verifiedOnly ? 1 : 0) + (myRecipesOnly ? 1 : 0)}
-                                    </span>
-                                )}
-                            </Button>
                             <Button type="submit" disabled={isSearching}>
                                 {isSearching ? "Searching..." : "Search"}
                             </Button>
-                            <Button 
-                                onClick={() => navigate("/dashboard/recipe-database/create")} 
-                                outline
-                                className="whitespace-nowrap"
-                            >
-                                Create Recipe
-                            </Button>
                         </div>
+                        <Button 
+                            onClick={() => navigate("/dashboard/recipe-database/create")} 
+                            outline
+                            className="w-full sm:w-auto whitespace-nowrap"
+                        >
+                            Create Recipe
+                        </Button>
                     </form>
 
                     {showFilters && (
