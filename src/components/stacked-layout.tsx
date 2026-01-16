@@ -73,7 +73,7 @@ export function StackedLayout({
       </MobileSidebar>
 
       {/* Navbar - sticky on mobile */}
-      <header className="sticky top-0 z-50 flex items-center px-4 bg-white dark:bg-zinc-900 lg:relative lg:z-auto">
+      <header className="sticky top-0 z-50 flex items-center px-4 bg-white dark:bg-zinc-900 lg:bg-transparent lg:dark:bg-transparent lg:relative lg:z-auto">
         <div className="py-2.5 lg:hidden mr-3">
           <NavbarItem onClick={() => setShowSidebar(true)} aria-label="Open navigation">
             <HamburgerIcon data-slot="icon" />
