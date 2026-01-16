@@ -76,7 +76,10 @@ describe("userPreferencesHandler", () => {
                 quick_add_days: 30,
                 weight_goal: null,
                 target_weight: null,
-                target_weight_unit: null
+                target_weight_unit: null,
+                communication_email: true,
+                communication_sms: false,
+                communication_push: false
             });
         });
 
@@ -86,7 +89,10 @@ describe("userPreferencesHandler", () => {
                     quick_add_days: 60,
                     weight_goal: null,
                     target_weight: null,
-                    target_weight_unit: null
+                    target_weight_unit: null,
+                    communication_email: true,
+                    communication_sms: false,
+                    communication_push: false
                 }] 
             });
 
@@ -97,7 +103,10 @@ describe("userPreferencesHandler", () => {
                 quick_add_days: 60,
                 weight_goal: null,
                 target_weight: null,
-                target_weight_unit: null
+                target_weight_unit: null,
+                communication_email: true,
+                communication_sms: false,
+                communication_push: false
             });
         });
 
@@ -150,7 +159,10 @@ describe("userPreferencesHandler", () => {
                     quick_add_days: 60,
                     weight_goal: null,
                     target_weight: null,
-                    target_weight_unit: null
+                    target_weight_unit: null,
+                    communication_email: true,
+                    communication_sms: false,
+                    communication_push: false
                 }] 
             });
 
@@ -162,7 +174,10 @@ describe("userPreferencesHandler", () => {
                 quick_add_days: 60,
                 weight_goal: null,
                 target_weight: null,
-                target_weight_unit: null
+                target_weight_unit: null,
+                communication_email: true,
+                communication_sms: false,
+                communication_push: false
             });
         });
 
@@ -173,7 +188,10 @@ describe("userPreferencesHandler", () => {
                     quick_add_days: 0,
                     weight_goal: null,
                     target_weight: null,
-                    target_weight_unit: null
+                    target_weight_unit: null,
+                    communication_email: true,
+                    communication_sms: false,
+                    communication_push: false
                 }] 
             });
 
@@ -185,7 +203,10 @@ describe("userPreferencesHandler", () => {
                 quick_add_days: 0,
                 weight_goal: null,
                 target_weight: null,
-                target_weight_unit: null
+                target_weight_unit: null,
+                communication_email: true,
+                communication_sms: false,
+                communication_push: false
             });
         });
 

@@ -83,7 +83,7 @@ export async function handleSignUp(req: Request, res: Response): Promise<void> {
 
         // Create default user settings
         await pool.query(
-            "INSERT INTO user_settings (user_id, quick_add_days) VALUES ($1, 30)",
+            "INSERT INTO user_settings (user_id, quick_add_days, communication_email, communication_sms, communication_push) VALUES ($1, 30, true, false, false)",
             [newUser.id]
         );
 

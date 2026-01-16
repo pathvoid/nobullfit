@@ -74,9 +74,9 @@ describe("signUpHandler", () => {
 
         expect(bcrypt.hash).toHaveBeenCalledWith("password123", 10);
         expect(mockPool.query).toHaveBeenCalledTimes(3);
-        // Verify user_settings was created with default 30 days
+        // Verify user_settings was created with default 30 days and communication preferences
         expect(mockPool.query).toHaveBeenCalledWith(
-            "INSERT INTO user_settings (user_id, quick_add_days) VALUES ($1, 30)",
+            "INSERT INTO user_settings (user_id, quick_add_days, communication_email, communication_sms, communication_push) VALUES ($1, 30, true, false, false)",
             [1]
         );
         expect(mockResponse.status).toHaveBeenCalledWith(200);

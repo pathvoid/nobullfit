@@ -299,5 +299,349 @@ describe("Settings", () => {
         global.URL.createObjectURL = originalCreateObjectURL;
         global.URL.revokeObjectURL = originalRevokeObjectURL;
     });
+
+    describe("Communication Preferences", () => {
+        beforeEach(() => {
+            // Mock preferences API response
+            (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url: string) => {
+                if (url === "/api/settings/preferences") {
+                    return Promise.resolve({
+                        ok: true,
+                        json: async () => ({
+                            quick_add_days: 30,
+                            communication_email: true,
+                            communication_sms: false,
+                            communication_push: false
+                        })
+                    });
+                }
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => ({})
+                });
+            });
+        });
+
+        it("should display communication preferences section", async () => {
+            const router = createMemoryRouter([
+                {
+                    path: "/dashboard/settings",
+                    element: <Settings />,
+                    loader: async () => ({
+                        title: "Settings - NoBullFit",
+                        meta: [],
+                        user: { email: "test@example.com" }
+                    }),
+                    HydrateFallback: () => null
+                }
+            ], {
+                initialEntries: ["/dashboard/settings"]
+            });
+
+            render(<RouterProvider router={router} />);
+
+            await waitFor(() => {
+                expect(screen.getByRole("heading", { name: /Communication Preferences/i })).toBeInTheDocument();
+            });
+
+            expect(screen.getByText(/Choose how you want to receive notifications/i)).toBeInTheDocument();
+        });
+
+        it("should display all communication preference checkboxes", async () => {
+            const router = createMemoryRouter([
+                {
+                    path: "/dashboard/settings",
+                    element: <Settings />,
+                    loader: async () => ({
+                        title: "Settings - NoBullFit",
+                        meta: [],
+                        user: { email: "test@example.com" }
+                    }),
+                    HydrateFallback: () => null
+                }
+            ], {
+                initialEntries: ["/dashboard/settings"]
+            });
+
+            render(<RouterProvider router={router} />);
+
+            await waitFor(() => {
+                // Use getByRole to find checkboxes by their accessible name
+                expect(screen.getByRole("checkbox", { name: /^Email$/i })).toBeInTheDocument();
+                expect(screen.getByRole("checkbox", { name: /^SMS$/i })).toBeInTheDocument();
+                expect(screen.getByRole("checkbox", { name: /^Push Notifications$/i })).toBeInTheDocument();
+            });
+        });
+
+        it("should disable SMS and Push notification checkboxes", async () => {
+            const router = createMemoryRouter([
+                {
+                    path: "/dashboard/settings",
+                    element: <Settings />,
+                    loader: async () => ({
+                        title: "Settings - NoBullFit",
+                        meta: [],
+                        user: { email: "test@example.com" }
+                    }),
+                    HydrateFallback: () => null
+                }
+            ], {
+                initialEntries: ["/dashboard/settings"]
+            });
+
+            render(<RouterProvider router={router} />);
+
+            await waitFor(() => {
+                const smsCheckbox = screen.getByRole("checkbox", { name: /^SMS$/i });
+                const pushCheckbox = screen.getByRole("checkbox", { name: /^Push Notifications$/i });
+                
+                // Headless UI Checkbox uses aria-disabled for disabled state
+                expect(smsCheckbox).toHaveAttribute("aria-disabled", "true");
+                expect(pushCheckbox).toHaveAttribute("aria-disabled", "true");
+            });
+        });
+
+        it("should load communication preferences from API", async () => {
+            (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url: string) => {
+                if (url === "/api/settings/preferences") {
+                    return Promise.resolve({
+                        ok: true,
+                        json: async () => ({
+                            quick_add_days: 30,
+                            communication_email: true,
+                            communication_sms: false,
+                            communication_push: false
+                        })
+                    });
+                }
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => ({})
+                });
+            });
+
+            const router = createMemoryRouter([
+                {
+                    path: "/dashboard/settings",
+                    element: <Settings />,
+                    loader: async () => ({
+                        title: "Settings - NoBullFit",
+                        meta: [],
+                        user: { email: "test@example.com" }
+                    }),
+                    HydrateFallback: () => null
+                }
+            ], {
+                initialEntries: ["/dashboard/settings"]
+            });
+
+            render(<RouterProvider router={router} />);
+
+            await waitFor(() => {
+                expect(global.fetch).toHaveBeenCalledWith(
+                    "/api/settings/preferences",
+                    expect.objectContaining({
+                        credentials: "include"
+                    })
+                );
+            });
+        });
+
+        it("should toggle email checkbox", async () => {
+            const router = createMemoryRouter([
+                {
+                    path: "/dashboard/settings",
+                    element: <Settings />,
+                    loader: async () => ({
+                        title: "Settings - NoBullFit",
+                        meta: [],
+                        user: { email: "test@example.com" }
+                    }),
+                    HydrateFallback: () => null
+                }
+            ], {
+                initialEntries: ["/dashboard/settings"]
+            });
+
+            render(<RouterProvider router={router} />);
+
+            // Wait for preferences to load
+            await waitFor(() => {
+                const emailCheckbox = screen.getByRole("checkbox", { name: /^Email$/i });
+                expect(emailCheckbox).toBeInTheDocument();
+            });
+
+            const emailCheckbox = screen.getByRole("checkbox", { name: /^Email$/i });
+            
+            // Check initial state (should be checked after loading)
+            await waitFor(() => {
+                expect(emailCheckbox).toHaveAttribute("aria-checked", "true");
+            });
+
+            // Click to uncheck
+            fireEvent.click(emailCheckbox);
+
+            // Should be unchecked now
+            await waitFor(() => {
+                expect(emailCheckbox).toHaveAttribute("aria-checked", "false");
+            });
+        });
+
+        it("should save communication preferences successfully", async () => {
+            let fetchCallCount = 0;
+            (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url: string) => {
+                if (url === "/api/settings/preferences") {
+                    fetchCallCount++;
+                    if (fetchCallCount === 1) {
+                        // First call - load preferences
+                        return Promise.resolve({
+                            ok: true,
+                            json: async () => ({
+                                quick_add_days: 30,
+                                communication_email: true,
+                                communication_sms: false,
+                                communication_push: false
+                            })
+                        });
+                    } else {
+                        // Second call - save preferences
+                        return Promise.resolve({
+                            ok: true,
+                            json: async () => ({
+                                message: "Preferences updated successfully",
+                                communication_email: false,
+                                communication_sms: false,
+                                communication_push: false
+                            })
+                        });
+                    }
+                }
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => ({})
+                });
+            });
+
+            const router = createMemoryRouter([
+                {
+                    path: "/dashboard/settings",
+                    element: <Settings />,
+                    loader: async () => ({
+                        title: "Settings - NoBullFit",
+                        meta: [],
+                        user: { email: "test@example.com" }
+                    }),
+                    HydrateFallback: () => null
+                }
+            ], {
+                initialEntries: ["/dashboard/settings"]
+            });
+
+            render(<RouterProvider router={router} />);
+
+            // Wait for preferences to load and email checkbox to be available
+            await waitFor(() => {
+                const emailCheckbox = screen.getByRole("checkbox", { name: /^Email$/i });
+                expect(emailCheckbox).toBeInTheDocument();
+            });
+
+            // Uncheck email checkbox
+            const emailCheckbox = screen.getByRole("checkbox", { name: /^Email$/i });
+            fireEvent.click(emailCheckbox);
+
+            // Wait for checkbox to update
+            await waitFor(() => {
+                expect(emailCheckbox).toHaveAttribute("aria-checked", "false");
+            });
+
+            // Click save button
+            const saveButton = screen.getByRole("button", { name: /Save Communication Preferences/i });
+            fireEvent.click(saveButton);
+
+            // Verify API was called with correct data
+            await waitFor(() => {
+                expect(global.fetch).toHaveBeenCalledWith(
+                    "/api/settings/preferences",
+                    expect.objectContaining({
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: expect.stringContaining('"communication_email":false')
+                    })
+                );
+            });
+
+            // Verify success message appears
+            await waitFor(() => {
+                expect(screen.getByText(/Communication preferences saved successfully/i)).toBeInTheDocument();
+            });
+        });
+
+        it("should display error message when saving communication preferences fails", async () => {
+            let fetchCallCount = 0;
+            (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url: string) => {
+                if (url === "/api/settings/preferences") {
+                    fetchCallCount++;
+                    if (fetchCallCount === 1) {
+                        // First call - load preferences
+                        return Promise.resolve({
+                            ok: true,
+                            json: async () => ({
+                                quick_add_days: 30,
+                                communication_email: true,
+                                communication_sms: false,
+                                communication_push: false
+                            })
+                        });
+                    } else {
+                        // Second call - save preferences fails
+                        return Promise.resolve({
+                            ok: false,
+                            json: async () => ({
+                                error: "Failed to save communication preferences."
+                            })
+                        });
+                    }
+                }
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => ({})
+                });
+            });
+
+            const router = createMemoryRouter([
+                {
+                    path: "/dashboard/settings",
+                    element: <Settings />,
+                    loader: async () => ({
+                        title: "Settings - NoBullFit",
+                        meta: [],
+                        user: { email: "test@example.com" }
+                    }),
+                    HydrateFallback: () => null
+                }
+            ], {
+                initialEntries: ["/dashboard/settings"]
+            });
+
+            render(<RouterProvider router={router} />);
+
+            // Wait for preferences to load and checkbox to be available
+            await waitFor(() => {
+                const emailCheckbox = screen.getByRole("checkbox", { name: /^Email$/i });
+                expect(emailCheckbox).toBeInTheDocument();
+            });
+
+            // Click save button
+            const saveButton = screen.getByRole("button", { name: /Save Communication Preferences/i });
+            fireEvent.click(saveButton);
+
+            // Verify error message appears
+            await waitFor(() => {
+                expect(screen.getByText(/Failed to save communication preferences/i)).toBeInTheDocument();
+            });
+        });
+    });
 });
 

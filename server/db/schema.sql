@@ -255,6 +255,9 @@ CREATE TABLE IF NOT EXISTS user_settings (
     weight_goal VARCHAR(10) CHECK (weight_goal IN ('lose', 'maintain', 'gain')),
     target_weight DECIMAL(10, 2),
     target_weight_unit VARCHAR(3) CHECK (target_weight_unit IN ('kg', 'lbs')),
+    communication_email BOOLEAN NOT NULL DEFAULT true,
+    communication_sms BOOLEAN NOT NULL DEFAULT false,
+    communication_push BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id)

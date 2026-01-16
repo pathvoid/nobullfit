@@ -58,7 +58,7 @@ export async function handleGetUserPreferences(req: Request, res: Response): Pro
 
         // Get user settings, or return defaults if not set
         const result = await pool.query(
-            "SELECT quick_add_days, weight_goal, target_weight, target_weight_unit FROM user_settings WHERE user_id = $1",
+            "SELECT quick_add_days, weight_goal, target_weight, target_weight_unit, communication_email, communication_sms, communication_push FROM user_settings WHERE user_id = $1",
             [userId]
         );
 
@@ -68,7 +68,10 @@ export async function handleGetUserPreferences(req: Request, res: Response): Pro
                 quick_add_days: 30,
                 weight_goal: null,
                 target_weight: null,
-                target_weight_unit: null
+                target_weight_unit: null,
+                communication_email: true,
+                communication_sms: false,
+                communication_push: false
             });
             return;
         }
@@ -77,7 +80,10 @@ export async function handleGetUserPreferences(req: Request, res: Response): Pro
             quick_add_days: result.rows[0].quick_add_days,
             weight_goal: result.rows[0].weight_goal,
             target_weight: result.rows[0].target_weight ? parseFloat(result.rows[0].target_weight) : null,
-            target_weight_unit: result.rows[0].target_weight_unit
+            target_weight_unit: result.rows[0].target_weight_unit,
+            communication_email: result.rows[0].communication_email ?? true,
+            communication_sms: result.rows[0].communication_sms ?? false,
+            communication_push: result.rows[0].communication_push ?? false
         });
     } catch (error) {
         console.error("Error fetching user preferences:", error);
@@ -100,7 +106,7 @@ export async function handleUpdateUserPreferences(req: Request, res: Response): 
             return;
         }
 
-        const { quick_add_days, weight_goal, target_weight, target_weight_unit } = req.body;
+        const { quick_add_days, weight_goal, target_weight, target_weight_unit, communication_email, communication_sms, communication_push } = req.body;
 
         // Validate quick_add_days if provided
         if (quick_add_days !== undefined) {
@@ -158,24 +164,44 @@ export async function handleUpdateUserPreferences(req: Request, res: Response): 
             }
         }
 
+        // Validate communication preferences if provided
+        if (communication_email !== undefined && typeof communication_email !== "boolean") {
+            res.status(400).json({ error: "Invalid communication_email value. Must be a boolean." });
+            return;
+        }
+        if (communication_sms !== undefined && typeof communication_sms !== "boolean") {
+            res.status(400).json({ error: "Invalid communication_sms value. Must be a boolean." });
+            return;
+        }
+        if (communication_push !== undefined && typeof communication_push !== "boolean") {
+            res.status(400).json({ error: "Invalid communication_push value. Must be a boolean." });
+            return;
+        }
+
         // Upsert user settings
         const result = await pool.query(
-            `INSERT INTO user_settings (user_id, quick_add_days, weight_goal, target_weight, target_weight_unit, updated_at)
-             VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+            `INSERT INTO user_settings (user_id, quick_add_days, weight_goal, target_weight, target_weight_unit, communication_email, communication_sms, communication_push, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
              ON CONFLICT (user_id)
              DO UPDATE SET 
                  quick_add_days = COALESCE($2, user_settings.quick_add_days),
                  weight_goal = $3,
                  target_weight = $4,
                  target_weight_unit = $5,
+                 communication_email = COALESCE($6, user_settings.communication_email),
+                 communication_sms = COALESCE($7, user_settings.communication_sms),
+                 communication_push = COALESCE($8, user_settings.communication_push),
                  updated_at = CURRENT_TIMESTAMP
-             RETURNING quick_add_days, weight_goal, target_weight, target_weight_unit`,
+             RETURNING quick_add_days, weight_goal, target_weight, target_weight_unit, communication_email, communication_sms, communication_push`,
             [
                 userId, 
                 quick_add_days ?? 30, 
                 weight_goal === undefined ? null : weight_goal,
                 target_weight === undefined ? null : target_weight,
-                target_weight_unit === undefined ? null : target_weight_unit
+                target_weight_unit === undefined ? null : target_weight_unit,
+                communication_email === undefined ? true : communication_email,
+                communication_sms === undefined ? false : communication_sms,
+                communication_push === undefined ? false : communication_push
             ]
         );
 
@@ -184,7 +210,10 @@ export async function handleUpdateUserPreferences(req: Request, res: Response): 
             quick_add_days: result.rows[0].quick_add_days,
             weight_goal: result.rows[0].weight_goal,
             target_weight: result.rows[0].target_weight ? parseFloat(result.rows[0].target_weight) : null,
-            target_weight_unit: result.rows[0].target_weight_unit
+            target_weight_unit: result.rows[0].target_weight_unit,
+            communication_email: result.rows[0].communication_email,
+            communication_sms: result.rows[0].communication_sms,
+            communication_push: result.rows[0].communication_push
         });
     } catch (error) {
         console.error("Error updating user preferences:", error);

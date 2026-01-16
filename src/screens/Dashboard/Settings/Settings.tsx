@@ -59,6 +59,14 @@ const Settings: React.FC = () => {
     const [preferencesError, setPreferencesError] = useState<string | null>(null);
     const [preferencesSuccess, setPreferencesSuccess] = useState<string | null>(null);
     const [isSavingPreferences, setIsSavingPreferences] = useState(false);
+    
+    // Communication preferences state - initialize as false to prevent hydration mismatch
+    const [communicationEmail, setCommunicationEmail] = useState<boolean>(false);
+    const [communicationSms, setCommunicationSms] = useState<boolean>(false);
+    const [communicationPush, setCommunicationPush] = useState<boolean>(false);
+    const [communicationError, setCommunicationError] = useState<string | null>(null);
+    const [communicationSuccess, setCommunicationSuccess] = useState<string | null>(null);
+    const [isSavingCommunication, setIsSavingCommunication] = useState(false);
 
     // Set helmet values
     if (loaderData?.title) {
@@ -77,6 +85,9 @@ const Settings: React.FC = () => {
             if (response.ok) {
                 const data = await response.json();
                 setQuickAddDays(data.quick_add_days ?? 30);
+                setCommunicationEmail(data.communication_email ?? true);
+                setCommunicationSms(data.communication_sms ?? false);
+                setCommunicationPush(data.communication_push ?? false);
             }
         } catch (error) {
             console.error("Error fetching preferences:", error);
@@ -116,6 +127,42 @@ const Settings: React.FC = () => {
         } catch (error) {
             setPreferencesError("An error occurred. Please try again.");
             setIsSavingPreferences(false);
+        }
+    };
+
+    // Handle communication preferences save
+    const handleSaveCommunicationPreferences = async () => {
+        setCommunicationError(null);
+        setCommunicationSuccess(null);
+        setIsSavingCommunication(true);
+
+        try {
+            const response = await fetch("/api/settings/preferences", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    communication_email: communicationEmail,
+                    communication_sms: communicationSms,
+                    communication_push: communicationPush
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setCommunicationError(data.error || "Failed to save communication preferences.");
+                setIsSavingCommunication(false);
+                return;
+            }
+
+            setCommunicationSuccess("Communication preferences saved successfully.");
+            setIsSavingCommunication(false);
+        } catch (error) {
+            setCommunicationError("An error occurred. Please try again.");
+            setIsSavingCommunication(false);
         }
     };
 
@@ -459,6 +506,73 @@ const Settings: React.FC = () => {
                         <div className="flex justify-end">
                             <Button onClick={handleSavePreferences} disabled={isSavingPreferences}>
                                 {isSavingPreferences ? "Saving..." : "Save Preferences"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="border-t border-zinc-950/10 dark:border-white/10 pt-8">
+                    <div className="space-y-6">
+                        <div>
+                            <Heading level={2} className="text-lg font-semibold">
+                                Communication Preferences
+                            </Heading>
+                            <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                                Choose how you want to receive notifications and updates from NoBullFit.
+                            </Text>
+                        </div>
+
+                        {communicationError && (
+                            <FormAlert variant="error">
+                                {communicationError}
+                            </FormAlert>
+                        )}
+                        {communicationSuccess && (
+                            <FormAlert variant="success">
+                                {communicationSuccess}
+                            </FormAlert>
+                        )}
+
+                        <CheckboxGroup>
+                            <CheckboxField>
+                                <Checkbox
+                                    checked={communicationEmail}
+                                    onChange={(checked) => setCommunicationEmail(checked)}
+                                />
+                                <Label>Email</Label>
+                                <Description>
+                                    Receive notifications and updates via email
+                                </Description>
+                            </CheckboxField>
+
+                            <CheckboxField>
+                                <Checkbox
+                                    checked={communicationSms}
+                                    onChange={(checked) => setCommunicationSms(checked)}
+                                    disabled
+                                />
+                                <Label>SMS</Label>
+                                <Description>
+                                    Receive notifications via text message (coming soon)
+                                </Description>
+                            </CheckboxField>
+
+                            <CheckboxField>
+                                <Checkbox
+                                    checked={communicationPush}
+                                    onChange={(checked) => setCommunicationPush(checked)}
+                                    disabled
+                                />
+                                <Label>Push Notifications</Label>
+                                <Description>
+                                    Receive push notifications in your browser (coming soon)
+                                </Description>
+                            </CheckboxField>
+                        </CheckboxGroup>
+
+                        <div className="flex justify-end">
+                            <Button onClick={handleSaveCommunicationPreferences} disabled={isSavingCommunication}>
+                                {isSavingCommunication ? "Saving..." : "Save Communication Preferences"}
                             </Button>
                         </div>
                     </div>
