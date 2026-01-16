@@ -53,6 +53,10 @@ describe("exportDataHandler", () => {
             country: "US",
             terms_accepted: true,
             terms_accepted_at: "2024-01-01T00:00:00Z",
+            plan: "free",
+            plan_selected_at: "2024-01-01T00:00:00Z",
+            subscribed: false,
+            subscribed_at: null,
             created_at: "2024-01-01T00:00:00Z",
             updated_at: "2024-01-01T00:00:00Z"
         };
@@ -119,7 +123,7 @@ describe("exportDataHandler", () => {
             .mockResolvedValueOnce({ rows: [] }) // progress_tracking
             .mockResolvedValueOnce({ rows: [] }) // weight_tracking
             .mockResolvedValueOnce({ rows: [] }) // tdee
-            .mockResolvedValueOnce({ rows: [{ quick_add_days: 30, weight_goal: "lose", target_weight: "75.00", target_weight_unit: "kg" }] }); // user_settings
+            .mockResolvedValueOnce({ rows: [{ quick_add_days: 30, weight_goal: "lose", target_weight: "75.00", target_weight_unit: "kg", communication_email: true, communication_sms: false, communication_push: false }] }); // user_settings
 
         await handleExportData(mockRequest as Request, mockResponse as Response);
 
@@ -199,6 +203,10 @@ describe("exportDataHandler", () => {
             country: null,
             terms_accepted: true,
             terms_accepted_at: null,
+            plan: "free",
+            plan_selected_at: "2024-01-01T00:00:00Z",
+            subscribed: false,
+            subscribed_at: null,
             created_at: "2024-01-01T00:00:00Z",
             updated_at: "2024-01-01T00:00:00Z"
         };
@@ -236,7 +244,7 @@ describe("exportDataHandler", () => {
             .mockResolvedValueOnce({ rows: [] }) // progress_tracking
             .mockResolvedValueOnce({ rows: [] }) // weight_tracking
             .mockResolvedValueOnce({ rows: [] }) // tdee
-            .mockResolvedValueOnce({ rows: [{ quick_add_days: 30, weight_goal: null, target_weight: null, target_weight_unit: null }] }); // user_settings
+            .mockResolvedValueOnce({ rows: [{ quick_add_days: 30, weight_goal: null, target_weight: null, target_weight_unit: null, communication_email: true, communication_sms: false, communication_push: false }] }); // user_settings
 
         await handleExportData(mockRequest as Request, mockResponse as Response);
 

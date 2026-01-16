@@ -26,7 +26,7 @@ export async function handleExportData(req: Request, res: Response) {
 
         // Get user profile data (excluding password_hash)
         const userResult = await pool.query(
-            "SELECT id, email, full_name, country, terms_accepted, terms_accepted_at, subscribed, subscribed_at, created_at, updated_at FROM users WHERE id = $1",
+            "SELECT id, email, full_name, country, terms_accepted, terms_accepted_at, plan, plan_selected_at, subscribed, subscribed_at, created_at, updated_at FROM users WHERE id = $1",
             [userId]
         );
 
@@ -137,7 +137,7 @@ export async function handleExportData(req: Request, res: Response) {
 
         // Get user settings
         const settingsResult = await pool.query(
-            "SELECT quick_add_days, weight_goal, target_weight, target_weight_unit, created_at, updated_at FROM user_settings WHERE user_id = $1",
+            "SELECT quick_add_days, weight_goal, target_weight, target_weight_unit, communication_email, communication_sms, communication_push, created_at, updated_at FROM user_settings WHERE user_id = $1",
             [userId]
         );
 
@@ -146,13 +146,19 @@ export async function handleExportData(req: Request, res: Response) {
             weight_goal: settingsResult.rows[0].weight_goal,
             target_weight: settingsResult.rows[0].target_weight ? parseFloat(String(settingsResult.rows[0].target_weight)) : null,
             target_weight_unit: settingsResult.rows[0].target_weight_unit,
+            communication_email: settingsResult.rows[0].communication_email ?? true,
+            communication_sms: settingsResult.rows[0].communication_sms ?? false,
+            communication_push: settingsResult.rows[0].communication_push ?? false,
             created_at: settingsResult.rows[0].created_at,
             updated_at: settingsResult.rows[0].updated_at
         } : {
             quick_add_days: 30, // Default value if no settings exist
             weight_goal: null,
             target_weight: null,
-            target_weight_unit: null
+            target_weight_unit: null,
+            communication_email: true,
+            communication_sms: false,
+            communication_push: false
         };
 
         // Compile all data
@@ -165,6 +171,8 @@ export async function handleExportData(req: Request, res: Response) {
                 country: user.country,
                 terms_accepted: user.terms_accepted,
                 terms_accepted_at: user.terms_accepted_at,
+                plan: user.plan,
+                plan_selected_at: user.plan_selected_at,
                 subscribed: user.subscribed,
                 subscribed_at: user.subscribed_at,
                 account_created_at: user.created_at,
