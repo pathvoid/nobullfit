@@ -67,7 +67,8 @@ describe("Favorites", () => {
                     title: "Favorites - NoBullFit",
                     meta: [{ name: "description", content: "Your favorite items" }],
                     user: { id: 1, email: "test@example.com", full_name: "Test User" }
-                })
+                }),
+                HydrateFallback: () => null
             }
         ], {
             initialEntries: ["/dashboard/favorites"]

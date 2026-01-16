@@ -9,6 +9,8 @@ import { Text } from "@components/text";
 import { Button } from "@components/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@components/table";
 import { Link } from "@components/link";
+import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel } from "@components/dropdown";
+import { MoreVertical, Trash2 } from "lucide-react";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 
 interface Favorite {
@@ -117,10 +119,9 @@ const Favorites: React.FC = () => {
                                         <TableHead>
                                             <TableRow>
                                                 <TableHeader className="min-w-[250px]">Name</TableHeader>
-                                                <TableHeader className="min-w-[80px]">Type</TableHeader>
+                                                <TableHeader className="hidden sm:table-cell min-w-[80px]">Type</TableHeader>
                                                 <TableHeader className="hidden md:table-cell min-w-[120px]">Brand</TableHeader>
-                                                <TableHeader className="hidden lg:table-cell min-w-[120px]">Category</TableHeader>
-                                                <TableHeader className="min-w-[100px]">Actions</TableHeader>
+                                                <TableHeader className="min-w-[100px] text-right"></TableHeader>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -167,7 +168,7 @@ const Favorites: React.FC = () => {
                                                                 </div>
                                                             </div>
                                                         </TableCell>
-                                                        <TableCell>
+                                                        <TableCell className="hidden sm:table-cell">
                                                             {isRecipe ? (
                                                                 <span className="text-purple-600 dark:text-purple-400">Recipe</span>
                                                             ) : (
@@ -182,22 +183,29 @@ const Favorites: React.FC = () => {
                                                                 <span className="text-zinc-400 dark:text-zinc-500">—</span>
                                                             )}
                                                         </TableCell>
-                                                        <TableCell className="hidden lg:table-cell">
-                                                            {!isRecipe && (favorite.food_data?.categoryLabel || favorite.food_data?.category || (
-                                                                <span className="text-zinc-400 dark:text-zinc-500">—</span>
-                                                            ))}
-                                                            {isRecipe && (
-                                                                <span className="text-zinc-400 dark:text-zinc-500">—</span>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Button
-                                                                onClick={() => handleRemoveFavorite(favorite)}
-                                                                disabled={removingIds.has(favorite.id)}
-                                                                color="red"
-                                                            >
-                                                                {removingIds.has(favorite.id) ? "Removing..." : "Remove"}
-                                                            </Button>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex justify-end">
+                                                                <Dropdown>
+                                                                    <DropdownButton 
+                                                                        plain
+                                                                        className="p-2"
+                                                                        aria-label="Favorite options"
+                                                                    >
+                                                                        <MoreVertical className="h-5 w-5" />
+                                                                    </DropdownButton>
+                                                                    <DropdownMenu anchor="bottom end" className="min-w-40">
+                                                                        <DropdownItem 
+                                                                            onClick={() => handleRemoveFavorite(favorite)}
+                                                                            disabled={removingIds.has(favorite.id)}
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" data-slot="icon" />
+                                                                            <DropdownLabel>
+                                                                                {removingIds.has(favorite.id) ? "Removing..." : "Remove"}
+                                                                            </DropdownLabel>
+                                                                        </DropdownItem>
+                                                                    </DropdownMenu>
+                                                                </Dropdown>
+                                                            </div>
                                                         </TableCell>
                                                     </TableRow>
                                                 );
