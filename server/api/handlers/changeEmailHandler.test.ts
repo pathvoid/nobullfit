@@ -15,6 +15,10 @@ vi.mock("../utils/emailService", () => ({
     sendEmailChangeConfirmationEmail: vi.fn()
 }));
 
+vi.mock("../utils/paddleService", () => ({
+    updateCustomerEmail: vi.fn().mockResolvedValue(true)
+}));
+
 vi.mock("crypto", () => ({
     default: {
         randomBytes: vi.fn()
@@ -24,6 +28,7 @@ vi.mock("crypto", () => ({
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
 import { sendEmailChangeConfirmationEmail } from "../utils/emailService.js";
+import { updateCustomerEmail } from "../utils/paddleService.js";
 import crypto from "crypto";
 
 describe("changeEmailHandler", () => {
@@ -167,6 +172,8 @@ describe("changeEmailHandler", () => {
             });
             // Email is available
             mockPool.query.mockResolvedValueOnce({ rows: [] });
+            // Get Paddle customer ID
+            mockPool.query.mockResolvedValueOnce({ rows: [{ paddle_customer_id: "ctm_123" }] });
             // Update email
             mockPool.query.mockResolvedValueOnce({ rows: [] });
             // Delete token
@@ -178,6 +185,34 @@ describe("changeEmailHandler", () => {
             expect(mockResponse.json).toHaveBeenCalledWith({
                 message: "Email address has been successfully updated."
             });
+            expect(updateCustomerEmail).toHaveBeenCalledWith("ctm_123", "new@example.com");
+        });
+
+        it("should confirm email change without Paddle customer", async () => {
+            mockRequest.body = { token: "valid_token" };
+
+            const futureDate = new Date();
+            futureDate.setHours(futureDate.getHours() + 24);
+
+            // Token exists
+            mockPool.query.mockResolvedValueOnce({
+                rows: [{ user_id: 1, new_email: "new@example.com", expires_at: futureDate }]
+            });
+            // Email is available
+            mockPool.query.mockResolvedValueOnce({ rows: [] });
+            // Get Paddle customer ID (no paddle customer)
+            mockPool.query.mockResolvedValueOnce({ rows: [{ paddle_customer_id: null }] });
+            // Update email
+            mockPool.query.mockResolvedValueOnce({ rows: [] });
+            // Delete token
+            mockPool.query.mockResolvedValueOnce({ rows: [] });
+
+            (updateCustomerEmail as ReturnType<typeof vi.fn>).mockClear();
+
+            await handleConfirmEmailChange(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(updateCustomerEmail).not.toHaveBeenCalled();
         });
 
         it("should return 400 if token is missing", async () => {

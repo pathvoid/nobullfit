@@ -54,17 +54,18 @@ describe("Pricing", () => {
         expect(screen.getByText(/No ads, ever/i)).toBeInTheDocument();
     });
 
-    it("should display the Pro plan as coming soon", async () => {
+    it("should display the Pro plan with pricing", async () => {
         renderPricing();
         
         // Check for Pro plan heading
         expect(await screen.findByRole("heading", { name: /^Pro$/i })).toBeInTheDocument();
         
-        // Check for Coming Soon badge
-        expect(screen.getByText("Coming Soon")).toBeInTheDocument();
+        // Check for Most Popular badge
+        expect(screen.getByText("Most Popular")).toBeInTheDocument();
         
-        // Check for TBD price
-        expect(screen.getByText("TBD")).toBeInTheDocument();
+        // Check for $10 price
+        expect(screen.getByText("$10")).toBeInTheDocument();
+        expect(screen.getByText("/ month")).toBeInTheDocument();
         
         // Check for Pro features
         expect(screen.getByText(/Plan meals for future days and weeks/i)).toBeInTheDocument();

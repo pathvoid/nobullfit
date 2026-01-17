@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import useHelmet from "@hooks/useHelmet";
 import { useLoaderData, useNavigate } from "react-router-dom";
 import { AuthLayout } from "@components/auth-layout";
@@ -10,6 +10,49 @@ import { Divider } from "@components/divider";
 import { Check, Sparkles, Heart, Shield, Download, Clock } from "lucide-react";
 import { useAuth } from "@core/contexts/AuthContext";
 import { toast } from "sonner";
+
+// Paddle event types
+interface PaddleCheckoutEvent {
+    name: string;
+    data?: {
+        status?: string;
+        transaction_id?: string;
+        customer_id?: string;
+    };
+}
+
+// Paddle types
+declare global {
+    interface Window {
+        Paddle?: {
+            Environment: {
+                set: (env: "sandbox" | "production") => void;
+            };
+            Initialize: (options: { 
+                token: string;
+                eventCallback?: (event: PaddleCheckoutEvent) => void;
+            }) => void;
+            Checkout: {
+                open: (options: {
+                    items: Array<{ priceId: string; quantity: number }>;
+                    customer?: { id: string; email?: string };
+                    customData?: Record<string, unknown>;
+                    settings?: {
+                        displayMode?: "overlay" | "inline";
+                        theme?: "light" | "dark";
+                        locale?: string;
+                        successUrl?: string;
+                        allowLogout?: boolean;
+                    };
+                }) => void;
+            };
+        };
+        // Global Paddle event handlers that can be updated by any page
+        __paddleOnCheckoutComplete?: () => void;
+        __paddleOnCheckoutClosed?: () => void;
+        __paddleInitialized?: boolean;
+    }
+}
 
 // Feature list item component for cleaner rendering
 const FeatureItem: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -25,17 +68,178 @@ const ChoosePlan: React.FC = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
+    const [paddleReady, setPaddleReady] = useState(false);
+    const [checkoutInProgress, setCheckoutInProgress] = useState(false);
+    
+    // Track if checkout completed successfully
+    const checkoutCompletedRef = useRef(false);
 
     // Set helmet values
     helmet.setTitle(loaderData.title);
     helmet.setMeta(loaderData.meta as Parameters<typeof helmet.setMeta>[0]);
 
-    const handleSelectPlan = async (plan: "free" | "pro") => {
-        if (plan === "pro") {
-            // Pro is not available yet
+    // Set up global Paddle event handlers for this page
+    useEffect(() => {
+        // Handler for checkout.completed - waits for subscription to be confirmed before navigating
+        window.__paddleOnCheckoutComplete = async () => {
+            checkoutCompletedRef.current = true;
+            
+            // Wait for sync to confirm subscription before navigating
+            // Paddle may take a moment to provision the subscription
+            const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
+            let retries = 0;
+            const maxRetries = 10;
+            
+            while (retries < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                try {
+                    const syncResponse = await fetch("/api/billing/sync", {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    
+                    if (syncResponse.ok) {
+                        const syncData = await syncResponse.json();
+                        if (syncData.synced && syncData.hasActiveSubscription) {
+                            navigate("/dashboard/billing?subscribed=true");
+                            return;
+                        }
+                    }
+                } catch {
+                    // Continue retrying
+                }
+                
+                retries++;
+            }
+            
+            // If we exhausted retries, navigate anyway and let billing page handle it
+            navigate("/dashboard/billing?subscribed=true");
+        };
+        
+        // Handler for checkout.closed - re-enable buttons if checkout wasn't completed
+        window.__paddleOnCheckoutClosed = () => {
+            if (!checkoutCompletedRef.current) {
+                setCheckoutInProgress(false);
+            }
+        };
+        
+        // Cleanup on unmount
+        return () => {
+            window.__paddleOnCheckoutComplete = undefined;
+            window.__paddleOnCheckoutClosed = undefined;
+        };
+    }, [navigate]);
+
+    // Load Paddle.js script and initialize (only once globally)
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        const initPaddle = async () => {
+            if (!window.Paddle) {
+                console.error("Paddle.js not loaded");
+                return;
+            }
+            
+            // Only initialize once globally
+            if (window.__paddleInitialized) {
+                setPaddleReady(true);
+                return;
+            }
+            
+            // Get Paddle config from the API
+            const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
+            
+            try {
+                const res = await fetch("/api/billing/paddle-config", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                if (!res.ok) {
+                    throw new Error(`Config fetch failed: ${res.status}`);
+                }
+                
+                const config = await res.json();
+                
+                if (!config.clientToken) {
+                    throw new Error("Missing client token in config");
+                }
+                
+                if (config.environment === "sandbox") {
+                    window.Paddle?.Environment.set("sandbox");
+                }
+                
+                // Initialize once with global callback dispatcher
+                window.Paddle?.Initialize({
+                    token: config.clientToken,
+                    eventCallback: (event: PaddleCheckoutEvent) => {
+                        // Dispatch to global handlers that each page can set
+                        if (event.name === "checkout.completed") {
+                            window.__paddleOnCheckoutComplete?.();
+                        }
+                        if (event.name === "checkout.closed") {
+                            window.__paddleOnCheckoutClosed?.();
+                        }
+                    }
+                });
+                
+                window.__paddleInitialized = true;
+                setPaddleReady(true);
+            } catch (err) {
+                console.error("Failed to initialize Paddle:", err);
+                // Don't set paddleReady to true - leave button disabled
+                // User can refresh to retry
+            }
+        };
+
+        // Check if script already loaded
+        if (window.Paddle) {
+            initPaddle();
             return;
         }
 
+        const script = document.createElement("script");
+        script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
+        script.async = true;
+        script.onload = () => initPaddle();
+        script.onerror = () => {
+            console.error("Failed to load Paddle.js script");
+        };
+        document.body.appendChild(script);
+    }, []);
+
+    // Open Paddle checkout
+    const openCheckout = useCallback((checkoutData: {
+        customerId: string;
+        priceId: string;
+        email: string;
+        clientToken: string;
+        environment: string;
+    }) => {
+        if (!window.Paddle) {
+            toast.error("Payment system is not ready. Please try again.");
+            return;
+        }
+
+        // Mark checkout as in progress and reset completion flag
+        setCheckoutInProgress(true);
+        checkoutCompletedRef.current = false;
+
+        // Open checkout - only pass customer ID and prevent email changes
+        // Note: Do NOT use successUrl - it causes a full page redirect before we can sync
+        // Navigation is handled by checkout.completed event callback
+        window.Paddle.Checkout.open({
+            items: [{ priceId: checkoutData.priceId, quantity: 1 }],
+            customer: { id: checkoutData.customerId },
+            settings: {
+                displayMode: "overlay",
+                theme: "light",
+                allowLogout: false
+            }
+        });
+    }, []);
+
+    const handleSelectPlan = async (plan: "free" | "pro") => {
         setIsLoading(true);
 
         try {
@@ -54,6 +258,16 @@ const ChoosePlan: React.FC = () => {
 
             if (!response.ok) {
                 toast.error(data.error || "Failed to select plan. Please try again.");
+                return;
+            }
+
+            // If checkout is required (Pro plan), open Paddle checkout
+            if (data.requiresCheckout && data.checkout) {
+                if (!paddleReady) {
+                    toast.error("Payment system is loading. Please try again in a moment.");
+                    return;
+                }
+                await openCheckout(data.checkout);
                 return;
             }
 
@@ -118,16 +332,16 @@ const ChoosePlan: React.FC = () => {
                             color="emerald"
                             className="w-full mt-6"
                             onClick={() => handleSelectPlan("free")}
-                            disabled={isLoading}
+                            disabled={isLoading || checkoutInProgress}
                         >
                             {isLoading ? "Setting up your account..." : "Get Started for Free"}
                         </Button>
                     </div>
 
                     {/* Pro Plan */}
-                    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-8 flex flex-col bg-zinc-100 dark:bg-zinc-800/30 relative opacity-75">
+                    <div className="rounded-2xl border-2 border-blue-300 dark:border-blue-700 p-8 flex flex-col bg-blue-50/50 dark:bg-blue-950/20 relative">
                         <div className="absolute -top-3 right-6">
-                            <Badge color="blue">Coming Soon</Badge>
+                            <Badge color="blue">Most Popular</Badge>
                         </div>
 
                         <div className="space-y-2">
@@ -136,7 +350,7 @@ const ChoosePlan: React.FC = () => {
                                 <Sparkles className="size-5 text-blue-500" />
                             </div>
                             <div className="flex items-baseline gap-1">
-                                <span className="text-4xl font-bold text-zinc-900 dark:text-white">TBD</span>
+                                <span className="text-4xl font-bold text-zinc-900 dark:text-white">$10</span>
                                 <span className="text-zinc-500 dark:text-zinc-400">/ month</span>
                             </div>
                             <Text>Quality-of-life features for power users.</Text>
@@ -158,15 +372,20 @@ const ChoosePlan: React.FC = () => {
                                 <FeatureItem>Personalized macro recommendations</FeatureItem>
                                 <FeatureItem>Goal timeline projections</FeatureItem>
                                 <FeatureItem>Weekly progress insights</FeatureItem>
+                                <li className="flex items-start gap-3">
+                                    <Sparkles className="size-5 text-blue-500 shrink-0 mt-0.5" />
+                                    <Text className="!mt-0 italic text-zinc-500 dark:text-zinc-400">And more features coming soon...</Text>
+                                </li>
                             </ul>
                         </div>
 
                         <Button
-                            outline
+                            color="blue"
                             className="w-full mt-6"
-                            disabled
+                            onClick={() => handleSelectPlan("pro")}
+                            disabled={isLoading || !paddleReady || checkoutInProgress}
                         >
-                            Not Available Yet
+                            {checkoutInProgress ? "Complete checkout..." : isLoading ? "Processing..." : "Subscribe to Pro"}
                         </Button>
                     </div>
                 </div>

@@ -3,6 +3,7 @@ import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
 import bcrypt from "bcryptjs";
 import { sendAccountDeletionConfirmationEmail } from "../utils/emailService.js";
+import { cancelAllCustomerSubscriptions } from "../utils/paddleService.js";
 
 export async function handleDeleteAccount(req: Request, res: Response) {
     try {
@@ -32,9 +33,9 @@ export async function handleDeleteAccount(req: Request, res: Response) {
             return res.status(400).json({ error: "Password is required to confirm account deletion." });
         }
 
-        // Get current user with password hash
+        // Get current user with password hash and Paddle customer ID
         const userResult = await pool.query(
-            "SELECT id, email, full_name, password_hash FROM users WHERE id = $1",
+            "SELECT id, email, full_name, password_hash, paddle_customer_id FROM users WHERE id = $1",
             [userId]
         );
 
@@ -48,6 +49,16 @@ export async function handleDeleteAccount(req: Request, res: Response) {
         const passwordMatch = await bcrypt.compare(password, user.password_hash);
         if (!passwordMatch) {
             return res.status(401).json({ error: "Incorrect password. Account deletion cancelled." });
+        }
+
+        // Cancel any active Paddle subscriptions before deleting the account
+        if (user.paddle_customer_id) {
+            try {
+                await cancelAllCustomerSubscriptions(user.paddle_customer_id);
+            } catch (paddleError) {
+                // Log error but don't fail the deletion
+                console.error("Failed to cancel Paddle subscriptions:", paddleError);
+            }
         }
 
         // Send confirmation email before deletion

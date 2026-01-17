@@ -30,7 +30,9 @@ describe("RefundPolicy", () => {
 
         render(<RouterProvider router={router} />);
         
-        // Wait for loader data to be available
-        expect(await screen.findByRole("heading", { name: /Refund Policy/i })).toBeInTheDocument();
+        // Wait for loader data to be available - find the main h1 heading
+        expect(await screen.findByRole("heading", { name: /Refund Policy/i, level: 1 })).toBeInTheDocument();
+        // Check for key subscription-related content
+        expect(screen.getByText(/Subscription Overview/i)).toBeInTheDocument();
     });
 });

@@ -40,9 +40,9 @@ Save your frequently used foods and recipes for quick access. Quickly add favori
 ### Data Management
 Export all your data in JSON format, including recipes, favorites, grocery lists, food tracking entries, and progress tracking data. Delete specific data by time period (7 days, 30 days, or all time) with granular control over what to remove.
 
-## Pro Features (No ETA)
+## Pro Features ($10/month)
 
-The following features are designed for Pro subscribers. **Note: Subscriptions are not yet available.** These features are implemented but will only be accessible once a subscription system is in place.
+The following features are available exclusively to Pro subscribers. Subscribe to Pro from the plan selection page during signup or from the Billing page in your dashboard.
 
 ### Meal Planner (Food Tracking Enhancements)
 Pro users will have access to advanced meal planning capabilities:

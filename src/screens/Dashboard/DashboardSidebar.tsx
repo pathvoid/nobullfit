@@ -5,7 +5,7 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem, DropdownLabel,
 import { NavbarItem } from "@components/navbar";
 import { useAuth } from "@core/contexts/AuthContext";
 import { CollapsibleSidebarSection } from "@components/collapsible-sidebar-section";
-import { Settings, ShieldCheck, Lightbulb, LogOut, ChevronUp } from "lucide-react";
+import { Settings, ShieldCheck, Lightbulb, LogOut, ChevronUp, CreditCard } from "lucide-react";
 
 // Get user initials for avatar
 const getUserInitials = (user: { full_name?: string } | null) => {
@@ -43,6 +43,10 @@ export function UserDropdown() {
                 <DropdownItem onClick={() => navigate("/dashboard/settings")}>
                     <Settings className="size-4" data-slot="icon" />
                     <DropdownLabel>Settings</DropdownLabel>
+                </DropdownItem>
+                <DropdownItem onClick={() => navigate("/dashboard/billing")}>
+                    <CreditCard className="size-4" data-slot="icon" />
+                    <DropdownLabel>Billing</DropdownLabel>
                 </DropdownItem>
                 <DropdownDivider />
                 <DropdownItem href="/privacy-policy">
@@ -100,6 +104,10 @@ export function SidebarFooterDropdown() {
                 <DropdownItem onClick={() => navigate("/dashboard/settings")}>
                     <Settings className="size-4" data-slot="icon" />
                     <DropdownLabel>Settings</DropdownLabel>
+                </DropdownItem>
+                <DropdownItem onClick={() => navigate("/dashboard/billing")}>
+                    <CreditCard className="size-4" data-slot="icon" />
+                    <DropdownLabel>Billing</DropdownLabel>
                 </DropdownItem>
                 <DropdownDivider />
                 <DropdownItem href="/privacy-policy">

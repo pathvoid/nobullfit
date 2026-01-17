@@ -64,6 +64,8 @@ import createRecipeLoader from "@loaders/createRecipeLoader";
 import editRecipeLoader from "@loaders/editRecipeLoader";
 import Settings from "@screens/Dashboard/Settings/Settings";
 import settingsLoader from "@loaders/settingsLoader";
+import Billing from "@screens/Dashboard/Billing/Billing";
+import billingLoader from "@loaders/billingLoader";
 import Error from "@screens/Error/Error";
 import NotFound from "@screens/NotFound/NotFound";
 
@@ -255,6 +257,12 @@ const routes: RouteObject[] = [
         path: "dashboard/settings",
         element: <Settings />,
         loader: settingsLoader,
+        errorElement: <Error />
+    },
+    {
+        path: "dashboard/billing",
+        element: <Billing />,
+        loader: billingLoader,
         errorElement: <Error />
     },
     {

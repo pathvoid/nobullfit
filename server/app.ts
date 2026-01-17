@@ -68,6 +68,8 @@ import { handleGenerateDashboardReport } from "./api/handlers/reportsHandler.js"
 import { handleGetMaintenanceStatus } from "./api/handlers/maintenanceHandler.js";
 import { handleGetUserPreferences, handleUpdateUserPreferences } from "./api/handlers/userPreferencesHandler.js";
 import { handleGetGoalInsights } from "./api/handlers/goalInsightsHandler.js";
+import { handleGetSubscription, handleCreatePortalSession, handleInitCheckout, handleSyncSubscription, handleGetPaddleConfig } from "./api/handlers/billingHandler.js";
+import { handlePaddleWebhook } from "./api/handlers/paddleWebhookHandler.js";
 
 // API router class - handles all /api routes
 class App {
@@ -167,6 +169,16 @@ class App {
         
         // Maintenance status (public endpoint)
         this.router.get("/maintenance/status", handleGetMaintenanceStatus);
+        
+        // Billing endpoints
+        this.router.get("/billing/subscription", handleGetSubscription);
+        this.router.get("/billing/paddle-config", handleGetPaddleConfig);
+        this.router.post("/billing/portal", handleCreatePortalSession);
+        this.router.post("/billing/checkout", handleInitCheckout);
+        this.router.post("/billing/sync", handleSyncSubscription);
+        
+        // Paddle webhook endpoint (signature verification happens in handler)
+        this.router.post("/paddle/webhook", handlePaddleWebhook);
     }
 }
 

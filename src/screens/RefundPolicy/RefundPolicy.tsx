@@ -16,44 +16,55 @@ const RefundPolicy: React.FC = () => {
             <div className="py-16">
                 <Heading>Refund Policy</Heading>
                 <div className="mt-8 space-y-4">
-                    <Text>Effective Date: 2025-08-26</Text>
+                    <Text>Effective Date: 2026-01-18</Text>
                     <Text>
-                        At <Strong>NoBullFit</Strong>, we believe in transparency and fairness. This refund policy outlines our approach to refunds for any paid services or subscriptions that may be introduced in the future.
+                        At <Strong>NoBullFit</Strong>, we believe in transparency and fairness. This refund policy outlines our approach to refunds for NoBullFit Pro subscriptions.
                     </Text>
+                    <div className="my-8 flex justify-center">
+                        <img src="https://cdn.nobull.fit/mango-refund.png" alt="NoBullFit" className="w-60 h-auto" />
+                    </div>
                     <div className="mt-10 space-y-4">
-                        <Heading level={2}>Current Service Status</Heading>
+                        <Heading level={2}>Subscription Overview</Heading>
                         <Text>
-                            As of the effective date of this policy, all NoBullFit services are provided free of charge. We do not currently offer any paid subscriptions, premium features, or chargeable services. Since there are no fees associated with using NoBullFit at this time, there are no refunds to process.
+                            NoBullFit offers a Pro subscription at $10/month that provides additional quality-of-life features for power users. Our core food tracking and progress monitoring features remain free of charge. Pro subscriptions are processed through our payment partner, <Strong>Paddle</Strong>.
                         </Text>
                     </div>
                     <div className="mt-10 space-y-4">
-                        <Heading level={2}>Future Paid Services</Heading>
+                        <Heading level={2}>Cancellation Policy</Heading>
                         <Text>
-                            If NoBullFit introduces paid subscriptions or premium features in the future, this refund policy will apply to those services. We are committed to maintaining our core food tracking and progress monitoring features free of charge, as outlined in our <Strong>Terms of Service</Strong>.
+                            You may cancel your NoBullFit Pro subscription at any time through the Billing page in your dashboard. When you cancel:
                         </Text>
+                        <div className="ml-4 space-y-2">
+                            <Text>- Your subscription will remain active until the end of your current billing period.</Text>
+                            <Text>- You will not be charged for the next billing cycle.</Text>
+                            <Text>- After your subscription ends, your account will revert to the free plan.</Text>
+                        </div>
+                    </div>
+                    <div className="mt-10 space-y-4">
+                        <Heading level={2}>Refund Policy</Heading>
                         <div className="space-y-4">
                             <div>
                                 <Subheading>Refund Eligibility</Subheading>
                                 <Text>
-                                    Should paid services be introduced, refunds will be considered on a case-by-case basis. Generally, refunds may be available within a reasonable timeframe after purchase if you experience technical issues that prevent you from using the service, or if there are billing errors on our part.
+                                    Refunds are considered on a case-by-case basis. You may be eligible for a refund if you experience technical issues that prevent you from using Pro features, if there are billing errors, or within 7 days of your initial subscription if you are unsatisfied with the service.
                                 </Text>
                             </div>
                             <div>
                                 <Subheading>Refund Process</Subheading>
                                 <Text>
-                                    To request a refund for any future paid service, please contact us at <Strong>support@nobull.fit</Strong> with your account information and the reason for your refund request. We will review your request and respond within a reasonable timeframe.
+                                    To request a refund, please contact us at <Strong>support@nobull.fit</Strong> with your account email and the reason for your refund request. We will review your request and respond within 2-3 business days.
                                 </Text>
                             </div>
                             <div>
                                 <Subheading>Refund Timeline</Subheading>
                                 <Text>
-                                    If a refund is approved, it will be processed to the original payment method within 5-10 business days. The exact timeline may vary depending on your payment provider.
+                                    If a refund is approved, it will be processed through Paddle to your original payment method within 5-10 business days. The exact timeline may vary depending on your payment provider and financial institution.
                                 </Text>
                             </div>
                             <div>
-                                <Subheading>Non-Refundable Items</Subheading>
+                                <Subheading>Partial Billing Periods</Subheading>
                                 <Text>
-                                    Please note that certain services or features may be non-refundable, such as one-time purchases or promotional offers. Any such limitations will be clearly disclosed at the time of purchase.
+                                    We do not provide prorated refunds for partial billing periods. If you cancel mid-cycle, you will retain access to Pro features until the end of your current billing period.
                                 </Text>
                             </div>
                         </div>
@@ -86,5 +97,3 @@ const RefundPolicy: React.FC = () => {
 };
 
 export default RefundPolicy;
-
-

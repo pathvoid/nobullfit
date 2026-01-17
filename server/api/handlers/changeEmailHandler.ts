@@ -3,6 +3,7 @@ import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
 import crypto from "crypto";
 import { sendEmailChangeConfirmationEmail } from "../utils/emailService.js";
+import { updateCustomerEmail } from "../utils/paddleService.js";
 
 export async function handleChangeEmailRequest(req: Request, res: Response) {
     try {
@@ -143,8 +144,23 @@ export async function handleConfirmEmailChange(req: Request, res: Response) {
             return res.status(400).json({ error: "This email address is already in use." });
         }
 
-        // Update user email
+        // Get the user's Paddle customer ID to update their email in Paddle
+        const userResult = await pool.query("SELECT paddle_customer_id FROM users WHERE id = $1", [user_id]);
+        const paddleCustomerId = userResult.rows[0]?.paddle_customer_id;
+
+        // Update user email in database
         await pool.query("UPDATE users SET email = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2", [new_email, user_id]);
+
+        // Update email in Paddle if customer exists
+        if (paddleCustomerId) {
+            const paddleResult = await updateCustomerEmail(paddleCustomerId, new_email);
+            
+            if (!paddleResult.success && !paddleResult.conflict) {
+                // Log non-conflict failures but don't fail the overall request
+                // Note: conflicts are expected when email already exists on another Paddle customer
+                console.error("Failed to update email in Paddle (non-conflict error)");
+            }
+        }
 
         // Delete the used token
         await pool.query("DELETE FROM email_change_requests WHERE token = $1", [token]);

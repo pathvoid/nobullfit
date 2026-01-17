@@ -71,17 +71,17 @@ describe("ChoosePlan", () => {
         expect(screen.getByText(/No ads, ever/i)).toBeInTheDocument();
     });
 
-    it("should display the Pro plan as coming soon", async () => {
+    it("should display the Pro plan with pricing", async () => {
         renderChoosePlan();
         
         // Check for Pro plan heading
         expect(await screen.findByRole("heading", { name: /^Pro$/i })).toBeInTheDocument();
         
-        // Check for Coming Soon badge
-        expect(screen.getByText("Coming Soon")).toBeInTheDocument();
+        // Check for Most Popular badge
+        expect(screen.getByText("Most Popular")).toBeInTheDocument();
         
-        // Check for TBD price
-        expect(screen.getByText("TBD")).toBeInTheDocument();
+        // Check for $10 price
+        expect(screen.getByText("$10")).toBeInTheDocument();
     });
 
     it("should have a Get Started button for Free plan", async () => {
@@ -92,11 +92,12 @@ describe("ChoosePlan", () => {
         expect(freeButton).not.toBeDisabled();
     });
 
-    it("should have a disabled button for Pro plan", async () => {
+    it("should have a Subscribe to Pro button", async () => {
         renderChoosePlan();
         
-        const proButton = await screen.findByRole("button", { name: /Not Available Yet/i });
+        const proButton = await screen.findByRole("button", { name: /Subscribe to Pro/i });
         expect(proButton).toBeInTheDocument();
+        // Button is disabled until Paddle.js loads
         expect(proButton).toBeDisabled();
     });
 

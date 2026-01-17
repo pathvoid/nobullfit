@@ -72,7 +72,7 @@ const Pricing: React.FC = () => {
                         {/* Pro Plan */}
                         <div className="rounded-2xl border-2 border-blue-300 dark:border-blue-700 p-8 space-y-6 bg-blue-50/50 dark:bg-blue-950/20 relative">
                             <div className="absolute -top-3 right-6">
-                                <Badge color="blue">Coming Soon</Badge>
+                                <Badge color="blue">Most Popular</Badge>
                             </div>
 
                             <div className="space-y-2">
@@ -81,7 +81,7 @@ const Pricing: React.FC = () => {
                                     <Sparkles className="size-5 text-blue-500" />
                                 </div>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl font-bold text-zinc-900 dark:text-white">TBD</span>
+                                    <span className="text-4xl font-bold text-zinc-900 dark:text-white">$10</span>
                                     <span className="text-zinc-500 dark:text-zinc-400">/ month</span>
                                 </div>
                                 <Text>Quality-of-life features for power users who want extra convenience.</Text>
@@ -103,16 +103,20 @@ const Pricing: React.FC = () => {
                                     <FeatureItem>Personalized macro recommendations</FeatureItem>
                                     <FeatureItem>Goal timeline projections</FeatureItem>
                                     <FeatureItem>Weekly progress insights</FeatureItem>
+                                    <li className="flex items-start gap-3">
+                                        <Sparkles className="size-5 text-blue-500 shrink-0 mt-0.5" />
+                                        <Text className="!mt-0 italic text-zinc-500 dark:text-zinc-400">And more features coming soon...</Text>
+                                    </li>
                                 </ul>
                             </div>
 
                             <div className="pt-4">
-                                <div className="rounded-lg bg-blue-100 dark:bg-blue-900/30 p-4">
-                                    <Text className="text-sm text-blue-700 dark:text-blue-300 !mt-0">
-                                        <Strong>Not available yet.</Strong> We're still building and refining the Pro features. 
-                                        Price will be announced when subscriptions launch.
-                                    </Text>
-                                </div>
+                                <Link 
+                                    to="/sign-up" 
+                                    className="block w-full text-center py-3 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+                                >
+                                    Get Started with Pro
+                                </Link>
                             </div>
                         </div>
                     </div>

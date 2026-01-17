@@ -478,6 +478,588 @@ This email was sent to ${email}.
     await sendEmail(email, subject, htmlBody, textBody);
 }
 
+// Send subscription activated email (when user subscribes to Pro)
+export async function sendSubscriptionActivatedEmail(email: string, name: string): Promise<void> {
+    const subject = "Welcome to NoBullFit Pro!";
+    
+    const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${subject}</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #18181b;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #18181b; margin: 0; font-size: 24px; font-weight: 600;">NoBullFit</h1>
+                </div>
+                
+                <div style="background-color: #ffffff; padding: 30px; border-radius: 8px;">
+                    <h2 style="color: #18181b; margin-top: 0; font-size: 20px; font-weight: 600;">Thank You for Supporting NoBullFit!</h2>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Hi ${name},</p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        Thank you so much for subscribing to NoBullFit Pro! Your support means the world to us.
+                    </p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        At NoBullFit, our mission is to make nutrition tracking simple, honest, and accessible to everyone. Your subscription directly helps us achieve this goal.
+                    </p>
+                    
+                    <div style="margin: 24px 0; padding: 20px; background-color: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+                        <p style="color: #166534; margin: 0 0 12px 0; font-weight: 600;">Where your support goes:</p>
+                        <ul style="color: #166534; margin: 0; padding-left: 20px;">
+                            <li style="margin-bottom: 8px;">Keeping NoBullFit running and accessible to all users</li>
+                            <li style="margin-bottom: 8px;">Developing new features and improvements</li>
+                            <li style="margin-bottom: 8px;">Maintaining our food database with accurate nutrition data</li>
+                            <li style="margin-bottom: 8px;">Supporting a small, dedicated team passionate about health</li>
+                        </ul>
+                    </div>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        Because of supporters like you, we can keep NoBullFit free of ads, free of gimmicks, and focused on what matters: helping people make healthier choices without the nonsense.
+                    </p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${APP_URL}/dashboard" style="display: inline-block; background-color: #27272a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Go to Dashboard</a>
+                    </div>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        You can manage your subscription anytime from the Billing page in your dashboard.
+                    </p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">With gratitude,<br>The NoBullFit Team</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e4e4e7;">
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        This email was sent to <a href="mailto:${email}" style="color: #27272a; text-decoration: underline;">${email}</a>.
+                    </p>
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        © ${new Date().getFullYear()} NoBullFit. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const textBody = `
+Thank You for Supporting NoBullFit!
+
+Hi ${name},
+
+Thank you so much for subscribing to NoBullFit Pro! Your support means the world to us.
+
+At NoBullFit, our mission is to make nutrition tracking simple, honest, and accessible to everyone. Your subscription directly helps us achieve this goal.
+
+Where your support goes:
+- Keeping NoBullFit running and accessible to all users
+- Developing new features and improvements
+- Maintaining our food database with accurate nutrition data
+- Supporting a small, dedicated team passionate about health
+
+Because of supporters like you, we can keep NoBullFit free of ads, free of gimmicks, and focused on what matters: helping people make healthier choices without the nonsense.
+
+You can manage your subscription anytime from the Billing page in your dashboard.
+
+With gratitude,
+The NoBullFit Team
+
+---
+This email was sent to ${email}.
+© ${new Date().getFullYear()} NoBullFit. All rights reserved.
+    `;
+
+    await sendEmail(email, subject, htmlBody, textBody);
+}
+
+// Send subscription canceled email
+export async function sendSubscriptionCanceledEmail(email: string, name: string, endDate?: string): Promise<void> {
+    const subject = "Your NoBullFit Pro Subscription Has Been Canceled";
+    const endDateText = endDate ? `Your Pro access will remain active until ${endDate}.` : "Your Pro access has ended.";
+    
+    const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${subject}</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #18181b;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #18181b; margin: 0; font-size: 24px; font-weight: 600;">NoBullFit</h1>
+                </div>
+                
+                <div style="background-color: #ffffff; padding: 30px; border-radius: 8px;">
+                    <h2 style="color: #18181b; margin-top: 0; font-size: 20px; font-weight: 600;">Subscription Canceled</h2>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Hi ${name},</p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        We're sorry to see you go! Your NoBullFit Pro subscription has been canceled.
+                    </p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        ${endDateText}
+                    </p>
+                    
+                    <div style="margin: 24px 0; padding: 16px; background-color: #fefce8; border-left: 4px solid #eab308; border-radius: 4px;">
+                        <p style="color: #854d0e; margin: 0; font-size: 14px;">
+                            <strong>Note:</strong> You'll continue to have access to all free features. Your saved recipes and data will remain intact.
+                        </p>
+                    </div>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        Changed your mind? You can resubscribe anytime from your Billing page.
+                    </p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${APP_URL}/dashboard/billing" style="display: inline-block; background-color: #27272a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Manage Subscription</a>
+                    </div>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Best regards,<br>The NoBullFit Team</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e4e4e7;">
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        This email was sent to <a href="mailto:${email}" style="color: #27272a; text-decoration: underline;">${email}</a>.
+                    </p>
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        © ${new Date().getFullYear()} NoBullFit. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const textBody = `
+Your NoBullFit Pro Subscription Has Been Canceled
+
+Hi ${name},
+
+We're sorry to see you go! Your NoBullFit Pro subscription has been canceled.
+
+${endDateText}
+
+Note: You'll continue to have access to all free features. Your saved recipes and data will remain intact.
+
+Changed your mind? You can resubscribe anytime from your Billing page at ${APP_URL}/dashboard/billing
+
+Best regards,
+The NoBullFit Team
+
+---
+This email was sent to ${email}.
+© ${new Date().getFullYear()} NoBullFit. All rights reserved.
+    `;
+
+    await sendEmail(email, subject, htmlBody, textBody);
+}
+
+// Send subscription paused email
+export async function sendSubscriptionPausedEmail(email: string, name: string, resumeDate?: string): Promise<void> {
+    const subject = "Your NoBullFit Pro Subscription Has Been Paused";
+    const resumeText = resumeDate ? `Your subscription will automatically resume on ${resumeDate}.` : "You can resume your subscription anytime from the Billing page.";
+    
+    const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${subject}</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #18181b;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #18181b; margin: 0; font-size: 24px; font-weight: 600;">NoBullFit</h1>
+                </div>
+                
+                <div style="background-color: #ffffff; padding: 30px; border-radius: 8px;">
+                    <h2 style="color: #18181b; margin-top: 0; font-size: 20px; font-weight: 600;">Subscription Paused</h2>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Hi ${name},</p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        Your NoBullFit Pro subscription has been paused. You won't be charged while your subscription is paused.
+                    </p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        ${resumeText}
+                    </p>
+                    
+                    <div style="margin: 24px 0; padding: 16px; background-color: #f0f9ff; border-left: 4px solid #0ea5e9; border-radius: 4px;">
+                        <p style="color: #0c4a6e; margin: 0; font-size: 14px;">
+                            <strong>Note:</strong> While paused, you'll have access to free features only. Your saved data will remain safe and available when you resume.
+                        </p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${APP_URL}/dashboard/billing" style="display: inline-block; background-color: #27272a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Resume Subscription</a>
+                    </div>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Best regards,<br>The NoBullFit Team</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e4e4e7;">
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        This email was sent to <a href="mailto:${email}" style="color: #27272a; text-decoration: underline;">${email}</a>.
+                    </p>
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        © ${new Date().getFullYear()} NoBullFit. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const textBody = `
+Your NoBullFit Pro Subscription Has Been Paused
+
+Hi ${name},
+
+Your NoBullFit Pro subscription has been paused. You won't be charged while your subscription is paused.
+
+${resumeText}
+
+Note: While paused, you'll have access to free features only. Your saved data will remain safe and available when you resume.
+
+You can resume your subscription at ${APP_URL}/dashboard/billing
+
+Best regards,
+The NoBullFit Team
+
+---
+This email was sent to ${email}.
+© ${new Date().getFullYear()} NoBullFit. All rights reserved.
+    `;
+
+    await sendEmail(email, subject, htmlBody, textBody);
+}
+
+// Send subscription resumed email
+export async function sendSubscriptionResumedEmail(email: string, name: string): Promise<void> {
+    const subject = "Welcome Back! Your NoBullFit Pro Is Active Again";
+    
+    const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${subject}</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #18181b;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #18181b; margin: 0; font-size: 24px; font-weight: 600;">NoBullFit</h1>
+                </div>
+                
+                <div style="background-color: #ffffff; padding: 30px; border-radius: 8px;">
+                    <h2 style="color: #18181b; margin-top: 0; font-size: 20px; font-weight: 600;">Welcome Back! 🎉</h2>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Hi ${name},</p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        Great news! Your NoBullFit Pro subscription has been resumed and all Pro features are now available again.
+                    </p>
+                    
+                    <div style="margin: 24px 0; padding: 20px; background-color: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+                        <p style="color: #166534; margin: 0; font-weight: 600;">Your Pro access is now active!</p>
+                        <p style="color: #166534; margin: 8px 0 0 0; font-size: 14px;">All your saved data and preferences have been preserved.</p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${APP_URL}/dashboard" style="display: inline-block; background-color: #27272a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Go to Dashboard</a>
+                    </div>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Best regards,<br>The NoBullFit Team</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e4e4e7;">
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        This email was sent to <a href="mailto:${email}" style="color: #27272a; text-decoration: underline;">${email}</a>.
+                    </p>
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        © ${new Date().getFullYear()} NoBullFit. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const textBody = `
+Welcome Back! Your NoBullFit Pro Is Active Again
+
+Hi ${name},
+
+Great news! Your NoBullFit Pro subscription has been resumed and all Pro features are now available again.
+
+Your Pro access is now active! All your saved data and preferences have been preserved.
+
+Go to your dashboard: ${APP_URL}/dashboard
+
+Best regards,
+The NoBullFit Team
+
+---
+This email was sent to ${email}.
+© ${new Date().getFullYear()} NoBullFit. All rights reserved.
+    `;
+
+    await sendEmail(email, subject, htmlBody, textBody);
+}
+
+// Send payment failed email
+export async function sendPaymentFailedEmail(email: string, name: string): Promise<void> {
+    const subject = "Action Required: Payment Failed for NoBullFit Pro";
+    
+    const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${subject}</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #18181b;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #18181b; margin: 0; font-size: 24px; font-weight: 600;">NoBullFit</h1>
+                </div>
+                
+                <div style="background-color: #ffffff; padding: 30px; border-radius: 8px;">
+                    <h2 style="color: #18181b; margin-top: 0; font-size: 20px; font-weight: 600;">Payment Failed</h2>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Hi ${name},</p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        We were unable to process your payment for NoBullFit Pro. This could be due to an expired card, insufficient funds, or other payment issues.
+                    </p>
+                    
+                    <div style="margin: 24px 0; padding: 16px; background-color: #fef2f2; border-left: 4px solid #ef4444; border-radius: 4px;">
+                        <p style="color: #991b1b; margin: 0; font-size: 14px;">
+                            <strong>Action Required:</strong> Please update your payment method to continue enjoying Pro features without interruption.
+                        </p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${APP_URL}/dashboard/billing" style="display: inline-block; background-color: #27272a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Update Payment Method</a>
+                    </div>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        If you need assistance, please don't hesitate to contact us at <a href="mailto:${FROM_EMAIL}" style="color: #27272a; text-decoration: underline;">${FROM_EMAIL}</a>.
+                    </p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Best regards,<br>The NoBullFit Team</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e4e4e7;">
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        This email was sent to <a href="mailto:${email}" style="color: #27272a; text-decoration: underline;">${email}</a>.
+                    </p>
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        © ${new Date().getFullYear()} NoBullFit. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const textBody = `
+Action Required: Payment Failed for NoBullFit Pro
+
+Hi ${name},
+
+We were unable to process your payment for NoBullFit Pro. This could be due to an expired card, insufficient funds, or other payment issues.
+
+Action Required: Please update your payment method to continue enjoying Pro features without interruption.
+
+Update your payment method at: ${APP_URL}/dashboard/billing
+
+If you need assistance, please contact us at ${FROM_EMAIL}.
+
+Best regards,
+The NoBullFit Team
+
+---
+This email was sent to ${email}.
+© ${new Date().getFullYear()} NoBullFit. All rights reserved.
+    `;
+
+    await sendEmail(email, subject, htmlBody, textBody);
+}
+
+// Send scheduled cancellation email (when user schedules cancellation at end of billing cycle)
+export async function sendSubscriptionScheduledCancellationEmail(email: string, name: string, endDate: string): Promise<void> {
+    const subject = "Your NoBullFit Pro Cancellation Is Scheduled";
+    
+    const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${subject}</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #18181b;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #18181b; margin: 0; font-size: 24px; font-weight: 600;">NoBullFit</h1>
+                </div>
+                
+                <div style="background-color: #ffffff; padding: 30px; border-radius: 8px;">
+                    <h2 style="color: #18181b; margin-top: 0; font-size: 20px; font-weight: 600;">Cancellation Scheduled</h2>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Hi ${name},</p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        We've received your request to cancel your NoBullFit Pro subscription.
+                    </p>
+                    
+                    <div style="margin: 24px 0; padding: 20px; background-color: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd;">
+                        <p style="color: #0c4a6e; margin: 0; font-weight: 600;">Your Pro access will remain active until:</p>
+                        <p style="color: #0c4a6e; margin: 8px 0 0 0; font-size: 18px; font-weight: 600;">${endDate}</p>
+                    </div>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        You'll continue to have full access to all Pro features until this date. After that, your account will automatically switch to the free plan.
+                    </p>
+                    
+                    <div style="margin: 24px 0; padding: 16px; background-color: #fefce8; border-left: 4px solid #eab308; border-radius: 4px;">
+                        <p style="color: #854d0e; margin: 0; font-size: 14px;">
+                            <strong>Changed your mind?</strong> You can cancel the scheduled cancellation anytime before ${endDate} from your Billing page.
+                        </p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${APP_URL}/dashboard/billing" style="display: inline-block; background-color: #27272a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Manage Subscription</a>
+                    </div>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Best regards,<br>The NoBullFit Team</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e4e4e7;">
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        This email was sent to <a href="mailto:${email}" style="color: #27272a; text-decoration: underline;">${email}</a>.
+                    </p>
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        © ${new Date().getFullYear()} NoBullFit. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const textBody = `
+Your NoBullFit Pro Cancellation Is Scheduled
+
+Hi ${name},
+
+We've received your request to cancel your NoBullFit Pro subscription.
+
+Your Pro access will remain active until: ${endDate}
+
+You'll continue to have full access to all Pro features until this date. After that, your account will automatically switch to the free plan.
+
+Changed your mind? You can cancel the scheduled cancellation anytime before ${endDate} from your Billing page at ${APP_URL}/dashboard/billing
+
+Best regards,
+The NoBullFit Team
+
+---
+This email was sent to ${email}.
+© ${new Date().getFullYear()} NoBullFit. All rights reserved.
+    `;
+
+    await sendEmail(email, subject, htmlBody, textBody);
+}
+
+// Send cancellation removed email (when user removes scheduled cancellation)
+export async function sendSubscriptionCancellationRemovedEmail(email: string, name: string): Promise<void> {
+    const subject = "Your NoBullFit Pro Subscription Will Continue";
+    
+    const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${subject}</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #18181b;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #18181b; margin: 0; font-size: 24px; font-weight: 600;">NoBullFit</h1>
+                </div>
+                
+                <div style="background-color: #ffffff; padding: 30px; border-radius: 8px;">
+                    <h2 style="color: #18181b; margin-top: 0; font-size: 20px; font-weight: 600;">Great News! Your Subscription Will Continue</h2>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Hi ${name},</p>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">
+                        We're happy to confirm that your scheduled cancellation has been removed. Your NoBullFit Pro subscription will continue as normal.
+                    </p>
+                    
+                    <div style="margin: 24px 0; padding: 20px; background-color: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+                        <p style="color: #166534; margin: 0; font-weight: 600;">Your Pro subscription is active!</p>
+                        <p style="color: #166534; margin: 8px 0 0 0; font-size: 14px;">You'll continue to enjoy all Pro features and your subscription will renew automatically.</p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${APP_URL}/dashboard" style="display: inline-block; background-color: #27272a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Go to Dashboard</a>
+                    </div>
+                    
+                    <p style="color: #18181b; margin: 16px 0;">Best regards,<br>The NoBullFit Team</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e4e4e7;">
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        This email was sent to <a href="mailto:${email}" style="color: #27272a; text-decoration: underline;">${email}</a>.
+                    </p>
+                    <p style="color: #71717a; margin: 4px 0; font-size: 12px;">
+                        © ${new Date().getFullYear()} NoBullFit. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const textBody = `
+Great News! Your NoBullFit Pro Subscription Will Continue
+
+Hi ${name},
+
+We're happy to confirm that your scheduled cancellation has been removed. Your NoBullFit Pro subscription will continue as normal.
+
+Your Pro subscription is active! You'll continue to enjoy all Pro features and your subscription will renew automatically.
+
+Go to your dashboard: ${APP_URL}/dashboard
+
+Best regards,
+The NoBullFit Team
+
+---
+This email was sent to ${email}.
+© ${new Date().getFullYear()} NoBullFit. All rights reserved.
+    `;
+
+    await sendEmail(email, subject, htmlBody, textBody);
+}
+
 // Send grocery list email
 export async function sendGroceryListEmail(
     email: string,

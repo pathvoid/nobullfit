@@ -34,9 +34,19 @@ const createServer = async () => {
 
     // Parse request bodies for form submissions
     app.use(express.urlencoded({ extended: true }));
+    // Paddle webhook needs raw body for signature verification
+    app.use("/api/paddle/webhook", express.json({
+        verify: (req: Request, res, buf) => {
+            (req as Request & { rawBody?: string }).rawBody = buf.toString();
+        }
+    }));
     app.use(express.json());
     // Parse cookies
     app.use(cookieParser());
+
+    // Mount API routes BEFORE Vite middleware so API requests are handled by Express
+    // This is critical for webhooks (like Paddle) that won't have allowed host headers
+    app.use("/api", api.router);
 
     let vite: ViteDevServer | undefined;
 
@@ -74,9 +84,6 @@ const createServer = async () => {
             })
         );
     }
-
-    // Mount API routes
-    app.use("/api", api.router);
 
     // SSR route handler - catches all non-API routes
     app.use(/.*/, async (req: Request, res: Response) => {

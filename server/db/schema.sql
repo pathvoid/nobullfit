@@ -13,6 +13,11 @@ CREATE TABLE IF NOT EXISTS users (
     plan_selected_at TIMESTAMP,
     subscribed BOOLEAN NOT NULL DEFAULT false,
     subscribed_at TIMESTAMP,
+    paddle_customer_id VARCHAR(50),
+    paddle_subscription_id VARCHAR(50),
+    subscription_status VARCHAR(20) CHECK (subscription_status IN ('active', 'paused', 'past_due', 'canceled', 'trialing')),
+    subscription_ends_at TIMESTAMP,
+    subscription_canceled_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -22,6 +27,10 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- Index for faster lookups by created_at
 CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
+
+-- Index for faster lookups by Paddle customer and subscription IDs
+CREATE INDEX IF NOT EXISTS idx_users_paddle_customer_id ON users(paddle_customer_id);
+CREATE INDEX IF NOT EXISTS idx_users_paddle_subscription_id ON users(paddle_subscription_id);
 
 -- Password resets table - stores password reset tokens
 CREATE TABLE IF NOT EXISTS password_resets (

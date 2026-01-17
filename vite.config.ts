@@ -7,6 +7,11 @@ import path from "path";
 // Vite configuration for SSR build
 export default defineConfig({
     plugins: [react(), tailwindcss()],
+    // Dev server configuration
+    server: {
+        // Allow external hosts (tunnelmole, ngrok, etc.) for webhook testing
+        allowedHosts: ["all"]
+    },
     // SSR configuration - specify packages that should be bundled
     ssr: {
         noExternal: [],

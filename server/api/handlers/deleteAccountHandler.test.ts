@@ -11,9 +11,14 @@ vi.mock("../utils/jwt", () => ({
     verifyToken: vi.fn()
 }));
 
+vi.mock("../utils/paddleService", () => ({
+    cancelAllCustomerSubscriptions: vi.fn().mockResolvedValue(true)
+}));
+
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
 import bcrypt from "bcryptjs";
+import { cancelAllCustomerSubscriptions } from "../utils/paddleService.js";
 
 vi.mock("bcryptjs", () => ({
     default: {
@@ -58,7 +63,8 @@ describe("deleteAccountHandler", () => {
         };
 
         const mockUser = {
-            password_hash: "hashed_password"
+            password_hash: "hashed_password",
+            paddle_customer_id: "ctm_123456"
         };
 
         (bcrypt.compare as ReturnType<typeof vi.fn>).mockResolvedValue(true);
@@ -69,10 +75,35 @@ describe("deleteAccountHandler", () => {
         await handleDeleteAccount(mockRequest as Request, mockResponse as Response);
 
         expect(bcrypt.compare).toHaveBeenCalledWith("correctpassword", "hashed_password");
+        expect(cancelAllCustomerSubscriptions).toHaveBeenCalledWith("ctm_123456");
         expect(mockPool.query).toHaveBeenCalledWith(
             "DELETE FROM users WHERE id = $1",
             [1]
         );
+        expect(mockResponse.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should delete account successfully without Paddle customer", async () => {
+        (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1, email: "test@example.com" });
+        mockRequest.headers = { authorization: "Bearer token" };
+        mockRequest.body = {
+            password: "correctpassword"
+        };
+
+        const mockUser = {
+            password_hash: "hashed_password",
+            paddle_customer_id: null
+        };
+
+        (bcrypt.compare as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+        (cancelAllCustomerSubscriptions as ReturnType<typeof vi.fn>).mockClear();
+        mockPool.query
+            .mockResolvedValueOnce({ rows: [mockUser] })
+            .mockResolvedValueOnce({ rows: [] });
+
+        await handleDeleteAccount(mockRequest as Request, mockResponse as Response);
+
+        expect(cancelAllCustomerSubscriptions).not.toHaveBeenCalled();
         expect(mockResponse.status).toHaveBeenCalledWith(200);
     });
 
