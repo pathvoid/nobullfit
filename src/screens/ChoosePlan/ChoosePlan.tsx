@@ -222,7 +222,7 @@ const ChoosePlan: React.FC = () => {
                             <Heading level={3}>Where Does the Money Go?</Heading>
                         </div>
                         <Text>
-                            Running a free service isn't free for us. Servers, databases, the food API, email delivery, 
+                            Running a free service isn't free for us. Servers, databases, APIs, email delivery, 
                             and image storage all cost money. When Pro subscriptions become available, your support will go directly 
                             toward <Strong>keeping NoBullFit online and ad-free</Strong> for everyone—including free users.
                         </Text>
