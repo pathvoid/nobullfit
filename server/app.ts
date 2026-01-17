@@ -48,7 +48,9 @@ import {
     handleGetRecentActivities,
     handleLogActivity,
     handleUpdateProgressTracking,
-    handleDeleteProgressTracking
+    handleDeleteProgressTracking,
+    handleCopyProgressDay,
+    handleCopyProgressWeek
 } from "./api/handlers/progressTrackingHandler.js";
 import {
     handleGetWeight,
@@ -142,6 +144,8 @@ class App {
         this.router.post("/progress-tracking", handleLogActivity);
         this.router.put("/progress-tracking/:id", handleUpdateProgressTracking);
         this.router.delete("/progress-tracking/:id", handleDeleteProgressTracking);
+        this.router.post("/progress-tracking/copy-day", handleCopyProgressDay);
+        this.router.post("/progress-tracking/copy-week", handleCopyProgressWeek);
         
         // Weight tracking endpoints
         this.router.get("/weight-tracking", handleGetWeight);

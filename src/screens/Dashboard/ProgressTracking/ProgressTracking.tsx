@@ -10,10 +10,10 @@ import { Button } from "@components/button";
 import { Input } from "@components/input";
 import { Select } from "@components/select";
 import { Dialog, DialogActions, DialogBody, DialogDescription, DialogTitle } from "@components/dialog";
-import { Field, Label as FieldLabel } from "@components/fieldset";
+import { Field, Label as FieldLabel, Description } from "@components/fieldset";
 import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel } from "@components/dropdown";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
-import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Scale, MoreVertical } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Scale, MoreVertical, Copy, ClipboardPaste, Calendar, Crown, ChevronDown } from "lucide-react";
 import { ActivityType, ACTIVITY_TYPES, getActivityTypeConfig, type ActivityTypeConfig } from "@utils/activityTypes";
 import { formatFieldValue } from "@utils/activityFormatters";
 import { toast } from "sonner";
@@ -45,6 +45,13 @@ interface WeightEntry {
     timezone: string;
     created_at: string;
     updated_at: string;
+}
+
+interface User {
+    id: number;
+    email: string;
+    full_name: string;
+    subscribed: boolean;
 }
 
 // Format date for display
@@ -88,6 +95,7 @@ const ProgressTracking: React.FC = () => {
     const loaderData = useLoaderData() as {
         title: string;
         meta: unknown[];
+        user?: User;
         initialActivities?: LoggedActivity[];
         initialDate?: string | null;
         initialTimezone?: string | null;
@@ -96,6 +104,9 @@ const ProgressTracking: React.FC = () => {
 
     // Get user's timezone
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    // Check if user is a Pro subscriber
+    const isProUser = loaderData.user?.subscribed === true;
 
     // Initialize date state
     const [currentDate, setCurrentDate] = useState<Date>(() => {
@@ -118,6 +129,16 @@ const ProgressTracking: React.FC = () => {
     const [isWeightDialogOpen, setIsWeightDialogOpen] = useState(false);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    
+    // Copy day state (Pro feature)
+    const [copiedDate, setCopiedDate] = useState<string | null>(null);
+    const [isPasting, setIsPasting] = useState(false);
+    
+    // Copy week dialog state (Pro feature)
+    const [isCopyWeekDialogOpen, setIsCopyWeekDialogOpen] = useState(false);
+    const [copyWeekSourceStart, setCopyWeekSourceStart] = useState("");
+    const [copyWeekTargetStart, setCopyWeekTargetStart] = useState("");
+    const [isCopyingWeek, setIsCopyingWeek] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [activityToDelete, setActivityToDelete] = useState<LoggedActivity | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -174,6 +195,21 @@ const ProgressTracking: React.FC = () => {
             console.error("Error fetching recent activities:", error);
         }
     }, []);
+    
+    // Check if a date is allowed for non-pro users (today or past only)
+    const isDateAllowedForFreeUser = useCallback((date: Date): boolean => {
+        const today = new Date();
+        // Compare dates without time component
+        const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const compareDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        return compareDateOnly <= todayDateOnly;
+    }, []);
+    
+    // Check if navigation to a date is allowed
+    const canNavigateToDate = useCallback((date: Date): boolean => {
+        if (isProUser) return true;
+        return isDateAllowedForFreeUser(date);
+    }, [isProUser, isDateAllowedForFreeUser]);
 
     // Fetch weight for current date
     const fetchWeight = useCallback(async (date: Date) => {
@@ -325,7 +361,10 @@ const ProgressTracking: React.FC = () => {
     const handleNextDay = () => {
         const newDate = new Date(currentDate);
         newDate.setDate(newDate.getDate() + 1);
-        setCurrentDate(newDate);
+        // For non-pro users, restrict to today or earlier
+        if (canNavigateToDate(newDate)) {
+            setCurrentDate(newDate);
+        }
     };
 
     // Navigate to today
@@ -336,7 +375,101 @@ const ProgressTracking: React.FC = () => {
     // Handle date input change
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newDate = new Date(e.target.value + "T00:00:00");
-        setCurrentDate(newDate);
+        // For non-pro users, restrict to today or earlier
+        if (canNavigateToDate(newDate)) {
+            setCurrentDate(newDate);
+        }
+    };
+    
+    // Copy current day (Pro feature)
+    const handleCopyDay = () => {
+        if (!isProUser) return;
+        const dateStr = formatDateForAPI(currentDate);
+        setCopiedDate(dateStr);
+        toast.success("Day copied!");
+    };
+    
+    // Paste copied day to current date (Pro feature)
+    const handlePasteDay = async () => {
+        if (!isProUser || !copiedDate) return;
+        
+        const targetDateStr = formatDateForAPI(currentDate);
+        if (copiedDate === targetDateStr) {
+            return; // Cannot paste to same day
+        }
+        
+        setIsPasting(true);
+        try {
+            const response = await fetch("/api/progress-tracking/copy-day", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    sourceDate: copiedDate,
+                    targetDate: targetDateStr,
+                    timezone: userTimezone
+                })
+            });
+            
+            if (response.ok) {
+                await fetchActivities(currentDate);
+                toast.success("Day pasted successfully!");
+            } else {
+                const error = await response.json();
+                console.error("Error pasting day:", error);
+                toast.error("Failed to paste day. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error pasting day:", error);
+            toast.error("Failed to paste day. Please try again.");
+        } finally {
+            setIsPasting(false);
+        }
+    };
+    
+    // Copy week (Pro feature)
+    const handleCopyWeek = async () => {
+        if (!isProUser || !copyWeekSourceStart || !copyWeekTargetStart) return;
+        
+        if (copyWeekSourceStart === copyWeekTargetStart) {
+            return; // Cannot copy to same week
+        }
+        
+        setIsCopyingWeek(true);
+        try {
+            const response = await fetch("/api/progress-tracking/copy-week", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    sourceWeekStart: copyWeekSourceStart,
+                    targetWeekStart: copyWeekTargetStart,
+                    timezone: userTimezone
+                })
+            });
+            
+            if (response.ok) {
+                setIsCopyWeekDialogOpen(false);
+                setCopyWeekSourceStart("");
+                setCopyWeekTargetStart("");
+                // Refresh current view if it falls within the target week
+                await fetchActivities(currentDate);
+                toast.success("Week copied successfully!");
+            } else {
+                const error = await response.json();
+                console.error("Error copying week:", error);
+                toast.error("Failed to copy week. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error copying week:", error);
+            toast.error("Failed to copy week. Please try again.");
+        } finally {
+            setIsCopyingWeek(false);
+        }
     };
 
     // Reset add dialog form state
@@ -715,10 +848,16 @@ const ProgressTracking: React.FC = () => {
                             type="date"
                             value={formatDateForAPI(currentDate)}
                             onChange={handleDateChange}
+                            max={!isProUser ? formatDateForAPI(new Date()) : undefined}
                             className="flex-1 sm:flex-none sm:w-auto"
                             aria-label="Select date"
                         />
-                        <Button onClick={handleNextDay} outline>
+                        <Button 
+                            onClick={handleNextDay} 
+                            outline
+                            disabled={!isProUser && !canNavigateToDate(new Date(currentDate.getTime() + 86400000))}
+                            title={!isProUser && !canNavigateToDate(new Date(currentDate.getTime() + 86400000)) ? "Pro feature: Log activities for future days" : "Next day"}
+                        >
                             <ChevronRight className="h-5 w-5" />
                         </Button>
                         {/* Today button - hidden on mobile, shown on desktop */}
@@ -729,28 +868,116 @@ const ProgressTracking: React.FC = () => {
                         </div>
                         {/* Spacer to push buttons to the right */}
                         <div className="hidden sm:block sm:flex-1" />
-                        {/* Action buttons on far right - desktop only */}
-                        <div className="hidden sm:flex sm:gap-2">
-                            <Button onClick={() => {
-                                resetAddDialog();
-                                setIsAddDialogOpen(true);
-                            }}>
-                                <Plus className="h-4 w-4" data-slot="icon" />
-                                Add Activity
-                            </Button>
-                            <Button onClick={handleOpenWeightDialog} outline>
-                                <Scale className="h-4 w-4" data-slot="icon" />
-                                {weightEntry ? "Update Weight" : "Add Weight"}
-                            </Button>
-                        </div>
+                        {/* For Pro users: Copy & Paste and action buttons on far right */}
+                        {isProUser && (
+                            <>
+                                <div className="hidden sm:block">
+                                    <Dropdown>
+                                        <DropdownButton 
+                                            outline
+                                        >
+                                            <Copy className="h-4 w-4" data-slot="icon" />
+                                            Copy & Paste
+                                            <ChevronDown className="h-4 w-4" data-slot="icon" />
+                                        </DropdownButton>
+                                        <DropdownMenu anchor="bottom start" className="min-w-48">
+                                            <DropdownItem 
+                                                onClick={handleCopyDay}
+                                                disabled={activities.length === 0}
+                                            >
+                                                <Copy className="h-4 w-4" data-slot="icon" />
+                                                <DropdownLabel>Copy Day</DropdownLabel>
+                                            </DropdownItem>
+                                            <DropdownItem 
+                                                onClick={handlePasteDay}
+                                                disabled={!copiedDate || copiedDate === formatDateForAPI(currentDate) || isPasting}
+                                            >
+                                                <ClipboardPaste className="h-4 w-4" data-slot="icon" />
+                                                <DropdownLabel>{isPasting ? "Pasting..." : "Paste Day"}</DropdownLabel>
+                                            </DropdownItem>
+                                            <DropdownItem 
+                                                onClick={() => setIsCopyWeekDialogOpen(true)}
+                                            >
+                                                <Calendar className="h-4 w-4" data-slot="icon" />
+                                                <DropdownLabel>Copy Week</DropdownLabel>
+                                            </DropdownItem>
+                                        </DropdownMenu>
+                                    </Dropdown>
+                                </div>
+                                <div className="hidden sm:flex sm:gap-2">
+                                    <Button onClick={() => {
+                                        resetAddDialog();
+                                        setIsAddDialogOpen(true);
+                                    }}>
+                                        <Plus className="h-4 w-4" data-slot="icon" />
+                                        Add Activity
+                                    </Button>
+                                    <Button onClick={handleOpenWeightDialog} outline>
+                                        <Scale className="h-4 w-4" data-slot="icon" />
+                                        {weightEntry ? "Update Weight" : "Add Weight"}
+                                    </Button>
+                                </div>
+                            </>
+                        )}
+                        {/* For non-pro users: Action buttons on far right */}
+                        {!isProUser && (
+                            <div className="hidden sm:flex sm:gap-2">
+                                <Button onClick={() => {
+                                    resetAddDialog();
+                                    setIsAddDialogOpen(true);
+                                }}>
+                                    <Plus className="h-4 w-4" data-slot="icon" />
+                                    Add Activity
+                                </Button>
+                                <Button onClick={handleOpenWeightDialog} outline>
+                                    <Scale className="h-4 w-4" data-slot="icon" />
+                                    {weightEntry ? "Update Weight" : "Add Weight"}
+                                </Button>
+                            </div>
+                        )}
                     </div>
                     
-                    {/* Action buttons - stacked on mobile, full width */}
+                    {/* Action buttons - stacked on mobile, hidden on desktop */}
                     <div className="grid grid-cols-1 gap-2 sm:hidden">
                         {/* Today button - shown on mobile only */}
                         <Button onClick={handleToday} outline className="w-full">
                             Today
                         </Button>
+                        {/* Copy/Paste Day/Week dropdown - Pro feature (mobile only) */}
+                        {isProUser && (
+                            <Dropdown>
+                                <DropdownButton 
+                                    outline
+                                    className="w-full"
+                                >
+                                    <Copy className="h-4 w-4" data-slot="icon" />
+                                    Copy & Paste
+                                    <ChevronDown className="h-4 w-4" data-slot="icon" />
+                                </DropdownButton>
+                                <DropdownMenu anchor="bottom start" className="min-w-48">
+                                    <DropdownItem 
+                                        onClick={handleCopyDay}
+                                        disabled={activities.length === 0}
+                                    >
+                                        <Copy className="h-4 w-4" data-slot="icon" />
+                                        <DropdownLabel>Copy Day</DropdownLabel>
+                                    </DropdownItem>
+                                    <DropdownItem 
+                                        onClick={handlePasteDay}
+                                        disabled={!copiedDate || copiedDate === formatDateForAPI(currentDate) || isPasting}
+                                    >
+                                        <ClipboardPaste className="h-4 w-4" data-slot="icon" />
+                                        <DropdownLabel>{isPasting ? "Pasting..." : "Paste Day"}</DropdownLabel>
+                                    </DropdownItem>
+                                    <DropdownItem 
+                                        onClick={() => setIsCopyWeekDialogOpen(true)}
+                                    >
+                                        <Calendar className="h-4 w-4" data-slot="icon" />
+                                        <DropdownLabel>Copy Week</DropdownLabel>
+                                    </DropdownItem>
+                                </DropdownMenu>
+                            </Dropdown>
+                        )}
                         {/* Add Activity button - mobile only */}
                         <Button onClick={() => {
                             resetAddDialog();
@@ -1114,6 +1341,75 @@ const ProgressTracking: React.FC = () => {
                     </Button>
                     <Button onClick={handleSaveWeight} disabled={isSavingWeight || !weightValue || parseFloat(weightValue) <= 0}>
                         {isSavingWeight ? "Saving..." : weightEntry ? "Update" : "Save"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            
+            {/* Copy Week Dialog (Pro feature) */}
+            <Dialog open={isCopyWeekDialogOpen} onClose={(open) => {
+                setIsCopyWeekDialogOpen(open);
+                if (!open) {
+                    setCopyWeekSourceStart("");
+                    setCopyWeekTargetStart("");
+                }
+            }}>
+                <DialogTitle>
+                    <div className="flex items-center gap-2">
+                        <Crown className="h-5 w-5 text-amber-500" />
+                        Copy Week
+                    </div>
+                </DialogTitle>
+                <DialogDescription>
+                    Copy all activities from one week to another. Select the Monday of each week.
+                </DialogDescription>
+                <DialogBody>
+                    <div className="space-y-4">
+                        <Field>
+                            <FieldLabel>Source Week Start (Monday)</FieldLabel>
+                            <Input
+                                type="date"
+                                value={copyWeekSourceStart}
+                                onChange={(e) => setCopyWeekSourceStart(e.target.value)}
+                                disabled={isCopyingWeek}
+                            />
+                            <Description>
+                                Select the Monday of the week you want to copy from.
+                            </Description>
+                        </Field>
+                        <Field>
+                            <FieldLabel>Target Week Start (Monday)</FieldLabel>
+                            <Input
+                                type="date"
+                                value={copyWeekTargetStart}
+                                onChange={(e) => setCopyWeekTargetStart(e.target.value)}
+                                disabled={isCopyingWeek}
+                            />
+                            <Description>
+                                Select the Monday of the week you want to copy to.
+                            </Description>
+                        </Field>
+                        <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                            Note: Existing activities on the target week will not be removed. The copied activities will be added alongside them.
+                        </Text>
+                    </div>
+                </DialogBody>
+                <DialogActions>
+                    <Button 
+                        plain 
+                        onClick={() => {
+                            setIsCopyWeekDialogOpen(false);
+                            setCopyWeekSourceStart("");
+                            setCopyWeekTargetStart("");
+                        }}
+                        disabled={isCopyingWeek}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleCopyWeek} 
+                        disabled={!copyWeekSourceStart || !copyWeekTargetStart || copyWeekSourceStart === copyWeekTargetStart || isCopyingWeek}
+                    >
+                        {isCopyingWeek ? "Copying..." : "Copy Week"}
                     </Button>
                 </DialogActions>
             </Dialog>

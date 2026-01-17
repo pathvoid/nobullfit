@@ -52,6 +52,13 @@ Pro users will have access to advanced meal planning capabilities:
 - **Copy Week**: Copy an entire week's worth of meals to another week — ideal for maintaining consistent meal plans.
 - **Drag-and-Drop Organization**: Reorganize meals between categories (Breakfast, Lunch, Dinner, Snack, Other) by simply dragging and dropping. Pro users also see all meal categories for easy organization.
 
+### Activity Planner (Progress Tracking Enhancements)
+Pro users will have access to advanced activity planning capabilities:
+
+- **Future Activity Planning**: Log activities for upcoming days, not just today or past dates. Perfect for planning workout schedules ahead of time.
+- **Copy Day**: Copy all activities from one day and paste them to another day, making it easy to replicate successful training days.
+- **Copy Week**: Copy an entire week's worth of activities to another week — ideal for maintaining consistent workout routines.
+
 ### Weight Goal Tracking (TDEE & Dashboard Enhancements)
 Pro users can set personalized weight goals with intelligent insights:
 

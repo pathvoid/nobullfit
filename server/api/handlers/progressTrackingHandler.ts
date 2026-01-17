@@ -298,3 +298,185 @@ export async function handleDeleteProgressTracking(req: Request, res: Response):
         res.status(500).json({ error: "Internal server error" });
     }
 }
+
+// Helper function to check if user is subscribed (pro user)
+async function isUserSubscribed(userId: number): Promise<boolean> {
+    const pool = await getPool();
+    if (!pool) return false;
+    
+    const result = await pool.query(
+        "SELECT subscribed FROM users WHERE id = $1",
+        [userId]
+    );
+    
+    return result.rows.length > 0 && result.rows[0].subscribed === true;
+}
+
+// Copy activities from one day to another (Pro feature)
+export async function handleCopyProgressDay(req: Request, res: Response): Promise<void> {
+    try {
+        const userId = await getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        // Check if user is subscribed
+        const subscribed = await isUserSubscribed(userId);
+        if (!subscribed) {
+            res.status(403).json({ error: "This feature requires a Pro subscription" });
+            return;
+        }
+
+        const { sourceDate, targetDate, timezone } = req.body;
+
+        if (!sourceDate || !targetDate || !timezone) {
+            res.status(400).json({ error: "sourceDate, targetDate, and timezone are required" });
+            return;
+        }
+
+        if (sourceDate === targetDate) {
+            res.status(400).json({ error: "Source and target dates cannot be the same" });
+            return;
+        }
+
+        const pool = await getPool();
+        if (!pool) {
+            res.status(500).json({ error: "Database connection not available" });
+            return;
+        }
+
+        // Fetch activities from source date
+        const sourceActivities = await pool.query(
+            `SELECT activity_type, activity_name, activity_data, calories_burned
+             FROM progress_tracking 
+             WHERE user_id = $1 AND date = $2`,
+            [userId, sourceDate]
+        );
+
+        if (sourceActivities.rows.length === 0) {
+            res.status(404).json({ error: "No activities found on the source date" });
+            return;
+        }
+
+        // Insert each activity for the target date
+        const insertPromises = sourceActivities.rows.map(activity => {
+            return pool.query(
+                `INSERT INTO progress_tracking 
+                 (user_id, activity_type, activity_name, date, timezone, activity_data, calories_burned)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                [
+                    userId,
+                    activity.activity_type,
+                    activity.activity_name,
+                    targetDate,
+                    timezone,
+                    JSON.stringify(activity.activity_data),
+                    activity.calories_burned
+                ]
+            );
+        });
+
+        await Promise.all(insertPromises);
+
+        res.status(200).json({
+            success: true,
+            copiedCount: sourceActivities.rows.length,
+            message: `Successfully copied ${sourceActivities.rows.length} activity(ies) from ${sourceDate} to ${targetDate}`
+        });
+    } catch (error) {
+        console.error("Error copying progress day:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+// Copy activities from one week to another (Pro feature)
+export async function handleCopyProgressWeek(req: Request, res: Response): Promise<void> {
+    try {
+        const userId = await getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        // Check if user is subscribed
+        const subscribed = await isUserSubscribed(userId);
+        if (!subscribed) {
+            res.status(403).json({ error: "This feature requires a Pro subscription" });
+            return;
+        }
+
+        const { sourceWeekStart, targetWeekStart, timezone } = req.body;
+
+        if (!sourceWeekStart || !targetWeekStart || !timezone) {
+            res.status(400).json({ error: "sourceWeekStart, targetWeekStart, and timezone are required" });
+            return;
+        }
+
+        if (sourceWeekStart === targetWeekStart) {
+            res.status(400).json({ error: "Source and target weeks cannot be the same" });
+            return;
+        }
+
+        const pool = await getPool();
+        if (!pool) {
+            res.status(500).json({ error: "Database connection not available" });
+            return;
+        }
+
+        // Calculate date ranges for source and target weeks (7 days each)
+        const sourceStart = new Date(sourceWeekStart);
+        const sourceEnd = new Date(sourceStart);
+        sourceEnd.setDate(sourceEnd.getDate() + 6);
+        
+        const targetStart = new Date(targetWeekStart);
+
+        // Fetch all activities from source week
+        const sourceActivities = await pool.query(
+            `SELECT activity_type, activity_name, date, activity_data, calories_burned
+             FROM progress_tracking 
+             WHERE user_id = $1 AND date >= $2 AND date <= $3`,
+            [userId, sourceWeekStart, sourceEnd.toISOString().split("T")[0]]
+        );
+
+        if (sourceActivities.rows.length === 0) {
+            res.status(404).json({ error: "No activities found in the source week" });
+            return;
+        }
+
+        // Insert each activity for the target week, calculating the day offset
+        const insertPromises = sourceActivities.rows.map(activity => {
+            const activityDate = new Date(activity.date);
+            const dayOffset = Math.floor((activityDate.getTime() - sourceStart.getTime()) / (1000 * 60 * 60 * 24));
+            const targetDate = new Date(targetStart);
+            targetDate.setDate(targetDate.getDate() + dayOffset);
+            const targetDateStr = targetDate.toISOString().split("T")[0];
+
+            return pool.query(
+                `INSERT INTO progress_tracking 
+                 (user_id, activity_type, activity_name, date, timezone, activity_data, calories_burned)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                [
+                    userId,
+                    activity.activity_type,
+                    activity.activity_name,
+                    targetDateStr,
+                    timezone,
+                    JSON.stringify(activity.activity_data),
+                    activity.calories_burned
+                ]
+            );
+        });
+
+        await Promise.all(insertPromises);
+
+        res.status(200).json({
+            success: true,
+            copiedCount: sourceActivities.rows.length,
+            message: `Successfully copied ${sourceActivities.rows.length} activity(ies) from source week to target week`
+        });
+    } catch (error) {
+        console.error("Error copying progress week:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}

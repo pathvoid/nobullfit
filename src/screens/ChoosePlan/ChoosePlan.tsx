@@ -152,8 +152,12 @@ const ChoosePlan: React.FC = () => {
                                 <FeatureItem>Plan meals for future days and weeks</FeatureItem>
                                 <FeatureItem>Copy entire days or weeks of meals</FeatureItem>
                                 <FeatureItem>Drag-and-drop meal organization</FeatureItem>
-                                <FeatureItem>Set weight goals with recommendations</FeatureItem>
+                                <FeatureItem>Plan activities for future days</FeatureItem>
+                                <FeatureItem>Copy entire days or weeks of activities</FeatureItem>
+                                <FeatureItem>Set weight goals (lose, maintain, gain)</FeatureItem>
+                                <FeatureItem>Personalized macro recommendations</FeatureItem>
                                 <FeatureItem>Goal timeline projections</FeatureItem>
+                                <FeatureItem>Weekly progress insights</FeatureItem>
                             </ul>
                         </div>
 

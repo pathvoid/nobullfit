@@ -11,7 +11,6 @@ import { Input } from "@components/input";
 import { Select } from "@components/select";
 import { Dialog, DialogActions, DialogBody, DialogDescription, DialogTitle } from "@components/dialog";
 import { Field, Label as FieldLabel, Description } from "@components/fieldset";
-import { Badge } from "@components/badge";
 import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel } from "@components/dropdown";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Copy, ClipboardPaste, Calendar, GripVertical, Crown, ChevronDown, MoreVertical } from "lucide-react";
@@ -1077,23 +1076,6 @@ const FoodTracking: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                
-                {/* Copied date indicator */}
-                {isProUser && copiedDate && (
-                    <div className="flex items-center gap-2">
-                        <Badge color="blue">
-                            <Copy className="h-3 w-3 mr-1" />
-                            Day copied: {copiedDate}
-                        </Badge>
-                        <Button 
-                            plain 
-                            onClick={() => setCopiedDate(null)}
-                            className="text-xs"
-                        >
-                            Clear
-                        </Button>
-                    </div>
-                )}
 
                 {/* Grand Totals */}
                 {foods.length > 0 && (

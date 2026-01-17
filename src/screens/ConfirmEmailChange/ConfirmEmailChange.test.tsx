@@ -129,8 +129,9 @@ describe("ConfirmEmailChange", () => {
     });
 
     it("should show success message after successful confirmation", async () => {
-        // Mock the location search with token
-        mockLocationSearch("?token=valid-token");
+        // Use a unique token for this test to avoid module-level caching
+        const uniqueToken = `success-token-${Date.now()}`;
+        mockLocationSearch(`?token=${uniqueToken}`);
         
         // Set up mock BEFORE rendering
         mockFetch.mockResolvedValue({
@@ -148,14 +149,15 @@ describe("ConfirmEmailChange", () => {
                 })
             }
         ], {
-            initialEntries: ["/confirm-email-change?token=valid-token"]
+            initialEntries: [`/confirm-email-change?token=${uniqueToken}`]
         });
 
         render(<RouterProvider router={router} />);
 
+        // Wait for the API call to complete and success state to render
         await waitFor(() => {
             expect(screen.getByText(/your email address has been successfully updated/i)).toBeInTheDocument();
-        });
+        }, { timeout: 3000 });
     });
 
     it("should show error message when confirmation fails", async () => {
@@ -190,8 +192,9 @@ describe("ConfirmEmailChange", () => {
     });
 
     it("should show sign in button after successful confirmation", async () => {
-        // Mock the location search with token
-        mockLocationSearch("?token=valid-token");
+        // Use a unique token for this test to avoid module-level caching
+        const uniqueToken = `signin-token-${Date.now()}`;
+        mockLocationSearch(`?token=${uniqueToken}`);
         
         // Set up mock BEFORE rendering
         mockFetch.mockResolvedValue({
@@ -209,14 +212,15 @@ describe("ConfirmEmailChange", () => {
                 })
             }
         ], {
-            initialEntries: ["/confirm-email-change?token=valid-token"]
+            initialEntries: [`/confirm-email-change?token=${uniqueToken}`]
         });
 
         render(<RouterProvider router={router} />);
 
+        // Wait for the API call to complete and success state to render
         await waitFor(() => {
             expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument();
-        });
+        }, { timeout: 3000 });
     });
 
     it("should show go to settings button after error", async () => {
