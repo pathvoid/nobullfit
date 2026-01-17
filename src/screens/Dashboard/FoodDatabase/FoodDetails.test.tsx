@@ -151,10 +151,12 @@ describe("FoodDetails", () => {
 
         render(<RouterProvider router={router} />);
 
-        await screen.findByText(/basic information/i);
+        // Wait for page to render and check brand is displayed in header
+        await screen.findByText(/local farm/i);
 
-        expect(screen.getByText(/brand/i)).toBeInTheDocument();
+        // Brand and category are shown in the header area
         expect(screen.getByText(/local farm/i)).toBeInTheDocument();
+        expect(screen.getByText(/fruits/i)).toBeInTheDocument();
     });
 
     it("should show add to favorites button when not favorited", async () => {
