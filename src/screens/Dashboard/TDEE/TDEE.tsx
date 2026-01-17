@@ -602,7 +602,7 @@ const TDEE: React.FC = () => {
                         <img 
                             src="https://cdn.nobull.fit/watermelon-tdee.png" 
                             alt="TDEE Calculator" 
-                            className="max-h-80 w-auto object-contain"
+                            className="max-h-64 w-auto object-contain"
                         />
                     </div>
                 </div>
