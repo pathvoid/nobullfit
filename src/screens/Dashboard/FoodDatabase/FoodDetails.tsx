@@ -15,6 +15,7 @@ import { DescriptionList, DescriptionTerm, DescriptionDetails } from "@component
 import { Dropdown, DropdownButton, DropdownItem, DropdownMenu } from "@components/dropdown";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 
 // Get default category based on current time
 function getDefaultCategory(): string {
@@ -186,6 +187,7 @@ const FoodDetails: React.FC = () => {
                 });
                 if (response.ok) {
                     setIsFavorite(false);
+                    toast.success("Removed from favorites");
                 }
             } else {
                 // Add to favorites
@@ -204,10 +206,12 @@ const FoodDetails: React.FC = () => {
                 });
                 if (response.ok) {
                     setIsFavorite(true);
+                    toast.success("Added to favorites!");
                 }
             }
         } catch (error) {
             console.error("Error toggling favorite:", error);
+            toast.error("Failed to update favorites. Please try again.");
         } finally {
             setIsToggling(false);
         }
@@ -270,9 +274,11 @@ const FoodDetails: React.FC = () => {
                 setIsAddToListDialogOpen(false);
                 setSelectedListId("");
                 setNewListName("");
+                toast.success("Added to grocery list!");
             }
         } catch (error) {
             console.error("Error adding to list:", error);
+            toast.error("Failed to add to grocery list. Please try again.");
         } finally {
             setIsAddingToList(false);
         }
@@ -334,13 +340,14 @@ const FoodDetails: React.FC = () => {
                 setLogMeasureUri("");
                 setLogMeasureLabel("");
                 setLogCategory(getDefaultCategory());
+                toast.success("Food logged successfully!");
             } else {
                 const errorData = await logResponse.json();
                 throw new Error(errorData.error || "Failed to log food");
             }
         } catch (error) {
             console.error("Error logging food:", error);
-            alert(error instanceof Error ? error.message : "Failed to log food. Please try again.");
+            toast.error(error instanceof Error ? error.message : "Failed to log food. Please try again.");
         } finally {
             setIsLoggingFood(false);
         }

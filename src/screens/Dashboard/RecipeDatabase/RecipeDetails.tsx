@@ -20,6 +20,7 @@ import { Ingredient, convertIngredient, UNITS, UnitSystem } from "@utils/ingredi
 import { RecipeTagKey, RECIPE_TAGS } from "@utils/recipeTags";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 
 // Get default category based on current time
 function getDefaultCategory(): string {
@@ -154,6 +155,7 @@ const RecipeDetails: React.FC = () => {
                 });
                 if (response.ok) {
                     setIsFavorite(false);
+                    toast.success("Removed from favorites");
                 }
             } else {
                 // Add to favorites
@@ -172,10 +174,12 @@ const RecipeDetails: React.FC = () => {
                 });
                 if (response.ok) {
                     setIsFavorite(true);
+                    toast.success("Added to favorites!");
                 }
             }
         } catch (error) {
             console.error("Error toggling favorite:", error);
+            toast.error("Failed to update favorites. Please try again.");
         } finally {
             setIsToggling(false);
         }
@@ -203,9 +207,11 @@ const RecipeDetails: React.FC = () => {
                 setIsAddToListDialogOpen(false);
                 setSelectedListId("");
                 setNewListName("");
+                toast.success("Ingredients added to grocery list!");
             }
         } catch (error) {
             console.error("Error adding recipe to list:", error);
+            toast.error("Failed to add ingredients to grocery list. Please try again.");
         } finally {
             setIsAddingToList(false);
         }
@@ -315,13 +321,14 @@ const RecipeDetails: React.FC = () => {
                 setIsLogRecipeDialogOpen(false);
                 setLogServings("1");
                 setLogCategory(getDefaultCategory());
+                toast.success("Recipe logged successfully!");
             } else {
                 const errorData = await logResponse.json();
                 throw new Error(errorData.error || "Failed to log recipe");
             }
         } catch (error) {
             console.error("Error logging recipe:", error);
-            alert(error instanceof Error ? error.message : "Failed to log recipe. Please try again.");
+            toast.error(error instanceof Error ? error.message : "Failed to log recipe. Please try again.");
         } finally {
             setIsLoggingRecipe(false);
         }

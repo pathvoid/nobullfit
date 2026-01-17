@@ -15,6 +15,7 @@ import { Badge } from "@components/badge";
 import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel } from "@components/dropdown";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Copy, ClipboardPaste, Calendar, GripVertical, Crown, ChevronDown, MoreVertical } from "lucide-react";
+import { toast } from "sonner";
 
 interface LoggedFood {
     id: number;
@@ -367,9 +368,11 @@ const FoodTracking: React.FC = () => {
                 setEditingFood(null);
                 await fetchFoods(currentDate);
                 await fetchRecentFoods();
+                toast.success("Food updated successfully!");
             }
         } catch (error) {
             console.error("Error updating food:", error);
+            toast.error("Failed to update food. Please try again.");
         }
     };
 
@@ -395,9 +398,11 @@ const FoodTracking: React.FC = () => {
                 setFoodToDelete(null);
                 await fetchFoods(currentDate);
                 await fetchRecentFoods();
+                toast.success("Food deleted successfully!");
             }
         } catch (error) {
             console.error("Error deleting food:", error);
+            toast.error("Failed to delete food. Please try again.");
         } finally {
             setIsDeleting(false);
         }
@@ -533,6 +538,7 @@ const FoodTracking: React.FC = () => {
                     resetAddDialog();
                     await fetchFoods(currentDate);
                     await fetchRecentFoods();
+                    toast.success("Recipe added successfully!");
                 }
             } else {
                 // Food entry
@@ -661,10 +667,12 @@ const FoodTracking: React.FC = () => {
                     resetAddDialog();
                     await fetchFoods(currentDate);
                     await fetchRecentFoods();
+                    toast.success("Food added successfully!");
                 }
             }
         } catch (error) {
             console.error("Error adding food:", error);
+            toast.error("Failed to add food. Please try again.");
         } finally {
             setIsSaving(false);
         }
@@ -703,12 +711,15 @@ const FoodTracking: React.FC = () => {
             
             if (response.ok) {
                 await fetchFoods(currentDate);
+                toast.success("Day pasted successfully!");
             } else {
                 const error = await response.json();
                 console.error("Error pasting day:", error);
+                toast.error("Failed to paste day. Please try again.");
             }
         } catch (error) {
             console.error("Error pasting day:", error);
+            toast.error("Failed to paste day. Please try again.");
         } finally {
             setIsPasting(false);
         }
@@ -743,12 +754,15 @@ const FoodTracking: React.FC = () => {
                 setCopyWeekTargetStart("");
                 // Refresh current view if it falls within the target week
                 await fetchFoods(currentDate);
+                toast.success("Week copied successfully!");
             } else {
                 const error = await response.json();
                 console.error("Error copying week:", error);
+                toast.error("Failed to copy week. Please try again.");
             }
         } catch (error) {
             console.error("Error copying week:", error);
+            toast.error("Failed to copy week. Please try again.");
         } finally {
             setIsCopyingWeek(false);
         }

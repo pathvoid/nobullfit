@@ -16,6 +16,7 @@ import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Scale, MoreVertical } from "lucide-react";
 import { ActivityType, ACTIVITY_TYPES, getActivityTypeConfig, type ActivityTypeConfig } from "@utils/activityTypes";
 import { formatFieldValue } from "@utils/activityFormatters";
+import { toast } from "sonner";
 
 interface LoggedActivity {
     id: number;
@@ -255,10 +256,13 @@ const ProgressTracking: React.FC = () => {
             if (response.ok) {
                 setIsWeightDialogOpen(false);
                 await fetchWeight(currentDate);
+                const wasUpdate = weightEntry !== null;
                 setWeightValue("");
+                toast.success(wasUpdate ? "Weight updated successfully!" : "Weight saved successfully!");
             }
         } catch (error) {
             console.error("Error saving weight:", error);
+            toast.error("Failed to save weight. Please try again.");
         } finally {
             setIsSavingWeight(false);
         }
@@ -278,9 +282,11 @@ const ProgressTracking: React.FC = () => {
             if (response.ok) {
                 setWeightEntry(null);
                 setWeightValue("");
+                toast.success("Weight deleted successfully!");
             }
         } catch (error) {
             console.error("Error deleting weight:", error);
+            toast.error("Failed to delete weight. Please try again.");
         } finally {
             setIsSavingWeight(false);
         }
@@ -432,9 +438,11 @@ const ProgressTracking: React.FC = () => {
                 resetAddDialog();
                 await fetchActivities(currentDate);
                 await fetchRecentActivities();
+                toast.success("Activity added successfully!");
             }
         } catch (error) {
             console.error("Error adding activity:", error);
+            toast.error("Failed to add activity. Please try again.");
         } finally {
             setIsSaving(false);
         }
@@ -518,9 +526,11 @@ const ProgressTracking: React.FC = () => {
                 setIsEditDialogOpen(false);
                 setEditingActivity(null);
                 await fetchActivities(currentDate);
+                toast.success("Activity updated successfully!");
             }
         } catch (error) {
             console.error("Error updating activity:", error);
+            toast.error("Failed to update activity. Please try again.");
         } finally {
             setIsSaving(false);
         }
@@ -547,9 +557,11 @@ const ProgressTracking: React.FC = () => {
                 setIsDeleteDialogOpen(false);
                 setActivityToDelete(null);
                 await fetchActivities(currentDate);
+                toast.success("Activity deleted successfully!");
             }
         } catch (error) {
             console.error("Error deleting activity:", error);
+            toast.error("Failed to delete activity. Please try again.");
         } finally {
             setIsDeleting(false);
         }

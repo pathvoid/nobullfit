@@ -16,6 +16,7 @@ import { Field, Label as FieldLabel } from "@components/fieldset";
 import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel, DropdownDivider } from "@components/dropdown";
 import { ChevronDown, ChevronUp, Search, Plus, Minus, Mail, Pencil, Trash2, MoreVertical } from "lucide-react";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
+import { toast } from "sonner";
 
 interface GroceryListItem {
     id: number;
@@ -102,9 +103,11 @@ const GroceryLists: React.FC = () => {
                 setLists(prev => [data.list, ...prev]);
                 setNewListName("");
                 setIsCreateDialogOpen(false);
+                toast.success("Grocery list created!");
             }
         } catch (error) {
             console.error("Error creating list:", error);
+            toast.error("Failed to create grocery list. Please try again.");
         } finally {
             setIsCreating(false);
         }
@@ -131,9 +134,11 @@ const GroceryLists: React.FC = () => {
                 );
                 setRenameListName("");
                 setIsRenameDialogOpen(null);
+                toast.success("List renamed successfully!");
             }
         } catch (error) {
             console.error("Error renaming list:", error);
+            toast.error("Failed to rename list. Please try again.");
         } finally {
             setIsRenaming(false);
         }
@@ -154,9 +159,11 @@ const GroceryLists: React.FC = () => {
                 const newSelected = new Map(selectedItems);
                 newSelected.delete(listId);
                 setSelectedItems(newSelected);
+                toast.success("List deleted successfully!");
             }
         } catch (error) {
             console.error("Error deleting list:", error);
+            toast.error("Failed to delete list. Please try again.");
         } finally {
             setIsDeleting(false);
         }
@@ -188,9 +195,11 @@ const GroceryLists: React.FC = () => {
                     }
                 }
                 setSelectedItems(newSelected);
+                toast.success("Item removed from list");
             }
         } catch (error) {
             console.error("Error removing item:", error);
+            toast.error("Failed to remove item. Please try again.");
         } finally {
             setRemovingItemIds(prev => {
                 const newSet = new Set(prev);
@@ -229,9 +238,11 @@ const GroceryLists: React.FC = () => {
                 const newSelected = new Map(selectedItems);
                 newSelected.delete(listId);
                 setSelectedItems(newSelected);
+                toast.success("Items removed from list");
             }
         } catch (error) {
             console.error("Error bulk removing items:", error);
+            toast.error("Failed to remove items. Please try again.");
         } finally {
             setRemovingItemIds(prev => {
                 const newSet = new Set(prev);
@@ -387,9 +398,11 @@ const GroceryLists: React.FC = () => {
                 setNewItemQuantity("1");
                 setNewItemUnit("");
                 setAddItemDialogListId(null);
+                toast.success("Item added to list!");
             }
         } catch (error) {
             console.error("Error adding custom item:", error);
+            toast.error("Failed to add item. Please try again.");
         } finally {
             setIsAddingItem(false);
         }

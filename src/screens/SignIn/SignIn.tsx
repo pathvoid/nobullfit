@@ -10,7 +10,7 @@ import { Heading } from "@components/heading";
 import { Input } from "@components/input";
 import { Strong, Text, TextLink } from "@components/text";
 import { Logo } from "@components/logo";
-import { FormAlert } from "@components/form-alert";
+import { toast } from "sonner";
 
 const SignIn: React.FC = () => {
     const loaderData = useLoaderData() as { title: string; meta: unknown[] };
@@ -18,7 +18,6 @@ const SignIn: React.FC = () => {
     const [searchParams] = useSearchParams();
     const helmet = useHelmet();
     const { login } = useAuth();
-    const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Set helmet values - refs are updated synchronously for SSR, state updates are deferred
@@ -27,7 +26,6 @@ const SignIn: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setError(null);
         setIsSubmitting(true);
 
         const formData = new FormData(e.currentTarget);
@@ -49,7 +47,7 @@ const SignIn: React.FC = () => {
             const result = await response.json();
 
             if (!response.ok) {
-                setError(result.error || "An error occurred. Please try again.");
+                toast.error(result.error || "An error occurred. Please try again.");
                 setIsSubmitting(false);
                 return;
             }
@@ -65,12 +63,12 @@ const SignIn: React.FC = () => {
                 window.location.href = redirectTo;
             } else {
                 // Token or user missing - show error
-                setError("Authentication failed. Please try again.");
+                toast.error("Authentication failed. Please try again.");
                 setIsSubmitting(false);
             }
         } catch (err) {
             console.error("Sign in error:", err);
-            setError("An error occurred while signing in. Please try again later.");
+            toast.error("An error occurred while signing in. Please try again later.");
             setIsSubmitting(false);
         }
     };
@@ -80,11 +78,6 @@ const SignIn: React.FC = () => {
             <form onSubmit={handleSubmit} className="grid w-full max-w-sm grid-cols-1 gap-8">
                 <Logo className="h-6 text-zinc-950 dark:text-white forced-colors:text-[CanvasText]" />
                 <Heading>Sign in to your account</Heading>
-                {error && (
-                    <FormAlert variant="error">
-                        {error}
-                    </FormAlert>
-                )}
                 <Field>
                     <Label>Email</Label>
                     <Input type="email" name="email" />

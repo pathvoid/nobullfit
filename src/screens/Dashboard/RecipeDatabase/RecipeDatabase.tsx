@@ -18,6 +18,7 @@ import { Search, Filter, X } from "lucide-react";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { useAuth } from "@core/contexts/AuthContext";
 import { RECIPE_TAGS, getAllTags, type RecipeTagKey } from "@utils/recipeTags";
+import { toast } from "sonner";
 
 interface Recipe {
     id: number;
@@ -47,7 +48,6 @@ const RecipeDatabase: React.FC = () => {
     const [appliedSearchQuery, setAppliedSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
     const [recipes, setRecipes] = useState<Recipe[]>([]);
-    const [error, setError] = useState<string | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const [selectedTags, setSelectedTags] = useState<RecipeTagKey[]>([]);
     const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -65,7 +65,6 @@ const RecipeDatabase: React.FC = () => {
     // Load recipes with current filters (preserving applied search query)
     const loadRecipes = useCallback(async () => {
         setIsSearching(true);
-        setError(null);
 
         try {
             const params = new URLSearchParams();
@@ -104,7 +103,7 @@ const RecipeDatabase: React.FC = () => {
             setPagination(data.pagination || null);
         } catch (err) {
             console.error("Error loading recipes:", err);
-            setError("Failed to load recipes. Please try again.");
+            toast.error("Failed to load recipes. Please try again.");
         } finally {
             setIsSearching(false);
         }
@@ -302,12 +301,6 @@ const RecipeDatabase: React.FC = () => {
                         ))}
                     </div>
                 </div>
-
-                {error && (
-                    <div className="rounded-lg border border-red-500/20 bg-red-50 p-4 dark:bg-red-950/10">
-                        <Text className="text-red-600 dark:text-red-400">{error}</Text>
-                    </div>
-                )}
 
                 {sortedRecipes.length === 0 && !isSearching ? (
                     <div className="rounded-lg border border-zinc-950/10 bg-zinc-50 p-12 text-center dark:border-white/10 dark:bg-zinc-800/50">

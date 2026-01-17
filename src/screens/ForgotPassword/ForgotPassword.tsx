@@ -8,13 +8,12 @@ import { Heading } from "@components/heading";
 import { Input } from "@components/input";
 import { Strong, Text, TextLink } from "@components/text";
 import { Logo } from "@components/logo";
-import { FormAlert } from "@components/form-alert";
+import { toast } from "sonner";
 
 const ForgotPassword: React.FC = () => {
     const loaderData = useLoaderData() as { title: string; meta: unknown[] };
     const navigate = useNavigate();
     const helmet = useHelmet();
-    const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,7 +23,6 @@ const ForgotPassword: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setError(null);
         setSuccess(false);
         setIsSubmitting(true);
 
@@ -43,17 +41,18 @@ const ForgotPassword: React.FC = () => {
             const result = await response.json();
 
             if (!response.ok) {
-                setError(result.error || "An error occurred. Please try again.");
+                toast.error(result.error || "An error occurred. Please try again.");
                 setIsSubmitting(false);
                 return;
             }
 
-            // Success - show success message
+            // Success - show success message and change UI
             setSuccess(true);
+            toast.success("If an account with that email exists, a password reset link has been sent.");
             setIsSubmitting(false);
         } catch (err) {
             console.error("Forgot password error:", err);
-            setError("An error occurred while processing your request. Please try again later.");
+            toast.error("An error occurred while processing your request. Please try again later.");
             setIsSubmitting(false);
         }
     };
@@ -63,16 +62,6 @@ const ForgotPassword: React.FC = () => {
             <form onSubmit={handleSubmit} className="grid w-full max-w-sm grid-cols-1 gap-8">
                 <Logo className="h-6 text-zinc-950 dark:text-white forced-colors:text-[CanvasText]" />
                 <Heading>Reset your password</Heading>
-                {error && (
-                    <FormAlert variant="error">
-                        {error}
-                    </FormAlert>
-                )}
-                {success && (
-                    <FormAlert variant="success">
-                        If an account with that email exists, a password reset link has been sent. Please check the server console for the reset link.
-                    </FormAlert>
-                )}
                 {!success && (
                     <>
                         <Text>

@@ -19,6 +19,7 @@ import {
     PaginationPrevious
 } from "@components/pagination";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
+import { toast } from "sonner";
 
 // Types for OpenFoodFacts API response
 interface OFFFood {
@@ -73,7 +74,6 @@ const FoodDatabase: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState<OFFResponse | null>(null);
-    const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [nextUrl, setNextUrl] = useState<string | null>(null);
     const [originalQuery, setOriginalQuery] = useState<string>("");
@@ -87,7 +87,6 @@ const FoodDatabase: React.FC = () => {
         }
 
         setIsSearching(true);
-        setError(null);
 
         try {
             const params = new URLSearchParams();
@@ -120,7 +119,7 @@ const FoodDatabase: React.FC = () => {
             
             setNextUrl(data._links?.next?.href || null);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "An error occurred");
+            toast.error(err instanceof Error ? err.message : "An error occurred");
             setSearchResults(null);
         } finally {
             setIsSearching(false);
@@ -236,12 +235,6 @@ const FoodDatabase: React.FC = () => {
                         </Button>
                     </div>
                 </form>
-
-                {error && (
-                    <div className="rounded-lg border border-red-500/20 bg-red-50 p-4 dark:bg-red-950/10">
-                        <Text className="text-red-600 dark:text-red-400">{error}</Text>
-                    </div>
-                )}
 
                 {searchResults && (
                     <div className="space-y-4">

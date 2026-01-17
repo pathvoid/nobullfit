@@ -8,14 +8,13 @@ import { Heading } from "@components/heading";
 import { Input } from "@components/input";
 import { Strong, Text, TextLink } from "@components/text";
 import { Logo } from "@components/logo";
-import { FormAlert } from "@components/form-alert";
+import { toast } from "sonner";
 
 const ResetPassword: React.FC = () => {
     const loaderData = useLoaderData() as { title: string; meta: unknown[] };
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const helmet = useHelmet();
-    const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -27,12 +26,11 @@ const ResetPassword: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setError(null);
         setSuccess(false);
         setIsSubmitting(true);
 
         if (!token) {
-            setError("Invalid reset link. Please request a new password reset.");
+            toast.error("Invalid reset link. Please request a new password reset.");
             setIsSubmitting(false);
             return;
         }
@@ -43,14 +41,14 @@ const ResetPassword: React.FC = () => {
 
         // Validate passwords match
         if (password !== confirmPassword) {
-            setError("Passwords do not match.");
+            toast.error("Passwords do not match.");
             setIsSubmitting(false);
             return;
         }
 
         // Validate password length
         if (password.length < 8) {
-            setError("Password must be at least 8 characters long.");
+            toast.error("Password must be at least 8 characters long.");
             setIsSubmitting(false);
             return;
         }
@@ -67,13 +65,14 @@ const ResetPassword: React.FC = () => {
             const result = await response.json();
 
             if (!response.ok) {
-                setError(result.error || "An error occurred. Please try again.");
+                toast.error(result.error || "An error occurred. Please try again.");
                 setIsSubmitting(false);
                 return;
             }
 
-            // Success - show success message
+            // Success - show success message and change UI
             setSuccess(true);
+            toast.success("Your password has been reset successfully. Redirecting to sign in...");
             setIsSubmitting(false);
             
             // Redirect to sign-in after 3 seconds
@@ -82,7 +81,7 @@ const ResetPassword: React.FC = () => {
             }, 3000);
         } catch (err) {
             console.error("Reset password error:", err);
-            setError("An error occurred while resetting your password. Please try again later.");
+            toast.error("An error occurred while resetting your password. Please try again later.");
             setIsSubmitting(false);
         }
     };
@@ -115,16 +114,6 @@ const ResetPassword: React.FC = () => {
             <form onSubmit={handleSubmit} className="grid w-full max-w-sm grid-cols-1 gap-8">
                 <Logo className="h-6 text-zinc-950 dark:text-white forced-colors:text-[CanvasText]" />
                 <Heading>Reset your password</Heading>
-                {error && (
-                    <FormAlert variant="error">
-                        {error}
-                    </FormAlert>
-                )}
-                {success && (
-                    <FormAlert variant="success">
-                        Your password has been reset successfully. Redirecting to sign in...
-                    </FormAlert>
-                )}
                 {!success && (
                     <>
                         <Text>

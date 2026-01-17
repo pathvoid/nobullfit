@@ -9,6 +9,7 @@ import { Button } from "@components/button";
 import { Divider } from "@components/divider";
 import { Check, Sparkles, Heart, Shield, Download, Clock } from "lucide-react";
 import { useAuth } from "@core/contexts/AuthContext";
+import { toast } from "sonner";
 
 // Feature list item component for cleaner rendering
 const FeatureItem: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -24,7 +25,6 @@ const ChoosePlan: React.FC = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     // Set helmet values
     helmet.setTitle(loaderData.title);
@@ -37,7 +37,6 @@ const ChoosePlan: React.FC = () => {
         }
 
         setIsLoading(true);
-        setError(null);
 
         try {
             const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
@@ -54,7 +53,7 @@ const ChoosePlan: React.FC = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.error || "Failed to select plan. Please try again.");
+                toast.error(data.error || "Failed to select plan. Please try again.");
                 return;
             }
 
@@ -67,7 +66,7 @@ const ChoosePlan: React.FC = () => {
             navigate(data.redirect || "/dashboard");
         } catch (err) {
             console.error("Plan selection error:", err);
-            setError("An error occurred. Please try again.");
+            toast.error("An error occurred. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -84,13 +83,6 @@ const ChoosePlan: React.FC = () => {
                         We believe privacy and health tracking shouldn't be premium features.
                     </Text>
                 </div>
-
-                {/* Error message */}
-                {error && (
-                    <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
-                        <Text className="text-red-700 dark:text-red-300 !mt-0">{error}</Text>
-                    </div>
-                )}
 
                 {/* Plan Cards */}
                 <div className="grid md:grid-cols-2 gap-8">

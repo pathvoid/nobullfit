@@ -122,8 +122,9 @@ describe("ConfirmEmailChange", () => {
 
         render(<RouterProvider router={router} />);
 
+        // Error state shows Go to Settings button
         await waitFor(() => {
-            expect(screen.getByText(/invalid confirmation link/i)).toBeInTheDocument();
+            expect(screen.getByRole("button", { name: /go to settings/i })).toBeInTheDocument();
         });
     });
 
@@ -182,8 +183,9 @@ describe("ConfirmEmailChange", () => {
 
         render(<RouterProvider router={router} />);
 
+        // Error state shows Go to Settings button (error details shown via toast)
         await waitFor(() => {
-            expect(screen.getByText(/token expired or invalid/i)).toBeInTheDocument();
+            expect(screen.getByRole("button", { name: /go to settings/i })).toBeInTheDocument();
         });
     });
 

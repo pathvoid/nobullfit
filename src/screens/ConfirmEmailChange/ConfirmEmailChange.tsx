@@ -5,8 +5,8 @@ import { AuthLayout } from "@components/auth-layout";
 import { Heading } from "@components/heading";
 import { Text } from "@components/text";
 import { Button } from "@components/button";
-import { FormAlert } from "@components/form-alert";
 import { Logo } from "@components/logo";
+import { toast } from "sonner";
 
 // Module-level flag to prevent duplicate requests across component instances (e.g., React Strict Mode)
 const pendingRequests = new Set<string>();
@@ -95,6 +95,7 @@ const ConfirmEmailChange: React.FC = () => {
                     const errorMessage = data.error || "Failed to confirm email change. Please try again.";
                     setStatus("error");
                     setMessage(errorMessage);
+                    toast.error(errorMessage);
                     // Store result for other instances
                     completedRequests.set(token, { status: "error", message: errorMessage });
                     return;
@@ -103,12 +104,14 @@ const ConfirmEmailChange: React.FC = () => {
                 const successMessage = data.message || "Your email address has been successfully updated.";
                 setStatus("success");
                 setMessage(successMessage);
+                toast.success(successMessage);
                 // Store result for other instances
                 completedRequests.set(token, { status: "success", message: successMessage });
             } catch (err) {
                 const errorMessage = "An error occurred. Please try again.";
                 setStatus("error");
                 setMessage(errorMessage);
+                toast.error(errorMessage);
                 // Store result for other instances
                 completedRequests.set(token, { status: "error", message: errorMessage });
             } finally {
@@ -137,9 +140,6 @@ const ConfirmEmailChange: React.FC = () => {
 
                 {status === "success" && (
                     <div className="space-y-6">
-                        <FormAlert variant="success">
-                            {message}
-                        </FormAlert>
                         <Text className="text-sm text-zinc-600 dark:text-zinc-400">
                             Your email address has been successfully updated. Please sign in with your new email address.
                         </Text>
@@ -151,9 +151,6 @@ const ConfirmEmailChange: React.FC = () => {
 
                 {status === "error" && (
                     <div className="space-y-6">
-                        <FormAlert variant="error">
-                            {message}
-                        </FormAlert>
                         <Text className="text-sm text-zinc-600 dark:text-zinc-400">
                             If you need to change your email address, please go to your settings page and request a new email change.
                         </Text>

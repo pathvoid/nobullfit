@@ -9,63 +9,51 @@ import { Text } from "@components/text";
 import { Field, Label, Description } from "@components/fieldset";
 import { Input } from "@components/input";
 import { Button } from "@components/button";
-import { FormAlert } from "@components/form-alert";
 import { Dialog, DialogTitle, DialogDescription, DialogBody, DialogActions } from "@components/dialog";
 import { Select } from "@components/select";
 import { Checkbox, CheckboxField, CheckboxGroup } from "@components/checkbox";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { useAuth } from "@core/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Settings: React.FC = () => {
     const loaderData = useLoaderData() as { title?: string; meta?: unknown[]; user?: { email: string } } | undefined;
     const helmet = useHelmet();
     const { user } = useAuth();
     const [email, setEmail] = useState(loaderData?.user?.email || user?.email || "");
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     // Password change state
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [passwordError, setPasswordError] = useState<string | null>(null);
-    const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     
     // Account deletion state
     const [deletePassword, setDeletePassword] = useState("");
-    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const navigate = useNavigate();
     
     // Data export state
     const [isExportingData, setIsExportingData] = useState(false);
-    const [exportError, setExportError] = useState<string | null>(null);
     
     // Delete data state
     const [showDeleteDataDialog, setShowDeleteDataDialog] = useState(false);
     const [deleteDataPassword, setDeleteDataPassword] = useState("");
     const [deleteDataTimePeriod, setDeleteDataTimePeriod] = useState<"7" | "30" | "all">("7");
     const [deleteDataTypes, setDeleteDataTypes] = useState<string[]>([]);
-    const [deleteDataError, setDeleteDataError] = useState<string | null>(null);
-    const [deleteDataSuccess, setDeleteDataSuccess] = useState<string | null>(null);
     const [isDeletingData, setIsDeletingData] = useState(false);
     
     // User preferences state
     const [quickAddDays, setQuickAddDays] = useState<number>(30);
-    const [preferencesError, setPreferencesError] = useState<string | null>(null);
-    const [preferencesSuccess, setPreferencesSuccess] = useState<string | null>(null);
     const [isSavingPreferences, setIsSavingPreferences] = useState(false);
     
     // Communication preferences state - initialize as false to prevent hydration mismatch
     const [communicationEmail, setCommunicationEmail] = useState<boolean>(false);
     const [communicationSms, setCommunicationSms] = useState<boolean>(false);
     const [communicationPush, setCommunicationPush] = useState<boolean>(false);
-    const [communicationError, setCommunicationError] = useState<string | null>(null);
-    const [communicationSuccess, setCommunicationSuccess] = useState<string | null>(null);
     const [isSavingCommunication, setIsSavingCommunication] = useState(false);
 
     // Set helmet values
@@ -100,8 +88,6 @@ const Settings: React.FC = () => {
 
     // Handle preferences save
     const handleSavePreferences = async () => {
-        setPreferencesError(null);
-        setPreferencesSuccess(null);
         setIsSavingPreferences(true);
 
         try {
@@ -117,23 +103,21 @@ const Settings: React.FC = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setPreferencesError(data.error || "Failed to save preferences.");
+                toast.error(data.error || "Failed to save preferences.");
                 setIsSavingPreferences(false);
                 return;
             }
 
-            setPreferencesSuccess("Preferences saved successfully.");
+            toast.success("Preferences saved successfully.");
             setIsSavingPreferences(false);
         } catch (error) {
-            setPreferencesError("An error occurred. Please try again.");
+            toast.error("An error occurred. Please try again.");
             setIsSavingPreferences(false);
         }
     };
 
     // Handle communication preferences save
     const handleSaveCommunicationPreferences = async () => {
-        setCommunicationError(null);
-        setCommunicationSuccess(null);
         setIsSavingCommunication(true);
 
         try {
@@ -153,23 +137,21 @@ const Settings: React.FC = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setCommunicationError(data.error || "Failed to save communication preferences.");
+                toast.error(data.error || "Failed to save communication preferences.");
                 setIsSavingCommunication(false);
                 return;
             }
 
-            setCommunicationSuccess("Communication preferences saved successfully.");
+            toast.success("Communication preferences saved successfully.");
             setIsSavingCommunication(false);
         } catch (error) {
-            setCommunicationError("An error occurred. Please try again.");
+            toast.error("An error occurred. Please try again.");
             setIsSavingCommunication(false);
         }
     };
 
     const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setError(null);
-        setSuccess(null);
         setIsSubmitting(true);
 
         const formData = new FormData(e.currentTarget);
@@ -178,7 +160,7 @@ const Settings: React.FC = () => {
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(newEmail)) {
-            setError("Please enter a valid email address.");
+            toast.error("Please enter a valid email address.");
             setIsSubmitting(false);
             return;
         }
@@ -196,35 +178,33 @@ const Settings: React.FC = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.error || "Failed to request email change. Please try again.");
+                toast.error(data.error || "Failed to request email change. Please try again.");
                 setIsSubmitting(false);
                 return;
             }
 
-            setSuccess("A confirmation email has been sent to your new email address. Please check your inbox and click the confirmation link to complete the change.");
+            toast.success("A confirmation email has been sent to your new email address. Please check your inbox and click the confirmation link to complete the change.");
             setIsSubmitting(false);
         } catch (err) {
-            setError("An error occurred. Please try again.");
+            toast.error("An error occurred. Please try again.");
             setIsSubmitting(false);
         }
     };
 
     const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setPasswordError(null);
-        setPasswordSuccess(null);
         setIsChangingPassword(true);
 
         // Validate password length
         if (newPassword.length < 8) {
-            setPasswordError("New password must be at least 8 characters long.");
+            toast.error("New password must be at least 8 characters long.");
             setIsChangingPassword(false);
             return;
         }
 
         // Validate passwords match
         if (newPassword !== confirmPassword) {
-            setPasswordError("New password and confirmation password do not match.");
+            toast.error("New password and confirmation password do not match.");
             setIsChangingPassword(false);
             return;
         }
@@ -245,30 +225,29 @@ const Settings: React.FC = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setPasswordError(data.error || "Failed to change password. Please try again.");
+                toast.error(data.error || "Failed to change password. Please try again.");
                 setIsChangingPassword(false);
                 return;
             }
 
-            setPasswordSuccess("Password has been changed successfully. A confirmation email has been sent to your email address.");
+            toast.success("Password has been changed successfully. A confirmation email has been sent to your email address.");
             // Clear password fields
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
             setIsChangingPassword(false);
         } catch (err) {
-            setPasswordError("An error occurred. Please try again.");
+            toast.error("An error occurred. Please try again.");
             setIsChangingPassword(false);
         }
     };
 
     const handleDeleteAccount = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setDeleteError(null);
         setIsDeletingAccount(true);
 
         if (!deletePassword) {
-            setDeleteError("Password is required to confirm account deletion.");
+            toast.error("Password is required to confirm account deletion.");
             setIsDeletingAccount(false);
             return;
         }
@@ -288,7 +267,7 @@ const Settings: React.FC = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setDeleteError(data.error || "Failed to delete account. Please try again.");
+                toast.error(data.error || "Failed to delete account. Please try again.");
                 setIsDeletingAccount(false);
                 return;
             }
@@ -302,13 +281,12 @@ const Settings: React.FC = () => {
             // Redirect to home page
             window.location.href = "/";
         } catch (err) {
-            setDeleteError("An error occurred. Please try again.");
+            toast.error("An error occurred. Please try again.");
             setIsDeletingAccount(false);
         }
     };
 
     const handleExportData = async () => {
-        setExportError(null);
         setIsExportingData(true);
 
         try {
@@ -319,7 +297,7 @@ const Settings: React.FC = () => {
 
             if (!response.ok) {
                 const data = await response.json();
-                setExportError(data.error || "Failed to export data. Please try again.");
+                toast.error(data.error || "Failed to export data. Please try again.");
                 setIsExportingData(false);
                 return;
             }
@@ -338,27 +316,26 @@ const Settings: React.FC = () => {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
+            toast.success("Data exported successfully!");
             setIsExportingData(false);
         } catch (err) {
-            setExportError("An error occurred while exporting your data. Please try again.");
+            toast.error("An error occurred while exporting your data. Please try again.");
             setIsExportingData(false);
         }
     };
 
     const handleDeleteData = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setDeleteDataError(null);
-        setDeleteDataSuccess(null);
         setIsDeletingData(true);
 
         if (!deleteDataPassword) {
-            setDeleteDataError("Password is required to confirm data deletion.");
+            toast.error("Password is required to confirm data deletion.");
             setIsDeletingData(false);
             return;
         }
 
         if (deleteDataTypes.length === 0) {
-            setDeleteDataError("Please select at least one data type to delete.");
+            toast.error("Please select at least one data type to delete.");
             setIsDeletingData(false);
             return;
         }
@@ -380,23 +357,19 @@ const Settings: React.FC = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setDeleteDataError(data.error || "Failed to delete data. Please try again.");
+                toast.error(data.error || "Failed to delete data. Please try again.");
                 setIsDeletingData(false);
                 return;
             }
 
-            setDeleteDataSuccess("Selected data has been successfully deleted.");
+            toast.success("Selected data has been successfully deleted.");
             setDeleteDataPassword("");
             setDeleteDataTypes([]);
             setDeleteDataTimePeriod("7");
-            
-            // Close dialog after 2 seconds
-            setTimeout(() => {
-                setShowDeleteDataDialog(false);
-                setDeleteDataSuccess(null);
-            }, 2000);
+            setIsDeletingData(false);
+            setShowDeleteDataDialog(false);
         } catch (err) {
-            setDeleteDataError("An error occurred. Please try again.");
+            toast.error("An error occurred. Please try again.");
             setIsDeletingData(false);
         }
     };
@@ -428,17 +401,6 @@ const Settings: React.FC = () => {
                 </div>
 
                 <form onSubmit={handleEmailSubmit} className="space-y-8">
-                    {error && (
-                        <FormAlert variant="error">
-                            {error}
-                        </FormAlert>
-                    )}
-                    {success && (
-                        <FormAlert variant="success">
-                            {success}
-                        </FormAlert>
-                    )}
-
                     <Field>
                         <Label>Email Address</Label>
                         <Description>
@@ -475,17 +437,6 @@ const Settings: React.FC = () => {
                             </Text>
                         </div>
 
-                        {preferencesError && (
-                            <FormAlert variant="error">
-                                {preferencesError}
-                            </FormAlert>
-                        )}
-                        {preferencesSuccess && (
-                            <FormAlert variant="success">
-                                {preferencesSuccess}
-                            </FormAlert>
-                        )}
-
                         <Field>
                             <Label>Quick Add History</Label>
                             <Description>
@@ -521,17 +472,6 @@ const Settings: React.FC = () => {
                                 Choose how you want to receive notifications and updates from NoBullFit.
                             </Text>
                         </div>
-
-                        {communicationError && (
-                            <FormAlert variant="error">
-                                {communicationError}
-                            </FormAlert>
-                        )}
-                        {communicationSuccess && (
-                            <FormAlert variant="success">
-                                {communicationSuccess}
-                            </FormAlert>
-                        )}
 
                         <CheckboxGroup>
                             <CheckboxField>
@@ -580,17 +520,6 @@ const Settings: React.FC = () => {
 
                 <div className="border-t border-zinc-950/10 dark:border-white/10 pt-8">
                     <form onSubmit={handlePasswordSubmit} className="space-y-8">
-                        {passwordError && (
-                            <FormAlert variant="error">
-                                {passwordError}
-                            </FormAlert>
-                        )}
-                        {passwordSuccess && (
-                            <FormAlert variant="success">
-                                {passwordSuccess}
-                            </FormAlert>
-                        )}
-
                         <Field>
                             <Label>Current Password</Label>
                             <Description>
@@ -663,12 +592,6 @@ const Settings: React.FC = () => {
                             </Text>
                         </div>
 
-                        {exportError && (
-                            <FormAlert variant="error">
-                                {exportError}
-                            </FormAlert>
-                        )}
-
                         <div>
                             <Button
                                 type="button"
@@ -736,7 +659,6 @@ const Settings: React.FC = () => {
                 <Dialog open={showDeleteConfirm} onClose={() => {
                     setShowDeleteConfirm(false);
                     setDeletePassword("");
-                    setDeleteError(null);
                 }}>
                     <form onSubmit={handleDeleteAccount}>
                         <DialogTitle>Delete Account</DialogTitle>
@@ -744,12 +666,6 @@ const Settings: React.FC = () => {
                             This action cannot be undone. This will permanently delete your account and remove all of your data.
                         </DialogDescription>
                         <DialogBody>
-                            {deleteError && (
-                                <FormAlert variant="error" className="mb-4">
-                                    {deleteError}
-                                </FormAlert>
-                            )}
-
                             <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/20 mb-4">
                                 <Text className="mb-3 font-semibold text-red-900 dark:text-red-400">
                                     Warning: This action cannot be undone
@@ -789,7 +705,6 @@ const Settings: React.FC = () => {
                                 onClick={() => {
                                     setShowDeleteConfirm(false);
                                     setDeletePassword("");
-                                    setDeleteError(null);
                                 }}
                             >
                                 Cancel
@@ -810,8 +725,6 @@ const Settings: React.FC = () => {
                     setDeleteDataPassword("");
                     setDeleteDataTypes([]);
                     setDeleteDataTimePeriod("7");
-                    setDeleteDataError(null);
-                    setDeleteDataSuccess(null);
                 }}>
                     <form onSubmit={handleDeleteData}>
                         <DialogTitle>Delete Selected Data</DialogTitle>
@@ -819,18 +732,6 @@ const Settings: React.FC = () => {
                             Select a time period and data types to delete. This action cannot be undone.
                         </DialogDescription>
                         <DialogBody>
-                            {deleteDataError && (
-                                <FormAlert variant="error" className="mb-4">
-                                    {deleteDataError}
-                                </FormAlert>
-                            )}
-
-                            {deleteDataSuccess && (
-                                <FormAlert variant="success" className="mb-4">
-                                    {deleteDataSuccess}
-                                </FormAlert>
-                            )}
-
                             <div className="space-y-6">
                                 <Field>
                                     <Label>Time Period</Label>
@@ -949,8 +850,6 @@ const Settings: React.FC = () => {
                                     setDeleteDataPassword("");
                                     setDeleteDataTypes([]);
                                     setDeleteDataTimePeriod("7");
-                                    setDeleteDataError(null);
-                                    setDeleteDataSuccess(null);
                                 }}
                                 disabled={isDeletingData}
                             >

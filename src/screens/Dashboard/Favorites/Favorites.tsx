@@ -12,6 +12,7 @@ import { Link } from "@components/link";
 import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel } from "@components/dropdown";
 import { MoreVertical, Trash2 } from "lucide-react";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
+import { toast } from "sonner";
 
 interface Favorite {
     id: number;
@@ -54,9 +55,11 @@ const Favorites: React.FC = () => {
 
             if (response.ok) {
                 setFavorites(prev => prev.filter(f => f.id !== favorite.id));
+                toast.success("Removed from favorites");
             }
         } catch (error) {
             console.error("Error removing favorite:", error);
+            toast.error("Failed to remove from favorites. Please try again.");
         } finally {
             setRemovingIds(prev => {
                 const newSet = new Set(prev);

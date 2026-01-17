@@ -10,15 +10,14 @@ import { Input } from "@components/input";
 import { Select } from "@components/select";
 import { Strong, Text, TextLink } from "@components/text";
 import { Logo } from "@components/logo";
-import { FormAlert } from "@components/form-alert";
 import { Captcha } from "@components/captcha";
 import { COUNTRIES } from "@utils/countries";
+import { toast } from "sonner";
 
 const SignUp: React.FC = () => {
     const loaderData = useLoaderData() as { title: string; meta: unknown[] };
     const navigate = useNavigate();
     const helmet = useHelmet();
-    const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isCaptchaValid, setIsCaptchaValid] = useState(false);
 
@@ -28,7 +27,6 @@ const SignUp: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setError(null);
         setIsSubmitting(true);
 
         const formData = new FormData(e.currentTarget);
@@ -37,14 +35,14 @@ const SignUp: React.FC = () => {
 
         // Validate passwords match
         if (password !== confirmPassword) {
-            setError("Passwords do not match.");
+            toast.error("Passwords do not match.");
             setIsSubmitting(false);
             return;
         }
 
         // Validate CAPTCHA
         if (!isCaptchaValid) {
-            setError("Please solve the math problem correctly.");
+            toast.error("Please solve the math problem correctly.");
             setIsSubmitting(false);
             return;
         }
@@ -74,12 +72,13 @@ const SignUp: React.FC = () => {
             const result = await response.json();
 
             if (!response.ok) {
-                setError(result.error || "An error occurred. Please try again.");
+                toast.error(result.error || "An error occurred. Please try again.");
                 setIsSubmitting(false);
                 return;
             }
 
-            // Success - redirect to sign-in
+            // Success - show toast and redirect to sign-in
+            toast.success("Account created successfully! Please sign in.");
             if (result.redirect) {
                 navigate(result.redirect);
             } else {
@@ -87,7 +86,7 @@ const SignUp: React.FC = () => {
             }
         } catch (err) {
             console.error("Sign up error:", err);
-            setError("An error occurred while creating your account. Please try again later.");
+            toast.error("An error occurred while creating your account. Please try again later.");
             setIsSubmitting(false);
         }
     };
@@ -97,11 +96,6 @@ const SignUp: React.FC = () => {
             <form onSubmit={handleSubmit} className="grid w-full max-w-sm grid-cols-1 gap-8 sm:max-w-2xl sm:grid-cols-2">
                 <Logo className="col-span-full h-6 text-zinc-950 dark:text-white forced-colors:text-[CanvasText]" />
                 <Heading className="col-span-full">Create your account</Heading>
-                {error && (
-                    <FormAlert variant="error" className="col-span-full">
-                        {error}
-                    </FormAlert>
-                )}
                 <Field>
                     <Label>Email</Label>
                     <Input type="email" name="email" required />

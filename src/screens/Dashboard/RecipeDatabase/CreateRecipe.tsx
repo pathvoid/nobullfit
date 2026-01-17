@@ -17,8 +17,8 @@ import { Ingredient, getAllUnits } from "@utils/ingredientUnits";
 import { RecipeTagKey, RECIPE_TAGS, getTagsByCategory } from "@utils/recipeTags";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Dialog, DialogTitle, DialogDescription, DialogBody, DialogActions } from "@components/dialog";
-import { FormAlert } from "@components/form-alert";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
+import { toast } from "sonner";
 
 interface Recipe {
     id: number;
@@ -54,7 +54,6 @@ const CreateRecipe: React.FC = () => {
     const [steps, setSteps] = useState<string[]>([""]);
     const [isPublic, setIsPublic] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [imageFilename, setImageFilename] = useState<string | null>(null);
@@ -75,7 +74,6 @@ const CreateRecipe: React.FC = () => {
     });
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [recipeStats, setRecipeStats] = useState<{ is_public: boolean; favorite_count: number } | null>(null);
     
     // Validation errors
@@ -145,7 +143,7 @@ const CreateRecipe: React.FC = () => {
                 })
                 .catch(err => {
                     console.error("Error loading recipe:", err);
-                    setError("Failed to load recipe");
+                    toast.error("Failed to load recipe");
                 });
         } else if (duplicateRecipe) {
             // Pre-fill form with duplicate recipe data
@@ -305,18 +303,17 @@ const CreateRecipe: React.FC = () => {
 
         // Validate file type
         if (!file.type.startsWith("image/")) {
-            setError("Please select an image file");
+            toast.error("Please select an image file");
             return;
         }
 
         // Validate file size (5MB)
         if (file.size > 5 * 1024 * 1024) {
-            setError("Image size must be less than 5MB");
+            toast.error("Image size must be less than 5MB");
             return;
         }
 
         setImageFile(file);
-        setError(null);
 
         // Create preview
         const reader = new FileReader();
@@ -346,7 +343,7 @@ const CreateRecipe: React.FC = () => {
             setImageFilename(data.filename);
         } catch (err) {
             console.error("Error uploading image:", err);
-            setError(err instanceof Error ? err.message : "Failed to upload image");
+            toast.error(err instanceof Error ? err.message : "Failed to upload image");
             setImageFile(null);
             setImagePreview(null);
         } finally {
@@ -362,7 +359,6 @@ const CreateRecipe: React.FC = () => {
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        setError(null);
         setNameError(null);
         setDescriptionError(null);
         setIngredientErrors({});
@@ -393,38 +389,38 @@ const CreateRecipe: React.FC = () => {
         // Validate ingredients
         const filteredIngredients = ingredients.filter(ing => ing.name.trim().length > 0);
         if (filteredIngredients.length === 0) {
-            setError("At least one ingredient is required");
+            toast.error("At least one ingredient is required");
             return;
         }
         
         // Check for ingredient emojis and validation errors
         for (let i = 0; i < filteredIngredients.length; i++) {
             if (containsEmoji(filteredIngredients[i].name)) {
-                setError(`Ingredient ${i + 1} name cannot contain emojis`);
+                toast.error(`Ingredient ${i + 1} name cannot contain emojis`);
                 return;
             }
             if (filteredIngredients[i].name.length > MAX_INGREDIENT_LENGTH) {
-                setError(`Ingredient ${i + 1} name must be ${MAX_INGREDIENT_LENGTH} characters or less`);
+                toast.error(`Ingredient ${i + 1} name must be ${MAX_INGREDIENT_LENGTH} characters or less`);
                 return;
             }
         }
         
         if (Object.keys(ingredientErrors).length > 0) {
-            setError("Please fix ingredient errors");
+            toast.error("Please fix ingredient errors");
             return;
         }
 
         // Validate steps
         const filteredSteps = steps.filter(step => step.trim().length > 0);
         if (filteredSteps.length === 0) {
-            setError("At least one step is required");
+            toast.error("At least one step is required");
             return;
         }
         
         // Check for step emojis
         for (let i = 0; i < filteredSteps.length; i++) {
             if (containsEmoji(filteredSteps[i])) {
-                setError(`Step ${i + 1} cannot contain emojis`);
+                toast.error(`Step ${i + 1} cannot contain emojis`);
                 return;
             }
         }
@@ -435,7 +431,7 @@ const CreateRecipe: React.FC = () => {
             return step.length > MAX_STEP_LENGTH || stepErrors[originalIdx];
         });
         if (invalidSteps || Object.keys(stepErrors).length > 0) {
-            setError("Please fix step length errors");
+            toast.error("Please fix step length errors");
             return;
         }
 
@@ -474,19 +470,20 @@ const CreateRecipe: React.FC = () => {
                     if (errorMessage.includes("name") || errorMessage.includes("varchar")) {
                         setNameError(`Recipe name must be ${MAX_NAME_LENGTH} characters or less`);
                     } else {
-                        setError(errorMessage);
+                        toast.error(errorMessage);
                     }
                 } else {
-                    setError(errorMessage);
+                    toast.error(errorMessage);
                 }
                 throw new Error(errorMessage);
             }
 
             const data = await response.json();
+            toast.success(`Recipe ${isEditMode ? "updated" : "created"} successfully!`);
             navigate(`/dashboard/recipe-database/${data.recipe.id}`);
         } catch (err) {
             console.error(`Error ${isEditMode ? "updating" : "creating"} recipe:`, err);
-            setError(err instanceof Error ? err.message : `Failed to ${isEditMode ? "update" : "create"} recipe. Please try again.`);
+            // Error already shown via toast above
         } finally {
             setIsSubmitting(false);
         }
@@ -495,7 +492,6 @@ const CreateRecipe: React.FC = () => {
     const handleDeleteRecipe = async () => {
         if (!recipeId) return;
 
-        setDeleteError(null);
         setIsDeleting(true);
 
         try {
@@ -509,11 +505,12 @@ const CreateRecipe: React.FC = () => {
                 throw new Error(data.error || "Failed to delete recipe");
             }
 
+            toast.success("Recipe deleted successfully!");
             // Navigate back to recipe database after successful deletion
             navigate("/dashboard/recipe-database");
         } catch (err) {
             console.error("Error deleting recipe:", err);
-            setDeleteError(err instanceof Error ? err.message : "Failed to delete recipe. Please try again.");
+            toast.error(err instanceof Error ? err.message : "Failed to delete recipe. Please try again.");
             setIsDeleting(false);
         }
     };
@@ -542,12 +539,6 @@ const CreateRecipe: React.FC = () => {
                             : "Create a new recipe to share with the community or keep it private."}
                     </Text>
                 </div>
-
-                {error && (
-                    <div className="rounded-lg border border-red-500/20 bg-red-50 p-4 dark:bg-red-950/10">
-                        <Text className="text-red-600 dark:text-red-400">{error}</Text>
-                    </div>
-                )}
 
                 {isEditMode && wasPublicAndVerified && (
                     <div className="rounded-lg border border-amber-500/20 bg-amber-50 p-4 dark:bg-amber-950/10">
@@ -1012,7 +1003,6 @@ const CreateRecipe: React.FC = () => {
                     <Dialog open={showDeleteDialog} onClose={() => {
                         if (!isDeleting) {
                             setShowDeleteDialog(false);
-                            setDeleteError(null);
                         }
                     }}>
                         <DialogTitle>Delete Recipe</DialogTitle>
@@ -1020,12 +1010,6 @@ const CreateRecipe: React.FC = () => {
                             Are you sure you want to delete this recipe? This action cannot be undone.
                         </DialogDescription>
                         <DialogBody>
-                            {deleteError && (
-                                <FormAlert variant="error" className="mb-4">
-                                    {deleteError}
-                                </FormAlert>
-                            )}
-
                             <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/20 mb-4">
                                 <Text className="mb-3 font-semibold text-red-900 dark:text-red-400">
                                     Warning: This action cannot be undone
@@ -1057,7 +1041,6 @@ const CreateRecipe: React.FC = () => {
                                 plain
                                 onClick={() => {
                                     setShowDeleteDialog(false);
-                                    setDeleteError(null);
                                 }}
                                 disabled={isDeleting}
                             >
