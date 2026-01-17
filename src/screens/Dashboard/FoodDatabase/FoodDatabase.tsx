@@ -270,6 +270,9 @@ const FoodDatabase: React.FC = () => {
                                                                             src={hint.food.image || "https://cdn.nobull.fit/no-image-no-text.jpg"}
                                                                             alt={hint.food.label}
                                                                             className="h-12 w-12 rounded-md object-cover"
+                                                                            onError={(e) => {
+                                                                                e.currentTarget.src = "https://cdn.nobull.fit/no-image-no-text.jpg";
+                                                                            }}
                                                                         />
                                                                     </Link>
                                                                     <div className="flex flex-col gap-1 min-w-0">

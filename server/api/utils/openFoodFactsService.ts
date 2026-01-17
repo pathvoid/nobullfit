@@ -365,16 +365,44 @@ function convertToOFFFood(product: OFFRawProduct): OFFFood {
 }
 
 // Search foods from database
+// Supports multi-term search: each term must match either product_name or brands
 export async function searchFoods(query: string, limit: number = 20, offset: number = 0): Promise<OFFSearchResult> {
     const conn = await getConnection();
     
-    const escapedQuery = query.replace(/[%_\\]/g, "\\$&");
-    const searchPattern = `%${escapedQuery}%`;
-    const startsWithPattern = `${escapedQuery}%`;
+    // Split query into terms and escape each
+    const terms = query.trim().split(/\s+/).filter(t => t.length > 0);
+    
+    if (terms.length === 0) {
+        return {
+            text: query,
+            count: 0,
+            parsed: [],
+            hints: []
+        };
+    }
+    
+    // Build WHERE clause: each term must match either product_name or brands
+    const escapedTerms = terms.map(t => t.replace(/[%_\\]/g, "\\$&"));
+    const termPatterns = escapedTerms.map(t => `%${t}%`);
+    
+    // For relevance ordering, use the first term for prefix matching
+    const firstTermStartsWith = `${escapedTerms[0]}%`;
     
     let result;
     
     if (useIndexedDb) {
+        // Build dynamic WHERE conditions for each term
+        const whereConditions = termPatterns.map((_, i) => 
+            `(product_name ILIKE $${i + 1} OR brands ILIKE $${i + 1})`
+        ).join(" AND ");
+        
+        const params = [
+            ...termPatterns,
+            limit,
+            offset,
+            firstTermStartsWith
+        ];
+        
         // Query from indexed products table (faster)
         result = await conn.run(`
             SELECT 
@@ -388,14 +416,26 @@ export async function searchFoods(query: string, limit: number = 20, offset: num
                 nutriments,
                 images
             FROM products
-            WHERE product_name ILIKE $1
+            WHERE ${whereConditions}
             ORDER BY 
-                CASE WHEN product_name ILIKE $4 THEN 0 ELSE 1 END,
+                CASE WHEN product_name ILIKE $${termPatterns.length + 3} THEN 0 ELSE 1 END,
                 length(product_name),
                 CASE WHEN array_length(nutriments) > 0 THEN 0 ELSE 1 END
-            LIMIT $2 OFFSET $3
-        `, [searchPattern, limit, offset, startsWithPattern]);
+            LIMIT $${termPatterns.length + 1} OFFSET $${termPatterns.length + 2}
+        `, params);
     } else {
+        // Build dynamic WHERE conditions for each term (Parquet version)
+        const whereConditions = termPatterns.map((_, i) => 
+            `(product_name[1].text ILIKE $${i + 1} OR brands ILIKE $${i + 1})`
+        ).join(" AND ");
+        
+        const params = [
+            ...termPatterns,
+            limit,
+            offset,
+            firstTermStartsWith
+        ];
+        
         // Query directly from Parquet (slower, no setup required)
         result = await conn.run(`
             SELECT 
@@ -409,14 +449,14 @@ export async function searchFoods(query: string, limit: number = 20, offset: num
                 nutriments,
                 images
             FROM read_parquet('${PARQUET_PATH.replace(/\\/g, "/")}')
-            WHERE product_name[1].text ILIKE $1
+            WHERE ${whereConditions}
                 AND product_name[1].text IS NOT NULL
             ORDER BY 
-                CASE WHEN product_name[1].text ILIKE $4 THEN 0 ELSE 1 END,
+                CASE WHEN product_name[1].text ILIKE $${termPatterns.length + 3} THEN 0 ELSE 1 END,
                 length(product_name[1].text),
                 CASE WHEN array_length(nutriments) > 0 THEN 0 ELSE 1 END
-            LIMIT $2 OFFSET $3
-        `, [searchPattern, limit, offset, startsWithPattern]);
+            LIMIT $${termPatterns.length + 1} OFFSET $${termPatterns.length + 2}
+        `, params);
     }
     
     const rows = await result.getRows();
