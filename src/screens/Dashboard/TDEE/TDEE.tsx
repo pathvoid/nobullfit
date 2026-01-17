@@ -12,7 +12,8 @@ import { Select } from "@components/select";
 import { Field, Label } from "@components/fieldset";
 import { FormAlert } from "@components/form-alert";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
-import { AlertCircle, Target } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 interface TDEEData {
     id: number;
@@ -74,7 +75,6 @@ const TDEE: React.FC = () => {
     const [currentWeight, setCurrentWeight] = useState<WeightData | null>(loaderData.weightData || null);
     const [hasWeight, setHasWeight] = useState<boolean>(loaderData.hasWeight);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
     const previousWeightRef = useRef<WeightData | null>(loaderData.weightData || null);
 
@@ -106,8 +106,6 @@ const TDEE: React.FC = () => {
     };
     const [targetWeight, setTargetWeight] = useState<string>(getInitialTargetWeight());
     const [isSavingGoal, setIsSavingGoal] = useState(false);
-    const [goalError, setGoalError] = useState<string | null>(null);
-    const [goalSuccess, setGoalSuccess] = useState<string | null>(null);
 
     // Convert height from feet/inches to cm when unit changes or values change
     useEffect(() => {
@@ -255,7 +253,6 @@ const TDEE: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError(null);
 
         if (!validateForm()) {
             return;
@@ -291,15 +288,20 @@ const TDEE: React.FC = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.error || "Failed to calculate TDEE");
+                toast.error(data.error || "Failed to calculate TDEE");
                 return;
             }
 
             setTdeeResult(data.tdee);
-            setError(null);
+            toast.success("TDEE saved! View your results on the Overview page.", {
+                action: {
+                    label: "Go to Overview",
+                    onClick: () => navigate("/dashboard")
+                }
+            });
         } catch (err) {
             console.error("Error saving TDEE:", err);
-            setError("An error occurred while calculating TDEE. Please try again.");
+            toast.error("An error occurred while calculating TDEE. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -323,11 +325,8 @@ const TDEE: React.FC = () => {
     const handleSaveGoal = async () => {
         if (!isProUser) return;
 
-        setGoalError(null);
-        setGoalSuccess(null);
-
         if (!weightGoal) {
-            setGoalError("Please select a weight goal");
+            toast.error("Please select a weight goal");
             return;
         }
 
@@ -335,7 +334,7 @@ const TDEE: React.FC = () => {
         if (targetWeight) {
             const weight = parseFloat(targetWeight);
             if (isNaN(weight) || weight <= 0) {
-                setGoalError("Please enter a valid target weight");
+                toast.error("Please enter a valid target weight");
                 return;
             }
         }
@@ -358,15 +357,14 @@ const TDEE: React.FC = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setGoalError(data.error || "Failed to save weight goal");
+                toast.error(data.error || "Failed to save weight goal");
                 return;
             }
 
-            setGoalSuccess("Weight goal saved successfully!");
-            setTimeout(() => setGoalSuccess(null), 3000);
+            toast.success("Weight goal saved successfully!");
         } catch (err) {
             console.error("Error saving weight goal:", err);
-            setGoalError("An error occurred while saving your goal. Please try again.");
+            toast.error("An error occurred while saving your goal. Please try again.");
         } finally {
             setIsSavingGoal(false);
         }
@@ -376,8 +374,6 @@ const TDEE: React.FC = () => {
     const handleClearGoal = async () => {
         if (!isProUser) return;
 
-        setGoalError(null);
-        setGoalSuccess(null);
         setIsSavingGoal(true);
 
         try {
@@ -397,17 +393,16 @@ const TDEE: React.FC = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setGoalError(data.error || "Failed to clear weight goal");
+                toast.error(data.error || "Failed to clear weight goal");
                 return;
             }
 
             setWeightGoal("");
             setTargetWeight("");
-            setGoalSuccess("Weight goal cleared!");
-            setTimeout(() => setGoalSuccess(null), 3000);
+            toast.success("Weight goal cleared!");
         } catch (err) {
             console.error("Error clearing weight goal:", err);
-            setGoalError("An error occurred while clearing your goal. Please try again.");
+            toast.error("An error occurred while clearing your goal. Please try again.");
         } finally {
             setIsSavingGoal(false);
         }
@@ -458,7 +453,8 @@ const TDEE: React.FC = () => {
                     </FormAlert>
                 )}
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Form on the left */}
                     <div className="lg:col-span-2">
                         <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -593,129 +589,89 @@ const TDEE: React.FC = () => {
                         </Select>
                     </Field>
 
-                    <div className="flex gap-4">
-                        <Button type="submit" disabled={isLoading || !hasWeight}>
-                            Save
-                        </Button>
-                    </div>
+                            <div className="flex gap-4">
+                                <Button type="submit" disabled={isLoading || !hasWeight}>
+                                    Save
+                                </Button>
+                            </div>
                         </form>
                     </div>
-
-                    <div className="space-y-6 lg:col-span-1">
-                        {hasWeight && currentWeight && (
-                            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
-                                <Text className="text-sm">
-                                    <strong>Current Weight:</strong> {currentWeight.weight} {currentWeight.unit}
-                                </Text>
-                                <Text className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-                                    Using your most recent weight entry from Progress Tracking
-                                </Text>
-                            </div>
-                        )}
-
-                        {tdeeResult && (
-                            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900">
-                                <Heading level={2} className="mb-4">
-                                    Your TDEE Results
-                                </Heading>
-                                <div className="space-y-4">
-                                    <div>
-                                        <Text className="text-sm text-zinc-600 dark:text-zinc-400">BMR (Basal Metabolic Rate)</Text>
-                                        <Text className="text-2xl font-bold">{Math.round(tdeeResult.bmr)} calories/day</Text>
-                                    </div>
-                                    <div>
-                                        <Text className="text-sm text-zinc-600 dark:text-zinc-400">TDEE (Total Daily Energy Expenditure)</Text>
-                                        <Text className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                            {Math.round(tdeeResult.tdee)} calories/day
-                                        </Text>
-                                    </div>
-                                </div>
-                                <Text className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-                                    Your TDEE represents the total number of calories you burn per day, including your BMR and activity level.
-                                    Use this as a baseline for your daily calorie goals.
-                                </Text>
-                            </div>
-                        )}
-
-                        {/* Pro Feature: Weight Goal */}
-                        {isProUser && tdeeResult && (
-                            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                    <Heading level={2}>
-                                        Weight Goal
-                                    </Heading>
-                                </div>
-                                <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-                                    Set your weight goal to get personalized macro recommendations and progress tracking on your dashboard.
-                                </Text>
-                                <div className="space-y-4">
-                                    <Field>
-                                        <Label>Objective</Label>
-                                        <Select
-                                            value={weightGoal}
-                                            onChange={(e) => setWeightGoal(e.target.value as "lose" | "maintain" | "gain" | "")}
-                                        >
-                                            <option value="">Select your goal...</option>
-                                            {Object.entries(weightGoalLabels).map(([value, label]) => (
-                                                <option key={value} value={value}>
-                                                    {label}
-                                                </option>
-                                            ))}
-                                        </Select>
-                                    </Field>
-
-                                    {weightGoal && weightGoal !== "maintain" && currentWeight && (
-                                        <Field>
-                                            <Label>Target Weight ({currentWeight.unit})</Label>
-                                            <Input
-                                                type="number"
-                                                value={targetWeight}
-                                                onChange={(e) => setTargetWeight(e.target.value)}
-                                                placeholder={`Target weight in ${currentWeight.unit}`}
-                                                min="1"
-                                                step="0.1"
-                                            />
-                                            <Text className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                                Optional: Set a target to see projected timeline on your dashboard.
-                                            </Text>
-                                        </Field>
-                                    )}
-
-                                    {goalError && (
-                                        <Text className="text-sm text-red-600 dark:text-red-400">{goalError}</Text>
-                                    )}
-                                    {goalSuccess && (
-                                        <Text className="text-sm text-green-600 dark:text-green-400">{goalSuccess}</Text>
-                                    )}
-
-                                    <div className="flex gap-2">
-                                        <Button
-                                            type="button"
-                                            onClick={handleSaveGoal}
-                                            disabled={isSavingGoal || !weightGoal}
-                                        >
-                                            {isSavingGoal ? "Saving..." : "Save Goal"}
-                                        </Button>
-                                        {(loaderData.preferences?.weight_goal || weightGoal) && (
-                                            <Button
-                                                type="button"
-                                                onClick={handleClearGoal}
-                                                disabled={isSavingGoal}
-                                                outline
-                                            >
-                                                Clear Goal
-                                            </Button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                    
+                    {/* Image on the right - hidden on mobile */}
+                    <div className="hidden lg:flex lg:col-span-1 items-center justify-center">
+                        <img 
+                            src="https://cdn.nobull.fit/watermelon-tdee.png" 
+                            alt="TDEE Calculator" 
+                            className="max-h-80 w-auto object-contain"
+                        />
                     </div>
                 </div>
 
-                {error && (
-                    <FormAlert variant="error">{error}</FormAlert>
+                {/* Pro Feature: Weight Goal - Full Width Row */}
+                {isProUser && tdeeResult && (
+                    <div className="space-y-6 mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
+                        {/* Title */}
+                        <Heading level={2}>Weight Goal</Heading>
+                        
+                        <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                            Set your weight goal to get personalized macro recommendations and progress tracking on your dashboard.
+                        </Text>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+                            <Field>
+                                <Label>Objective</Label>
+                                <Select
+                                    value={weightGoal}
+                                    onChange={(e) => setWeightGoal(e.target.value as "lose" | "maintain" | "gain" | "")}
+                                >
+                                    <option value="">Select your goal...</option>
+                                    {Object.entries(weightGoalLabels).map(([value, label]) => (
+                                        <option key={value} value={value}>
+                                            {label}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </Field>
+
+                            {weightGoal && weightGoal !== "maintain" && currentWeight && (
+                                <Field>
+                                    <Label>Target Weight ({currentWeight.unit})</Label>
+                                    <Input
+                                        type="number"
+                                        value={targetWeight}
+                                        onChange={(e) => setTargetWeight(e.target.value)}
+                                        placeholder={`Target weight in ${currentWeight.unit}`}
+                                        min="1"
+                                        step="0.1"
+                                    />
+                                    <Text className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                        Optional: Set a target to see projected timeline on your dashboard.
+                                    </Text>
+                                </Field>
+                            )}
+                        </div>
+                        
+                        {/* Buttons below */}
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                onClick={handleSaveGoal}
+                                disabled={isSavingGoal || !weightGoal}
+                            >
+                                {isSavingGoal ? "Saving..." : "Save Goal"}
+                            </Button>
+                            {(loaderData.preferences?.weight_goal || weightGoal) && (
+                                <Button
+                                    type="button"
+                                    onClick={handleClearGoal}
+                                    disabled={isSavingGoal}
+                                    outline
+                                >
+                                    Clear Goal
+                                </Button>
+                            )}
+                        </div>
+                    </div>
                 )}
             </div>
         </SidebarLayout>

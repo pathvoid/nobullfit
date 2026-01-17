@@ -113,7 +113,7 @@ describe("TDEE", () => {
         expect(screen.getByText(/you need to log your weight/i)).toBeInTheDocument();
     });
 
-    it("should display current weight when user has weight data", async () => {
+    it("should enable save button when user has weight data", async () => {
         (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
             ok: true,
             json: async () => ({ weight: { weight: 70, unit: "kg" } })
@@ -139,10 +139,12 @@ describe("TDEE", () => {
         render(<RouterProvider router={router} />);
 
         await waitFor(() => {
-            expect(screen.getByText(/current weight:/i)).toBeInTheDocument();
+            expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument();
         });
 
-        expect(screen.getByText(/70 kg/i)).toBeInTheDocument();
+        // Save button should be enabled when user has weight data
+        const saveButton = screen.getByRole("button", { name: /save/i });
+        expect(saveButton).not.toBeDisabled();
     });
 
     it("should display form fields", async () => {
@@ -374,7 +376,7 @@ describe("TDEE", () => {
         });
     });
 
-    it("should display TDEE results after calculation", async () => {
+    it("should load existing TDEE data into form fields", async () => {
         (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
             ok: true,
             json: async () => ({ weight: { weight: 70, unit: "kg" } })
@@ -409,12 +411,14 @@ describe("TDEE", () => {
 
         render(<RouterProvider router={router} />);
 
+        // Form should be populated with existing data
         await waitFor(() => {
-            expect(screen.getByText(/your tdee results/i)).toBeInTheDocument();
+            const ageInput = screen.getByLabelText(/age/i) as HTMLInputElement;
+            expect(ageInput.value).toBe("30");
         });
 
-        expect(screen.getByText(/2000 calories\/day/i)).toBeInTheDocument();
-        expect(screen.getByText(/3100 calories\/day/i)).toBeInTheDocument();
+        const heightInput = screen.getByLabelText(/height/i) as HTMLInputElement;
+        expect(heightInput.value).toBe("180");
     });
 
     // Pro feature: Weight Goal tests
@@ -497,12 +501,13 @@ describe("TDEE", () => {
 
         render(<RouterProvider router={router} />);
 
+        // Wait for page to render
         await waitFor(() => {
-            expect(screen.getByText(/your tdee results/i)).toBeInTheDocument();
+            expect(screen.getByRole("heading", { name: /tdee calculator/i })).toBeInTheDocument();
         });
 
         // Weight Goal section should not be present for non-Pro users
-        expect(screen.queryByText(/weight goal/i)).not.toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: /weight goal/i })).not.toBeInTheDocument();
     });
 
     it("should allow Pro users to save weight goal", async () => {
