@@ -14,7 +14,7 @@ import { Field, Label as FieldLabel } from "@components/fieldset";
 import { DescriptionList, DescriptionTerm, DescriptionDetails } from "@components/description-list";
 import { Dropdown, DropdownButton, DropdownItem, DropdownMenu } from "@components/dropdown";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Star } from "lucide-react";
 import { toast } from "sonner";
 
 // Get default category based on current time
@@ -443,7 +443,20 @@ const FoodDetails: React.FC = () => {
                 {/* Header Section */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex-1">
-                        <Heading level={1}>{food.label}</Heading>
+                        <div className="flex items-center gap-2">
+                            <Heading level={1}>{food.label}</Heading>
+                            <button
+                                onClick={handleToggleFavorite}
+                                disabled={isToggling}
+                                className="p-1 bg-transparent border-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+                                title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                            >
+                                <Star
+                                    className={`size-6 ${isFavorite ? "fill-amber-400 text-amber-400" : "text-zinc-400 hover:text-amber-400"}`}
+                                />
+                            </button>
+                        </div>
                         {food.knownAs && (
                             <Text className="mt-2 text-zinc-600 dark:text-zinc-400">
                                 Also known as: {food.knownAs}
@@ -456,25 +469,6 @@ const FoodDetails: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                        {isFavorite ? (
-                            <Button 
-                                onClick={handleToggleFavorite}
-                                disabled={isToggling}
-                                color="red"
-                                className="w-full sm:w-auto"
-                            >
-                                ★ Remove from Favorites
-                            </Button>
-                        ) : (
-                            <Button 
-                                onClick={handleToggleFavorite}
-                                disabled={isToggling}
-                                outline
-                                className="w-full sm:w-auto"
-                            >
-                                ☆ Add to Favorites
-                            </Button>
-                        )}
                         <Dropdown>
                             <DropdownButton outline className="w-full sm:w-auto">
                                 More Actions

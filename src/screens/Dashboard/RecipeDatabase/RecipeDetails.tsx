@@ -19,7 +19,7 @@ import { RecipeMacros } from "@core/components/RecipeMacrosInput";
 import { Ingredient, convertIngredient, UNITS, UnitSystem } from "@utils/ingredientUnits";
 import { RecipeTagKey, RECIPE_TAGS } from "@utils/recipeTags";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Star } from "lucide-react";
 import { toast } from "sonner";
 
 // Get default category based on current time
@@ -358,6 +358,17 @@ const RecipeDetails: React.FC = () => {
                                     ✓
                                 </span>
                             )}
+                            <button
+                                onClick={handleToggleFavorite}
+                                disabled={isToggling}
+                                className="p-1 bg-transparent border-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+                                title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                            >
+                                <Star
+                                    className={`size-6 ${isFavorite ? "fill-amber-400 text-amber-400" : "text-zinc-400 hover:text-amber-400"}`}
+                                />
+                            </button>
                         </div>
                         {recipe.description && (
                             <Text className="mt-2 text-zinc-600 dark:text-zinc-400">
@@ -401,25 +412,6 @@ const RecipeDetails: React.FC = () => {
                         )}
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                        {isFavorite ? (
-                            <Button 
-                                onClick={handleToggleFavorite}
-                                disabled={isToggling}
-                                color="red"
-                                className="w-full sm:w-auto"
-                            >
-                                ★ Remove from Favorites
-                            </Button>
-                        ) : (
-                            <Button 
-                                onClick={handleToggleFavorite}
-                                disabled={isToggling}
-                                outline
-                                className="w-full sm:w-auto"
-                            >
-                                ☆ Add to Favorites
-                            </Button>
-                        )}
                         <Dropdown>
                             <DropdownButton outline className="w-full sm:w-auto">
                                 More Actions
