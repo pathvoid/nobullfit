@@ -11,6 +11,7 @@ import { Input } from "@components/input";
 import { Select } from "@components/select";
 import { Field, Label } from "@components/fieldset";
 import { FormAlert } from "@components/form-alert";
+import { Divider } from "@components/divider";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -453,141 +454,141 @@ const TDEE: React.FC = () => {
                     </FormAlert>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Form on the left */}
-                    <div className="lg:col-span-2">
+                <div className={`grid grid-cols-1 gap-8 ${isProUser && tdeeResult ? "xl:grid-cols-3" : ""}`}>
+                    {/* TDEE Calculator Form */}
+                    <div className={isProUser && tdeeResult ? "xl:col-span-2" : ""}>
                         <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        <Field>
-                            <Label>Age</Label>
-                            <Input
-                                type="number"
-                                value={age}
-                                onChange={(e) => setAge(e.target.value)}
-                                min="1"
-                                max="150"
-                                required
-                                data-invalid={validationErrors.age ? true : undefined}
-                            />
-                            {validationErrors.age && (
-                                <Text className="mt-1 text-sm text-red-600 dark:text-red-400">
-                                    {validationErrors.age}
-                                </Text>
-                            )}
-                        </Field>
-
-                        <Field>
-                            <Label>Gender</Label>
-                            <Select
-                                value={gender}
-                                onChange={(e) => setGender(e.target.value as "male" | "female")}
-                                required
-                            >
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                            </Select>
-                        </Field>
-                    </div>
-
-                    <Field>
-                        <Label>Height</Label>
-                        <div className="space-y-4">
-                            <div className="flex gap-2">
-                                <Button
-                                    type="button"
-                                    onClick={() => setHeightUnit("cm")}
-                                    className={heightUnit === "cm" ? "" : "bg-zinc-200 dark:bg-zinc-800"}
-                                >
-                                    Centimeters (cm)
-                                </Button>
-                                <Button
-                                    type="button"
-                                    onClick={() => setHeightUnit("ft")}
-                                    className={heightUnit === "ft" ? "" : "bg-zinc-200 dark:bg-zinc-800"}
-                                >
-                                    Feet & Inches
-                                </Button>
-                            </div>
-
-                            {heightUnit === "cm" ? (
-                                <div>
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                <Field>
+                                    <Label>Age</Label>
                                     <Input
                                         type="number"
-                                        value={heightCm}
-                                        onChange={(e) => setHeightCm(e.target.value)}
-                                        placeholder="Height in cm"
+                                        value={age}
+                                        onChange={(e) => setAge(e.target.value)}
                                         min="1"
-                                        max="300"
-                                        step="0.01"
+                                        max="150"
                                         required
-                                        data-invalid={validationErrors.height ? true : undefined}
+                                        data-invalid={validationErrors.age ? true : undefined}
                                     />
-                                    {validationErrors.height && (
+                                    {validationErrors.age && (
                                         <Text className="mt-1 text-sm text-red-600 dark:text-red-400">
-                                            {validationErrors.height}
+                                            {validationErrors.age}
                                         </Text>
                                     )}
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Input
-                                            type="number"
-                                            value={heightFeet}
-                                            onChange={(e) => setHeightFeet(e.target.value)}
-                                            placeholder="Feet"
-                                            min="0"
-                                            max="10"
-                                            required
-                                            data-invalid={validationErrors.heightFeet ? true : undefined}
-                                        />
-                                        {validationErrors.heightFeet && (
-                                            <Text className="mt-1 text-sm text-red-600 dark:text-red-400">
-                                                {validationErrors.heightFeet}
-                                            </Text>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <Input
-                                            type="number"
-                                            value={heightInches}
-                                            onChange={(e) => setHeightInches(e.target.value)}
-                                            placeholder="Inches"
-                                            min="0"
-                                            max="11"
-                                            required
-                                            data-invalid={validationErrors.heightInches ? true : undefined}
-                                        />
-                                        {validationErrors.heightInches && (
-                                            <Text className="mt-1 text-sm text-red-600 dark:text-red-400">
-                                                {validationErrors.heightInches}
-                                            </Text>
-                                        )}
-                                    </div>
-                                    {validationErrors.height && (
-                                        <Text className="col-span-2 mt-1 text-sm text-red-600 dark:text-red-400">
-                                            {validationErrors.height}
-                                        </Text>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </Field>
+                                </Field>
 
-                    <Field>
-                        <Label>Activity Level</Label>
-                        <Select
-                            value={activityLevel}
-                            onChange={(e) => setActivityLevel(e.target.value as typeof activityLevel)}
-                            required
-                        >
-                            {Object.entries(activityLevelLabels).map(([value, label]) => (
-                                <option key={value} value={value}>
-                                    {label}
-                                </option>
-                            ))}
-                        </Select>
-                    </Field>
+                                <Field>
+                                    <Label>Gender</Label>
+                                    <Select
+                                        value={gender}
+                                        onChange={(e) => setGender(e.target.value as "male" | "female")}
+                                        required
+                                    >
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </Select>
+                                </Field>
+                            </div>
+
+                            <Field>
+                                <Label>Height</Label>
+                                <div className="space-y-4">
+                                    <div className="flex gap-2">
+                                        <Button
+                                            type="button"
+                                            onClick={() => setHeightUnit("cm")}
+                                            className={heightUnit === "cm" ? "" : "bg-zinc-200 dark:bg-zinc-800"}
+                                        >
+                                            Centimeters (cm)
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            onClick={() => setHeightUnit("ft")}
+                                            className={heightUnit === "ft" ? "" : "bg-zinc-200 dark:bg-zinc-800"}
+                                        >
+                                            Feet & Inches
+                                        </Button>
+                                    </div>
+
+                                    {heightUnit === "cm" ? (
+                                        <div>
+                                            <Input
+                                                type="number"
+                                                value={heightCm}
+                                                onChange={(e) => setHeightCm(e.target.value)}
+                                                placeholder="Height in cm"
+                                                min="1"
+                                                max="300"
+                                                step="0.01"
+                                                required
+                                                data-invalid={validationErrors.height ? true : undefined}
+                                            />
+                                            {validationErrors.height && (
+                                                <Text className="mt-1 text-sm text-red-600 dark:text-red-400">
+                                                    {validationErrors.height}
+                                                </Text>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <Input
+                                                    type="number"
+                                                    value={heightFeet}
+                                                    onChange={(e) => setHeightFeet(e.target.value)}
+                                                    placeholder="Feet"
+                                                    min="0"
+                                                    max="10"
+                                                    required
+                                                    data-invalid={validationErrors.heightFeet ? true : undefined}
+                                                />
+                                                {validationErrors.heightFeet && (
+                                                    <Text className="mt-1 text-sm text-red-600 dark:text-red-400">
+                                                        {validationErrors.heightFeet}
+                                                    </Text>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <Input
+                                                    type="number"
+                                                    value={heightInches}
+                                                    onChange={(e) => setHeightInches(e.target.value)}
+                                                    placeholder="Inches"
+                                                    min="0"
+                                                    max="11"
+                                                    required
+                                                    data-invalid={validationErrors.heightInches ? true : undefined}
+                                                />
+                                                {validationErrors.heightInches && (
+                                                    <Text className="mt-1 text-sm text-red-600 dark:text-red-400">
+                                                        {validationErrors.heightInches}
+                                                    </Text>
+                                                )}
+                                            </div>
+                                            {validationErrors.height && (
+                                                <Text className="col-span-2 mt-1 text-sm text-red-600 dark:text-red-400">
+                                                    {validationErrors.height}
+                                                </Text>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </Field>
+
+                            <Field>
+                                <Label>Activity Level</Label>
+                                <Select
+                                    value={activityLevel}
+                                    onChange={(e) => setActivityLevel(e.target.value as typeof activityLevel)}
+                                    required
+                                >
+                                    {Object.entries(activityLevelLabels).map(([value, label]) => (
+                                        <option key={value} value={value}>
+                                            {label}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </Field>
 
                             <div className="flex gap-4">
                                 <Button type="submit" disabled={isLoading || !hasWeight}>
@@ -596,83 +597,75 @@ const TDEE: React.FC = () => {
                             </div>
                         </form>
                     </div>
-                    
-                    {/* Image on the right - hidden on mobile */}
-                    <div className="hidden lg:flex lg:col-span-1 items-center justify-center">
-                        <img 
-                            src="https://cdn.nobull.fit/watermelon-tdee.png" 
-                            alt="TDEE Calculator" 
-                            className="max-h-64 w-auto object-contain"
-                        />
-                    </div>
-                </div>
 
-                {/* Pro Feature: Weight Goal - Full Width Row */}
-                {isProUser && tdeeResult && (
-                    <div className="space-y-6 mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                        {/* Title */}
-                        <Heading level={2}>Weight Goal</Heading>
-                        
-                        <Text className="text-sm text-zinc-600 dark:text-zinc-400">
-                            Set your weight goal to get personalized macro recommendations and progress tracking on your dashboard.
-                        </Text>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-                            <Field>
-                                <Label>Objective</Label>
-                                <Select
-                                    value={weightGoal}
-                                    onChange={(e) => setWeightGoal(e.target.value as "lose" | "maintain" | "gain" | "")}
-                                >
-                                    <option value="">Select your goal...</option>
-                                    {Object.entries(weightGoalLabels).map(([value, label]) => (
-                                        <option key={value} value={value}>
-                                            {label}
-                                        </option>
-                                    ))}
-                                </Select>
-                            </Field>
-
-                            {weightGoal && weightGoal !== "maintain" && currentWeight && (
+                    {/* Pro Feature: Weight Goal */}
+                    {isProUser && tdeeResult && (
+                        <>
+                            <Divider soft className="xl:hidden" />
+                            <div className="xl:col-span-1 space-y-4 xl:border-l xl:border-zinc-200 xl:dark:border-zinc-800 xl:pl-8">
+                            <Heading level={2}>Weight Goal</Heading>
+                            
+                            <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                                Set your weight goal to get personalized macro recommendations and progress tracking on your dashboard.
+                            </Text>
+                            
+                            <div className="space-y-4">
                                 <Field>
-                                    <Label>Target Weight ({currentWeight.unit})</Label>
-                                    <Input
-                                        type="number"
-                                        value={targetWeight}
-                                        onChange={(e) => setTargetWeight(e.target.value)}
-                                        placeholder={`Target weight in ${currentWeight.unit}`}
-                                        min="1"
-                                        step="0.1"
-                                    />
-                                    <Text className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                        Optional: Set a target to see projected timeline on your dashboard.
-                                    </Text>
+                                    <Label>Objective</Label>
+                                    <Select
+                                        value={weightGoal}
+                                        onChange={(e) => setWeightGoal(e.target.value as "lose" | "maintain" | "gain" | "")}
+                                    >
+                                        <option value="">Select your goal...</option>
+                                        {Object.entries(weightGoalLabels).map(([value, label]) => (
+                                            <option key={value} value={value}>
+                                                {label}
+                                            </option>
+                                        ))}
+                                    </Select>
                                 </Field>
-                            )}
-                        </div>
-                        
-                        {/* Buttons below */}
-                        <div className="flex gap-2">
-                            <Button
-                                type="button"
-                                onClick={handleSaveGoal}
-                                disabled={isSavingGoal || !weightGoal}
-                            >
-                                {isSavingGoal ? "Saving..." : "Save Goal"}
-                            </Button>
-                            {(loaderData.preferences?.weight_goal || weightGoal) && (
+
+                                {weightGoal && weightGoal !== "maintain" && currentWeight && (
+                                    <Field>
+                                        <Label>Target Weight ({currentWeight.unit})</Label>
+                                        <Input
+                                            type="number"
+                                            value={targetWeight}
+                                            onChange={(e) => setTargetWeight(e.target.value)}
+                                            placeholder={`Target weight in ${currentWeight.unit}`}
+                                            min="1"
+                                            step="0.1"
+                                        />
+                                        <Text className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                            Optional: Set a target to see projected timeline on your dashboard.
+                                        </Text>
+                                    </Field>
+                                )}
+                            </div>
+                            
+                            <div className="flex gap-2">
                                 <Button
                                     type="button"
-                                    onClick={handleClearGoal}
-                                    disabled={isSavingGoal}
-                                    outline
+                                    onClick={handleSaveGoal}
+                                    disabled={isSavingGoal || !weightGoal}
                                 >
-                                    Clear Goal
+                                    {isSavingGoal ? "Saving..." : "Save Goal"}
                                 </Button>
-                            )}
+                                {(loaderData.preferences?.weight_goal || weightGoal) && (
+                                    <Button
+                                        type="button"
+                                        onClick={handleClearGoal}
+                                        disabled={isSavingGoal}
+                                        outline
+                                    >
+                                        Clear Goal
+                                    </Button>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                        </>
+                    )}
+                </div>
             </div>
         </SidebarLayout>
     );
