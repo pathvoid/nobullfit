@@ -181,7 +181,7 @@ const MyFitnessPalAlternative: React.FC = () => {
                             <div>
                                 <Subheading>How does NoBullFit make money?</Subheading>
                                 <Text>
-                                    NoBullFit is currently free to use. We're exploring sustainable business models that don't involve ads or data selling, likely a reasonable subscription fee for advanced features in the future, while keeping core tracking free. We're committed to transparency about any changes.
+                                    NoBullFit offers an optional Pro subscription at $10/month for power users who want advanced features like meal planning, activity scheduling, and goal tracking. Core food tracking and progress monitoring are completely free and always will be. We never use ads or sell your data.
                                 </Text>
                             </div>
                             <div>

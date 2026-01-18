@@ -75,7 +75,7 @@ const About: React.FC = () => {
                                 We believe that tracking your nutrition and fitness progress shouldn't come at the cost of your privacy. NoBullFit is built from the ground up with data privacy as our core principle.
                             </Text>
                             <Text>
-                                The core features are completely free to use. We may offer paid plans in the future for advanced features, but the essential food tracking and progress monitoring will always remain free.
+                                The core features are completely free to use. We offer an optional <Strong>NoBullFit Pro</Strong> subscription at $10/month for power users who want additional features like meal planning and goal tracking, but the essential food tracking and progress monitoring will always remain free.
                             </Text>
                         </div>
                         <div className="space-y-6">

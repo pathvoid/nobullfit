@@ -72,7 +72,7 @@ const RefundPolicy: React.FC = () => {
                     <div className="mt-10 space-y-4">
                         <Heading level={2}>Free Service Guarantee</Heading>
                         <Text>
-                            We want to be clear: our core food tracking and progress monitoring features will always remain free. If premium features are introduced in the future, they will be optional enhancements, and you will always be able to use NoBullFit's essential functionality without any cost.
+                            We want to be clear: our core food tracking and progress monitoring features will always remain free. NoBullFit Pro is an optional enhancement for power users, and you will always be able to use NoBullFit's essential functionality without any cost.
                         </Text>
                     </div>
                     <div className="mt-10 space-y-4">
@@ -87,7 +87,7 @@ const RefundPolicy: React.FC = () => {
                     <div className="mt-10 space-y-4">
                         <Heading level={2}>Updates to This Policy</Heading>
                         <Text>
-                            This refund policy may be updated if NoBullFit introduces paid services in the future. If significant changes are made, we will notify users clearly on our platform and update the effective date accordingly.
+                            This refund policy may be updated as NoBullFit evolves. If significant changes are made, we will notify users clearly on our platform and update the effective date accordingly.
                         </Text>
                     </div>
                 </div>
