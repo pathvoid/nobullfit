@@ -55,10 +55,16 @@ async function main() {
                 ingredients_text[1].text as ingredients_text,
                 serving_size,
                 serving_quantity,
+                completeness,
                 nutriments,
                 images
             FROM read_parquet('${PARQUET_PATH.replace(/\\/g, "/")}')
             WHERE product_name[1].text IS NOT NULL
+                AND completeness > 0.5
+                AND serving_quantity IS NOT NULL
+                AND serving_size IS NOT NULL
+                AND array_length(nutriments) > 0
+                AND len(list_filter(nutriments, x -> x.name = 'energy-kcal' AND x."100g" IS NOT NULL)) > 0
         `);
 
         // Get row count

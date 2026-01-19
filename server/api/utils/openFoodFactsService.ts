@@ -437,6 +437,7 @@ export async function searchFoods(query: string, limit: number = 20, offset: num
         ];
         
         // Query directly from Parquet (slower, no setup required)
+        // Filter by completeness > 0.5 and serving data to ensure quality results
         result = await conn.run(`
             SELECT 
                 code,
@@ -451,6 +452,11 @@ export async function searchFoods(query: string, limit: number = 20, offset: num
             FROM read_parquet('${PARQUET_PATH.replace(/\\/g, "/")}')
             WHERE ${whereConditions}
                 AND product_name[1].text IS NOT NULL
+                AND completeness > 0.5
+                AND serving_quantity IS NOT NULL
+                AND serving_size IS NOT NULL
+                AND array_length(nutriments) > 0
+                AND len(list_filter(nutriments, x -> x.name = 'energy-kcal' AND x."100g" IS NOT NULL)) > 0
             ORDER BY 
                 CASE WHEN product_name[1].text ILIKE $${termPatterns.length + 3} THEN 0 ELSE 1 END,
                 length(product_name[1].text),
