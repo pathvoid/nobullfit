@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import RecipeDatabase from "./RecipeDatabase";
 
 // Mock useHelmet hook
@@ -60,7 +60,7 @@ const mockRecipes = [
     }
 ];
 
-global.fetch = vi.fn(() =>
+const createMockFetch = () => vi.fn(() =>
     Promise.resolve({
         ok: true,
         json: () => Promise.resolve({
@@ -71,6 +71,10 @@ global.fetch = vi.fn(() =>
 ) as unknown as typeof fetch;
 
 describe("RecipeDatabase", () => {
+    beforeEach(() => {
+        global.fetch = createMockFetch();
+    });
+
     it("should render the recipe database page", async () => {
         const router = createMemoryRouter([
             {
@@ -133,7 +137,7 @@ describe("RecipeDatabase", () => {
         expect(searchButton).not.toBeDisabled();
     });
 
-    it("should enable search button with less than 3 characters when filters are active", async () => {
+    it("should enable search button with less than 3 characters when filters are active via URL", async () => {
         const router = createMemoryRouter([
             {
                 path: "/dashboard/recipe-database",
@@ -145,29 +149,17 @@ describe("RecipeDatabase", () => {
                 })
             }
         ], {
-            initialEntries: ["/dashboard/recipe-database"]
+            // Start with verified filter in URL
+            initialEntries: ["/dashboard/recipe-database?verified=true"]
         });
 
         render(<RouterProvider router={router} />);
 
         await screen.findByRole("heading", { name: /recipe database/i });
 
-        // Initially disabled
-        expect(screen.getByRole("button", { name: /search/i })).toBeDisabled();
-
-        // Open filters
-        const filterButton = screen.getByRole("button", { name: /filter/i });
-        fireEvent.click(filterButton);
-
-        // Toggle "Verified recipes only" filter by clicking the checkbox
-        const verifiedCheckbox = await screen.findByRole("checkbox", { name: /verified recipes only/i });
-        fireEvent.click(verifiedCheckbox);
-
-        // Search button should now be enabled even without search text
-        // Re-query the button to get the updated state
-        await screen.findByRole("button", { name: /search/i }).then((button) => {
-            expect(button).not.toBeDisabled();
-        });
+        // Search button should be enabled even without search text because filter is active
+        const searchButton = screen.getByRole("button", { name: /search/i });
+        expect(searchButton).not.toBeDisabled();
     });
 
     it("should not submit search form when query is less than 3 characters and no filters", async () => {
@@ -200,8 +192,213 @@ describe("RecipeDatabase", () => {
 
         // Fetch should not have been called for recipe search
         expect(fetchSpy).not.toHaveBeenCalledWith(
-            expect.stringContaining("/api/recipes/search"),
+            expect.stringContaining("/api/recipes?"),
             expect.anything()
         );
+    });
+
+    it("should load recipes when URL has valid search query", async () => {
+        const fetchSpy = createMockFetch();
+        global.fetch = fetchSpy;
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            // URL with valid search query (3+ characters)
+            initialEntries: ["/dashboard/recipe-database?q=chicken"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Wait for fetch to be called with search param
+        await waitFor(() => {
+            expect(fetchSpy).toHaveBeenCalledWith(
+                expect.stringContaining("search=chicken"),
+                expect.anything()
+            );
+        });
+    });
+
+    it("should ignore search query in URL if less than 3 characters without filters", async () => {
+        const fetchSpy = createMockFetch();
+        global.fetch = fetchSpy;
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            // URL with invalid search query (less than 3 characters)
+            initialEntries: ["/dashboard/recipe-database?q=ab"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Should show the "Search for Recipes" prompt instead of loading recipes
+        expect(screen.getByRole("heading", { name: /search for recipes/i })).toBeInTheDocument();
+    });
+
+    it("should load recipes with filters from URL params", async () => {
+        const fetchSpy = createMockFetch();
+        global.fetch = fetchSpy;
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            // URL with filters
+            initialEntries: ["/dashboard/recipe-database?verified=true&tags=breakfast,easy"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Wait for fetch to be called with filter params (tags are URL-encoded, comma becomes %2C)
+        await waitFor(() => {
+            expect(fetchSpy).toHaveBeenCalledWith(
+                expect.stringContaining("tags=breakfast%2Ceasy"),
+                expect.anything()
+            );
+        });
+    });
+
+    it("should ignore invalid tags in URL params", async () => {
+        const fetchSpy = createMockFetch();
+        global.fetch = fetchSpy;
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            // URL with mix of valid and invalid tags
+            initialEntries: ["/dashboard/recipe-database?tags=breakfast,invalidtag123,easy"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Wait for fetch to be called - should only include valid tags
+        await waitFor(() => {
+            expect(fetchSpy).toHaveBeenCalledWith(
+                expect.stringContaining("tags=breakfast%2Ceasy"),
+                expect.anything()
+            );
+        });
+    });
+
+    it("should handle invalid page number in URL by defaulting to page 1", async () => {
+        const fetchSpy = createMockFetch();
+        global.fetch = fetchSpy;
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            // URL with invalid page number and valid search
+            initialEntries: ["/dashboard/recipe-database?q=chicken&page=-5"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Wait for fetch to be called with page=1 (default)
+        await waitFor(() => {
+            expect(fetchSpy).toHaveBeenCalledWith(
+                expect.stringContaining("page=1"),
+                expect.anything()
+            );
+        });
+    });
+
+    it("should populate search input from URL param", async () => {
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/recipe-database?q=pasta"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        const searchInput = screen.getByPlaceholderText(/search recipes/i);
+        expect(searchInput).toHaveValue("pasta");
+    });
+
+    it("should show filters panel when filter params are in URL", async () => {
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/recipe-database?verified=true"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Filters panel should be visible
+        expect(screen.getByRole("heading", { name: /filters/i })).toBeInTheDocument();
+
+        // Verified checkbox should be checked
+        const verifiedCheckbox = screen.getByRole("checkbox", { name: /verified recipes only/i });
+        expect(verifiedCheckbox).toBeChecked();
     });
 });

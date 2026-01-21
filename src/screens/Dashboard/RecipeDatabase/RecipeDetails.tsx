@@ -37,7 +37,7 @@ import {
 import { RECIPE_TAGS, RecipeTagKey } from "@utils/recipeTags";
 import { ChevronDown, Star } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useLoaderData, useNavigate, useParams } from "react-router-dom";
+import { useLoaderData, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 
@@ -87,6 +87,7 @@ const RecipeDetails: React.FC = () => {
   };
   const helmet = useHelmet();
   const navigate = useNavigate();
+  const location = useLocation();
   const { recipeId } = useParams<{ recipeId: string }>();
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
@@ -153,7 +154,20 @@ const RecipeDetails: React.FC = () => {
   }, [isAddToListDialogOpen]);
 
   const handleBack = () => {
-    navigate("/dashboard/recipe-database");
+    // Check if we came from the recipe database (stored in location state)
+    const fromRecipeDatabase = location.state?.fromRecipeDatabase;
+    const searchParams = location.state?.searchParams;
+
+    if (fromRecipeDatabase && searchParams) {
+      // Navigate back to recipe database with the preserved search params
+      navigate(`/dashboard/recipe-database?${searchParams}`);
+    } else if (fromRecipeDatabase) {
+      // Came from recipe database but no search params
+      navigate("/dashboard/recipe-database");
+    } else {
+      // Came from somewhere else (e.g., favorites), go to clean recipe database
+      navigate("/dashboard/recipe-database");
+    }
   };
 
   const handleEdit = () => {

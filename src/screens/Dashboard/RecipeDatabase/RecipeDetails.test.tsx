@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import RecipeDetails from "./RecipeDetails";
 
 // Mock useHelmet hook
@@ -313,6 +313,90 @@ describe("RecipeDetails", () => {
 
         await waitFor(() => {
             expect(screen.getByRole("button", { name: /Add to Favorites/i })).toBeInTheDocument();
+        });
+    });
+
+    it("should navigate back to recipe database with search params when coming from search", async () => {
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <div data-testid="recipe-database">Recipe Database</div>
+            },
+            {
+                path: "/dashboard/recipe-database/:recipeId",
+                element: <RecipeDetails />,
+                loader: async () => ({
+                    recipe: mockRecipe,
+                    title: "Test Recipe - NoBullFit",
+                    meta: []
+                })
+            }
+        ], {
+            initialEntries: [
+                "/dashboard/recipe-database?q=test&verified=true",
+                {
+                    pathname: "/dashboard/recipe-database/1",
+                    state: {
+                        fromRecipeDatabase: true,
+                        searchParams: "q=test&verified=true"
+                    }
+                }
+            ],
+            initialIndex: 1
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await waitFor(() => {
+            expect(screen.getByText("Test Recipe")).toBeInTheDocument();
+        });
+
+        // Click back button
+        const backButton = screen.getByRole("button", { name: /back/i });
+        fireEvent.click(backButton);
+
+        // Should navigate to recipe database with search params
+        await waitFor(() => {
+            expect(router.state.location.pathname).toBe("/dashboard/recipe-database");
+            expect(router.state.location.search).toBe("?q=test&verified=true");
+        });
+    });
+
+    it("should navigate back to recipe database without params when coming from favorites", async () => {
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <div data-testid="recipe-database">Recipe Database</div>
+            },
+            {
+                path: "/dashboard/recipe-database/:recipeId",
+                element: <RecipeDetails />,
+                loader: async () => ({
+                    recipe: mockRecipe,
+                    title: "Test Recipe - NoBullFit",
+                    meta: []
+                })
+            }
+        ], {
+            // Coming from favorites - no fromRecipeDatabase state
+            initialEntries: ["/dashboard/recipe-database/1"],
+            initialIndex: 0
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await waitFor(() => {
+            expect(screen.getByText("Test Recipe")).toBeInTheDocument();
+        });
+
+        // Click back button
+        const backButton = screen.getByRole("button", { name: /back/i });
+        fireEvent.click(backButton);
+
+        // Should navigate to clean recipe database
+        await waitFor(() => {
+            expect(router.state.location.pathname).toBe("/dashboard/recipe-database");
+            expect(router.state.location.search).toBe("");
         });
     });
 });
