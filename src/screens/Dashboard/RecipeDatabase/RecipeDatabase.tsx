@@ -141,8 +141,15 @@ const RecipeDatabase: React.FC = () => {
     setCurrentPage(1);
   }, [appliedSearchQuery, selectedTags, verifiedOnly, myRecipesOnly]);
 
+  const MIN_SEARCH_LENGTH = 3;
+
   const handleSearch = async (e: FormEvent) => {
     e.preventDefault();
+    // Require minimum characters for search (unless filters are active)
+    const hasFilters = selectedTags.length > 0 || verifiedOnly || myRecipesOnly;
+    if (!hasFilters && searchQuery.trim().length < MIN_SEARCH_LENGTH) {
+      return;
+    }
     setCurrentPage(1); // Reset to first page on new search
     setHasSearched(true);
     setAppliedSearchQuery(searchQuery);
@@ -235,7 +242,8 @@ const RecipeDatabase: React.FC = () => {
                   type: "button",
                   onClick: () => setShowFilters(!showFilters),
                   outline: true,
-                  className: "flex items-center gap-1"
+                  className: "flex items-center gap-1",
+                  "aria-label": "Filter"
                 }}
                 buttonContent={
                   <>
@@ -251,7 +259,24 @@ const RecipeDatabase: React.FC = () => {
                   </>
                 }
               />
-              <Button type="submit" disabled={isSearching}>
+              <Button
+                type="submit"
+                disabled={
+                  isSearching ||
+                  (searchQuery.trim().length < MIN_SEARCH_LENGTH &&
+                    selectedTags.length === 0 &&
+                    !verifiedOnly &&
+                    !myRecipesOnly)
+                }
+                title={
+                  searchQuery.trim().length < MIN_SEARCH_LENGTH &&
+                  selectedTags.length === 0 &&
+                  !verifiedOnly &&
+                  !myRecipesOnly
+                    ? `Enter at least ${MIN_SEARCH_LENGTH} characters to search`
+                    : undefined
+                }
+              >
                 {isSearching ? "Searching..." : "Search"}
               </Button>
             </div>
