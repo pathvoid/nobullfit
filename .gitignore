@@ -32,6 +32,6 @@ data/openfoodfacts/*.duckdb.wal
 *.sw?
 
 docs/
-.cursor/
+temp/
 
 .env

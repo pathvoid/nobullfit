@@ -1,18 +1,17 @@
-import useHelmet from "@hooks/useHelmet";
-import { useLoaderData } from "react-router-dom";
-import { useState } from "react";
-import { SidebarLayout } from "@components/sidebar-layout";
-import { Navbar, NavbarSection, NavbarSpacer } from "@components/navbar";
-import { Logo } from "@components/logo";
+import { Dropdown, DropdownButton, DropdownItem, DropdownLabel, DropdownMenu } from "@components/dropdown";
 import { Heading } from "@components/heading";
-import { Text } from "@components/text";
-import { Button } from "@components/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@components/table";
 import { Link } from "@components/link";
-import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel } from "@components/dropdown";
+import { Logo } from "@components/logo";
+import { Navbar, NavbarSection, NavbarSpacer } from "@components/navbar";
+import { SidebarLayout } from "@components/sidebar-layout";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@components/table";
+import { Text } from "@components/text";
+import useHelmet from "@hooks/useHelmet";
 import { MoreVertical, Trash2 } from "lucide-react";
-import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
+import { useState } from "react";
+import { useLoaderData } from "react-router-dom";
 import { toast } from "sonner";
+import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 
 interface Favorite {
     id: number;
@@ -30,9 +29,9 @@ interface Favorite {
 }
 
 const Favorites: React.FC = () => {
-    const loaderData = useLoaderData() as { 
-        title: string; 
-        meta: unknown[]; 
+    const loaderData = useLoaderData() as {
+        title: string;
+        meta: unknown[];
         favorites?: Favorite[];
         error?: string;
     };
@@ -46,7 +45,7 @@ const Favorites: React.FC = () => {
 
     const handleRemoveFavorite = async (favorite: Favorite) => {
         setRemovingIds(prev => new Set(prev).add(favorite.id));
-        
+
         try {
             const response = await fetch(`/api/favorites/${encodeURIComponent(favorite.food_id)}?itemType=${favorite.item_type}`, {
                 method: "DELETE",
@@ -98,9 +97,9 @@ const Favorites: React.FC = () => {
 
                 {favorites.length === 0 ? (
                     <div className="rounded-lg border border-zinc-950/10 bg-zinc-50 p-12 text-center dark:border-white/10 dark:bg-zinc-800/50">
-                        <img 
-                            src="https://cdn.nobull.fit/apple-heart.png" 
-                            alt="No favorites" 
+                        <img
+                            src="https://cdn.nobull.fit/apple-heart.png"
+                            alt="No favorites"
                             className="mx-auto h-48 w-48 object-contain"
                         />
                         <Heading level={2} className="mt-4">
@@ -130,23 +129,27 @@ const Favorites: React.FC = () => {
                                         <TableBody>
                                             {favorites.map((favorite) => {
                                                 const isRecipe = favorite.item_type === "recipe";
-                                                const detailUrl = isRecipe 
+                                                const detailUrl = isRecipe
                                                     ? `/dashboard/recipe-database/${encodeURIComponent(favorite.food_id)}`
                                                     : `/dashboard/food-database/${encodeURIComponent(favorite.food_id)}`;
-                                                
+
                                                 // Get thumbnail image
                                                 let thumbnailUrl = "https://cdn.nobull.fit/no-image-no-text.jpg";
                                                 if (isRecipe && favorite.food_data?.image_filename) {
-                                                    thumbnailUrl = `https://cdn.nobull.fit/recipes/${favorite.food_data.image_filename}`;
+                                                    // Check if image_filename is already a full URL
+                                                    const imageFilename = favorite.food_data.image_filename;
+                                                    thumbnailUrl = imageFilename.startsWith("http://") || imageFilename.startsWith("https://")
+                                                        ? imageFilename
+                                                        : `https://cdn.nobull.fit/recipes/${imageFilename}`;
                                                 } else if (!isRecipe && favorite.food_data?.image) {
                                                     thumbnailUrl = favorite.food_data.image;
                                                 }
-                                                
+
                                                 return (
                                                     <TableRow key={favorite.id}>
                                                         <TableCell>
                                                             <div className="flex items-center gap-3">
-                                                                <Link 
+                                                                <Link
                                                                     href={detailUrl}
                                                                     className="shrink-0"
                                                                 >
@@ -160,7 +163,7 @@ const Favorites: React.FC = () => {
                                                                     />
                                                                 </Link>
                                                                 <div className="flex flex-col gap-1 min-w-0">
-                                                                    <Link 
+                                                                    <Link
                                                                         href={detailUrl}
                                                                         className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
                                                                     >
@@ -192,7 +195,7 @@ const Favorites: React.FC = () => {
                                                         <TableCell className="text-right">
                                                             <div className="flex justify-end">
                                                                 <Dropdown>
-                                                                    <DropdownButton 
+                                                                    <DropdownButton
                                                                         plain
                                                                         className="p-2"
                                                                         aria-label="Favorite options"
@@ -200,7 +203,7 @@ const Favorites: React.FC = () => {
                                                                         <MoreVertical className="h-5 w-5" />
                                                                     </DropdownButton>
                                                                     <DropdownMenu anchor="bottom end" className="min-w-40">
-                                                                        <DropdownItem 
+                                                                        <DropdownItem
                                                                             onClick={() => handleRemoveFavorite(favorite)}
                                                                             disabled={removingIds.has(favorite.id)}
                                                                         >
