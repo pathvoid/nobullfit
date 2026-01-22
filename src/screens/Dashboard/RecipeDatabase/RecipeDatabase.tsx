@@ -460,14 +460,14 @@ const RecipeDatabase: React.FC = () => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableHeader className="min-w-[200px]">
+                      <TableHeader className="min-w-50">
                         Recipe Name
                       </TableHeader>
-                      <TableHeader className="hidden md:table-cell min-w-[300px]">
+                      <TableHeader className="hidden md:table-cell min-w-75">
                         Description
                       </TableHeader>
-                      <TableHeader className="min-w-[120px]">Tags</TableHeader>
-                      <TableHeader className="hidden sm:table-cell min-w-[150px]">
+                      <TableHeader className="min-w-30">Tags</TableHeader>
+                      <TableHeader className="hidden sm:table-cell min-w-37.5">
                         Author
                       </TableHeader>
                     </TableRow>
