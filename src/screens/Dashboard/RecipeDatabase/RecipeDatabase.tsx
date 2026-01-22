@@ -25,10 +25,96 @@ import { useAuth } from "@core/contexts/AuthContext";
 import useHelmet from "@hooks/useHelmet";
 import { RECIPE_TAGS, getAllTags, type RecipeTagKey } from "@utils/recipeTags";
 import { Filter, X } from "lucide-react";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
+
+const FiltersPanel = memo<{
+  hasActiveFilters: boolean;
+  clearFilters: () => void;
+  user: any;
+  myRecipes: boolean;
+  verified: boolean;
+  tags: RecipeTagKey[];
+  onMyRecipesChange: (checked: boolean) => void;
+  onVerifiedChange: (checked: boolean) => void;
+  onTagToggle: (tag: RecipeTagKey) => void;
+  allTags: { key: RecipeTagKey; label: string }[];
+}>(
+  ({ hasActiveFilters, clearFilters, user, myRecipes, verified, tags, onMyRecipesChange, onVerifiedChange, onTagToggle, allTags }) => {
+    return (
+      <div className="rounded-lg border border-zinc-950/10 bg-zinc-50 p-4 dark:border-white/10 dark:bg-zinc-900/50">
+        <div className="mb-4 flex items-center justify-between">
+          <Heading level={3} className="text-lg">
+            Filters
+          </Heading>
+          {hasActiveFilters && (
+            <Button
+              onClick={clearFilters}
+              outline
+              className="flex items-center gap-1 text-sm"
+            >
+              <X className="size-4" />
+              Clear All
+            </Button>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          {user && (
+            <CheckboxField>
+              <Checkbox
+                checked={myRecipes}
+                onChange={onMyRecipesChange}
+              />
+              <Label>Show only my recipes</Label>
+            </CheckboxField>
+          )}
+
+          <CheckboxField>
+            <Checkbox
+              checked={verified}
+              onChange={onVerifiedChange}
+            />
+            <Label>Verified recipes only</Label>
+          </CheckboxField>
+
+          <Field>
+            <Label>Tags</Label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {allTags.map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => onTagToggle(key)}
+                  className={`rounded-md px-3 py-1 text-sm transition-colors ${
+                    tags.includes(key)
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-zinc-700 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </Field>
+        </div>
+      </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if the actual filter values change
+    return (
+      prevProps.myRecipes === nextProps.myRecipes &&
+      prevProps.verified === nextProps.verified &&
+      prevProps.tags.length === nextProps.tags.length &&
+      prevProps.tags.every((tag, i) => tag === nextProps.tags[i]) &&
+      prevProps.hasActiveFilters === nextProps.hasActiveFilters &&
+      prevProps.user?.id === nextProps.user?.id
+    );
+  }
+);
 
 interface Recipe {
   id: number;
@@ -49,7 +135,7 @@ const RecipeDatabase: React.FC = () => {
   const helmet = useHelmet();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   // Set helmet values
   helmet.setTitle(loaderData.title);
@@ -58,48 +144,49 @@ const RecipeDatabase: React.FC = () => {
   const MIN_SEARCH_LENGTH = 3;
   const RECIPES_PER_PAGE = 20;
 
-  // Parse URL params with validation
-  const urlState = useMemo(() => {
+  // Initialize filter state from sessionStorage or URL (on first load)
+  const [filterState, setFilterState] = useState(() => {
+    // Try to get from sessionStorage first (only in browser)
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('recipeFilters');
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (e) {
+          // If parsing fails, fall through to URL params
+        }
+      }
+    }
+
+    // Fall back to URL params
     const searchParam = searchParams.get("q") || "";
     const tagsParam = searchParams.get("tags") || "";
     const verifiedParam = searchParams.get("verified") === "true";
     const myRecipesParam = searchParams.get("myRecipes") === "true";
     const pageParam = parseInt(searchParams.get("page") || "1", 10);
 
-    // Parse and validate tags
     const parsedTags = tagsParam
       ? (tagsParam.split(",").filter((tag) =>
           Object.keys(RECIPE_TAGS).includes(tag)
         ) as RecipeTagKey[])
       : [];
 
-    // Validate page number
     const validPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
-    // Check if we have valid filters (for search validation)
-    const hasFilters = parsedTags.length > 0 || verifiedParam || myRecipesParam;
-
-    // Validate search query - must be at least MIN_SEARCH_LENGTH unless filters are active
-    const validSearch = hasFilters || searchParam.length >= MIN_SEARCH_LENGTH ? searchParam : "";
-
-    // Determine if we should auto-search (valid URL params present)
-    const shouldSearch = validSearch.length >= MIN_SEARCH_LENGTH || hasFilters;
-
     return {
-      search: validSearch,
+      search: searchParam,
       tags: parsedTags,
       verified: verifiedParam,
       myRecipes: myRecipesParam,
-      page: validPage,
-      shouldSearch
+      page: validPage
     };
-  }, [searchParams]);
+  });
 
-  const [searchQuery, setSearchQuery] = useState(urlState.search);
+  const [searchQuery, setSearchQuery] = useState(filterState.search);
   const [isSearching, setIsSearching] = useState(false);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [showFilters, setShowFilters] = useState(
-    urlState.tags.length > 0 || urlState.verified || urlState.myRecipes
+  const [showFilters, setShowFilters] = useState(() =>
+    filterState.tags.length > 0 || filterState.verified || filterState.myRecipes
   );
   const [pagination, setPagination] = useState<{
     page: number;
@@ -108,13 +195,27 @@ const RecipeDatabase: React.FC = () => {
     totalPages: number;
   } | null>(null);
 
-  // Sync search input with URL when URL changes externally (e.g., browser back)
+  // Save filter state to sessionStorage whenever it changes
   useEffect(() => {
-    setSearchQuery(urlState.search);
-  }, [urlState.search]);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('recipeFilters', JSON.stringify(filterState));
+    }
+  }, [filterState]);
 
-  // Update URL params helper
-  const updateUrlParams = useCallback(
+  // Sync search input with filter state
+  useEffect(() => {
+    setSearchQuery(filterState.search);
+  }, [filterState.search]);
+
+  // Keep filters open if there are active filters
+  useEffect(() => {
+    if (filterState.tags.length > 0 || filterState.verified || filterState.myRecipes) {
+      setShowFilters(true);
+    }
+  }, [filterState.tags.length, filterState.verified, filterState.myRecipes]);
+
+  // Update filter state (stored in sessionStorage, no URL changes)
+  const updateFilters = useCallback(
     (updates: {
       search?: string;
       tags?: RecipeTagKey[];
@@ -122,61 +223,52 @@ const RecipeDatabase: React.FC = () => {
       myRecipes?: boolean;
       page?: number;
     }) => {
-      setSearchParams((currentParams) => {
-        const newParams = new URLSearchParams();
-
-        const currentSearch = currentParams.get("q") || "";
-        const currentTags = currentParams.get("tags")?.split(",").filter(Boolean) || [];
-        const currentVerified = currentParams.get("verified") === "true";
-        const currentMyRecipes = currentParams.get("myRecipes") === "true";
-        const currentPage = parseInt(currentParams.get("page") || "1", 10);
-
-        const search = updates.search !== undefined ? updates.search : currentSearch;
-        const tags = updates.tags !== undefined ? updates.tags : currentTags;
-        const verified = updates.verified !== undefined ? updates.verified : currentVerified;
-        const myRecipes = updates.myRecipes !== undefined ? updates.myRecipes : currentMyRecipes;
-        const page = updates.page !== undefined ? updates.page : currentPage;
-
-        if (search) newParams.set("q", search);
-        if (tags.length > 0) newParams.set("tags", tags.join(","));
-        if (verified) newParams.set("verified", "true");
-        if (myRecipes) newParams.set("myRecipes", "true");
-        if (page > 1) newParams.set("page", String(page));
-
-        return newParams;
-      }, { replace: true });
+      setFilterState((current: typeof filterState) => ({
+        ...current,
+        ...updates
+      }));
     },
-    [setSearchParams]
+    []
   );
 
-  // Load recipes based on URL state
+  // Load recipes based on filter state
   const loadRecipes = useCallback(async () => {
     // Don't load if no valid search criteria
-    if (!urlState.shouldSearch) return;
+    const hasFilters = filterState.tags.length > 0 || filterState.verified || filterState.myRecipes;
+    const shouldSearch = filterState.search.length >= MIN_SEARCH_LENGTH || hasFilters;
+    if (!shouldSearch) return;
 
-    setIsSearching(true);
+    // Use a timeout to delay showing loading state for fast responses
+    let showLoadingTimeout: NodeJS.Timeout | null = null;
+    let isCompleted = false;
+
+    showLoadingTimeout = setTimeout(() => {
+      if (!isCompleted) {
+        setIsSearching(true);
+      }
+    }, 150);
 
     try {
       const params = new URLSearchParams();
 
-      if (urlState.search.trim()) {
-        params.append("search", urlState.search.trim());
+      if (filterState.search.trim()) {
+        params.append("search", filterState.search.trim());
       }
 
-      if (urlState.tags.length > 0) {
-        params.append("tags", urlState.tags.join(","));
+      if (filterState.tags.length > 0) {
+        params.append("tags", filterState.tags.join(","));
       }
 
-      if (urlState.verified) {
+      if (filterState.verified) {
         params.append("verified", "true");
       }
 
-      if (urlState.myRecipes && user) {
+      if (filterState.myRecipes && user) {
         params.append("myRecipes", "true");
       }
 
       // Add pagination parameters
-      params.append("page", String(urlState.page));
+      params.append("page", String(filterState.page));
       params.append("limit", String(RECIPES_PER_PAGE));
 
       const response = await fetch(`/api/recipes?${params.toString()}`, {
@@ -194,9 +286,13 @@ const RecipeDatabase: React.FC = () => {
       console.error("Error loading recipes:", err);
       toast.error("Failed to load recipes. Please try again.");
     } finally {
+      isCompleted = true;
+      if (showLoadingTimeout) {
+        clearTimeout(showLoadingTimeout);
+      }
       setIsSearching(false);
     }
-  }, [urlState, user]);
+  }, [filterState, user]);
 
   // Load recipes when URL state changes
   useEffect(() => {
@@ -206,39 +302,43 @@ const RecipeDatabase: React.FC = () => {
   const handleSearch = async (e: FormEvent) => {
     e.preventDefault();
     // Require minimum characters for search (unless filters are active)
-    const hasFilters = urlState.tags.length > 0 || urlState.verified || urlState.myRecipes;
+    const hasFilters = filterState.tags.length > 0 || filterState.verified || filterState.myRecipes;
     if (!hasFilters && searchQuery.trim().length < MIN_SEARCH_LENGTH) {
       return;
     }
-    // Update URL params - this will trigger loadRecipes via useEffect
-    updateUrlParams({ search: searchQuery.trim(), page: 1 });
+    // Update filter state - this will trigger loadRecipes via useEffect
+    updateFilters({ search: searchQuery.trim(), page: 1 });
   };
 
   const toggleTag = (tag: RecipeTagKey) => {
-    const newTags = urlState.tags.includes(tag)
-      ? urlState.tags.filter((t) => t !== tag)
-      : [...urlState.tags, tag];
-    updateUrlParams({ tags: newTags, page: 1 });
+    const newTags = filterState.tags.includes(tag)
+      ? filterState.tags.filter((t: RecipeTagKey) => t !== tag)
+      : [...filterState.tags, tag];
+    updateFilters({ tags: newTags, page: 1 });
   };
 
   const clearFilters = () => {
     setSearchQuery("");
     setRecipes([]);
     setPagination(null);
-    setSearchParams(new URLSearchParams(), { replace: true });
+    updateFilters({ search: "", tags: [], verified: false, myRecipes: false, page: 1 });
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('recipeFilters');
+    }
   };
 
   const handlePageChange = (page: number) => {
-    updateUrlParams({ page });
+    updateFilters({ page });
     // Scroll to top when page changes
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const hasActiveFilters =
-    urlState.search.trim() ||
-    urlState.tags.length > 0 ||
-    urlState.verified ||
-    urlState.myRecipes;
+  const hasActiveFilters = Boolean(
+    filterState.search.trim() ||
+    filterState.tags.length > 0 ||
+    filterState.verified ||
+    filterState.myRecipes
+  );
 
   // Sort recipes: user's recipes first, then verified, then by date
   const sortedRecipes = [...recipes].sort((a, b) => {
@@ -255,7 +355,8 @@ const RecipeDatabase: React.FC = () => {
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
-  const allTags = getAllTags();
+  // Memoize allTags to prevent FiltersPanel from re-rendering unnecessarily
+  const allTags = useMemo(() => getAllTags(), []);
 
   return (
     <SidebarLayout
@@ -304,10 +405,10 @@ const RecipeDatabase: React.FC = () => {
                     <Filter className="size-4" />
                     {hasActiveFilters && (
                       <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
-                        {(urlState.search.trim() ? 1 : 0) +
-                          urlState.tags.length +
-                          (urlState.verified ? 1 : 0) +
-                          (urlState.myRecipes ? 1 : 0)}
+                        {(filterState.search.trim() ? 1 : 0) +
+                          filterState.tags.length +
+                          (filterState.verified ? 1 : 0) +
+                          (filterState.myRecipes ? 1 : 0)}
                       </span>
                     )}
                   </>
@@ -318,15 +419,15 @@ const RecipeDatabase: React.FC = () => {
                 disabled={
                   isSearching ||
                   (searchQuery.trim().length < MIN_SEARCH_LENGTH &&
-                    urlState.tags.length === 0 &&
-                    !urlState.verified &&
-                    !urlState.myRecipes)
+                    filterState.tags.length === 0 &&
+                    !filterState.verified &&
+                    !filterState.myRecipes)
                 }
                 title={
                   searchQuery.trim().length < MIN_SEARCH_LENGTH &&
-                  urlState.tags.length === 0 &&
-                  !urlState.verified &&
-                  !urlState.myRecipes
+                  filterState.tags.length === 0 &&
+                  !filterState.verified &&
+                  !filterState.myRecipes
                     ? `Enter at least ${MIN_SEARCH_LENGTH} characters to search`
                     : undefined
                 }
@@ -343,80 +444,31 @@ const RecipeDatabase: React.FC = () => {
             </Button>
           </form>
 
-          {showFilters && (
-            <div className="rounded-lg border border-zinc-950/10 bg-zinc-50 p-4 dark:border-white/10 dark:bg-zinc-900/50">
-              <div className="mb-4 flex items-center justify-between">
-                <Heading level={3} className="text-lg">
-                  Filters
-                </Heading>
-                {hasActiveFilters && (
-                  <Button
-                    onClick={clearFilters}
-                    outline
-                    className="flex items-center gap-1 text-sm"
-                  >
-                    <X className="size-4" />
-                    Clear All
-                  </Button>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                {user && (
-                  <CheckboxField>
-                    <Checkbox
-                      checked={urlState.myRecipes}
-                      onChange={(checked) => {
-                        updateUrlParams({ myRecipes: checked, page: 1 });
-                      }}
-                    />
-                    <Label>Show only my recipes</Label>
-                  </CheckboxField>
-                )}
-
-                <CheckboxField>
-                  <Checkbox
-                    checked={urlState.verified}
-                    onChange={(checked) => {
-                      updateUrlParams({ verified: checked, page: 1 });
-                    }}
-                  />
-                  <Label>Verified recipes only</Label>
-                </CheckboxField>
-
-                <Field>
-                  <Label>Tags</Label>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {allTags.map(({ key, label }) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => toggleTag(key)}
-                        className={`rounded-md px-3 py-1 text-sm transition-colors ${
-                          urlState.tags.includes(key)
-                            ? "bg-blue-600 text-white"
-                            : "bg-white text-zinc-700 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </Field>
-              </div>
-            </div>
-          )}
+          <div style={{ display: showFilters ? 'block' : 'none' }}>
+            <FiltersPanel
+              hasActiveFilters={hasActiveFilters}
+              clearFilters={clearFilters}
+              user={user}
+              myRecipes={filterState.myRecipes}
+              verified={filterState.verified}
+              tags={filterState.tags}
+              onMyRecipesChange={(checked) => updateFilters({ myRecipes: checked, page: 1 })}
+              onVerifiedChange={(checked) => updateFilters({ verified: checked, page: 1 })}
+              onTagToggle={toggleTag}
+              allTags={allTags}
+            />
+          </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <Text className="text-sm text-zinc-600 dark:text-zinc-400">
               Active filters: {hasActiveFilters ? null : "None"}
             </Text>
-            {urlState.search.trim() && (
-              <Badge color="zinc">Search: {urlState.search}</Badge>
+            {filterState.search.trim() && (
+              <Badge color="zinc">Search: {filterState.search}</Badge>
             )}
-            {urlState.myRecipes && <Badge color="blue">My Recipes</Badge>}
-            {urlState.verified && <Badge color="green">Verified</Badge>}
-            {urlState.tags.map((tag) => (
+            {filterState.myRecipes && <Badge color="blue">My Recipes</Badge>}
+            {filterState.verified && <Badge color="green">Verified</Badge>}
+            {filterState.tags.map((tag: RecipeTagKey) => (
               <Badge key={tag} color="zinc">
                 {RECIPE_TAGS[tag]}
               </Badge>
@@ -424,7 +476,7 @@ const RecipeDatabase: React.FC = () => {
           </div>
         </div>
 
-        {!urlState.shouldSearch ? (
+        {!(filterState.search.length >= MIN_SEARCH_LENGTH || filterState.tags.length > 0 || filterState.verified || filterState.myRecipes) ? (
           <div className="rounded-lg border border-zinc-950/10 bg-zinc-50 p-12 text-center dark:border-white/10 dark:bg-zinc-800/50">
             <img
               src="https://cdn.nobull.fit/cooking-pot.png"
@@ -595,10 +647,10 @@ const RecipeDatabase: React.FC = () => {
               <Button
                 plain
                 aria-label="Previous page"
-                disabled={urlState.page === 1}
+                disabled={filterState.page === 1}
                 onClick={() => {
-                  if (urlState.page > 1) {
-                    handlePageChange(urlState.page - 1);
+                  if (filterState.page > 1) {
+                    handlePageChange(filterState.page - 1);
                   }
                 }}
               >
@@ -623,7 +675,7 @@ const RecipeDatabase: React.FC = () => {
               {(() => {
                 const pages: React.ReactNode[] = [];
                 const totalPages = pagination.totalPages;
-                const current = urlState.page;
+                const current = filterState.page;
 
                 // Always show first page
                 if (current > 3) {
@@ -691,10 +743,10 @@ const RecipeDatabase: React.FC = () => {
               <Button
                 plain
                 aria-label="Next page"
-                disabled={urlState.page >= pagination.totalPages}
+                disabled={filterState.page >= pagination.totalPages}
                 onClick={() => {
-                  if (urlState.page < pagination.totalPages) {
-                    handlePageChange(urlState.page + 1);
+                  if (filterState.page < pagination.totalPages) {
+                    handlePageChange(filterState.page + 1);
                   }
                 }}
               >

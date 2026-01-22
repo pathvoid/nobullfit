@@ -73,6 +73,7 @@ const createMockFetch = () => vi.fn(() =>
 describe("RecipeDatabase", () => {
     beforeEach(() => {
         global.fetch = createMockFetch();
+        sessionStorage.clear();
     });
 
     it("should render the recipe database page", async () => {
@@ -80,6 +81,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                hydrateFallbackElement: <div>Loading...</div>,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -87,7 +89,10 @@ describe("RecipeDatabase", () => {
                 })
             }
         ], {
-            initialEntries: ["/dashboard/recipe-database"]
+            initialEntries: ["/dashboard/recipe-database"],
+            future: {
+                v7_partialHydration: true
+            }
         });
 
         render(<RouterProvider router={router} />);
@@ -403,5 +408,255 @@ describe("RecipeDatabase", () => {
         // Verified checkbox should be checked
         const verifiedCheckbox = screen.getByRole("checkbox", { name: /verified recipes only/i });
         expect(verifiedCheckbox).toBeChecked();
+    });
+
+    it("should save filter state to sessionStorage when filters change", async () => {
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/recipe-database"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Open filters
+        const filterButton = screen.getByRole("button", { name: /filter/i });
+        fireEvent.click(filterButton);
+
+        // Check the verified checkbox
+        const verifiedCheckbox = screen.getByRole("checkbox", { name: /verified recipes only/i });
+        fireEvent.click(verifiedCheckbox);
+
+        // Wait for sessionStorage to be updated
+        await waitFor(() => {
+            const stored = sessionStorage.getItem('recipeFilters');
+            expect(stored).toBeTruthy();
+            const parsed = JSON.parse(stored!);
+            expect(parsed.verified).toBe(true);
+        });
+    });
+
+    it("should load filter state from sessionStorage on initial render", async () => {
+        // Pre-populate sessionStorage
+        sessionStorage.setItem('recipeFilters', JSON.stringify({
+            search: "chicken",
+            tags: ["breakfast"],
+            verified: true,
+            myRecipes: false,
+            page: 1
+        }));
+
+        const fetchSpy = createMockFetch();
+        global.fetch = fetchSpy;
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/recipe-database"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Verify the search input has the stored value
+        const searchInput = screen.getByPlaceholderText(/search recipes/i);
+        expect(searchInput).toHaveValue("chicken");
+
+        // Filters panel should be visible
+        expect(screen.getByRole("heading", { name: /filters/i })).toBeInTheDocument();
+
+        // Verified checkbox should be checked
+        const verifiedCheckbox = screen.getByRole("checkbox", { name: /verified recipes only/i });
+        expect(verifiedCheckbox).toBeChecked();
+
+        // Verify API was called with stored filters
+        await waitFor(() => {
+            expect(fetchSpy).toHaveBeenCalledWith(
+                expect.stringContaining("search=chicken"),
+                expect.anything()
+            );
+            expect(fetchSpy).toHaveBeenCalledWith(
+                expect.stringContaining("verified=true"),
+                expect.anything()
+            );
+            expect(fetchSpy).toHaveBeenCalledWith(
+                expect.stringContaining("tags=breakfast"),
+                expect.anything()
+            );
+        });
+    });
+
+    it("should prefer sessionStorage over URL params on initial load", async () => {
+        // Pre-populate sessionStorage with different values than URL
+        sessionStorage.setItem('recipeFilters', JSON.stringify({
+            search: "pasta",
+            tags: [],
+            verified: false,
+            myRecipes: false,
+            page: 1
+        }));
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            // URL has different search query
+            initialEntries: ["/dashboard/recipe-database?q=chicken&verified=true"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Should use sessionStorage value, not URL value
+        const searchInput = screen.getByPlaceholderText(/search recipes/i);
+        expect(searchInput).toHaveValue("pasta");
+    });
+
+    it("should clear filters and reset sessionStorage when clearFilters is called", async () => {
+        // Pre-populate sessionStorage
+        sessionStorage.setItem('recipeFilters', JSON.stringify({
+            search: "test",
+            tags: ["breakfast"],
+            verified: true,
+            myRecipes: false,
+            page: 1
+        }));
+
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/recipe-database"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Filters panel should be visible with active filters
+        expect(screen.getByRole("heading", { name: /filters/i })).toBeInTheDocument();
+
+        // Click clear all button
+        const clearButton = screen.getByRole("button", { name: /clear all/i });
+        fireEvent.click(clearButton);
+
+        // sessionStorage should be reset to empty state
+        await waitFor(() => {
+            const stored = sessionStorage.getItem('recipeFilters');
+            expect(stored).toBeTruthy();
+            const parsed = JSON.parse(stored!);
+            expect(parsed).toEqual({
+                search: "",
+                tags: [],
+                verified: false,
+                myRecipes: false,
+                page: 1
+            });
+        });
+    });
+
+    it("should update sessionStorage when tags are toggled", async () => {
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/recipe-database"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Open filters
+        const filterButton = screen.getByRole("button", { name: /filter/i });
+        fireEvent.click(filterButton);
+
+        // Click a tag button
+        const breakfastTag = screen.getByRole("button", { name: /breakfast/i });
+        fireEvent.click(breakfastTag);
+
+        // Wait for sessionStorage to be updated
+        await waitFor(() => {
+            const stored = sessionStorage.getItem('recipeFilters');
+            expect(stored).toBeTruthy();
+            const parsed = JSON.parse(stored!);
+            expect(parsed.tags).toContain("breakfast");
+        });
+    });
+
+    it("should update sessionStorage when performing a search", async () => {
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            initialEntries: ["/dashboard/recipe-database"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        const searchInput = screen.getByPlaceholderText(/search recipes/i);
+        const searchButton = screen.getByRole("button", { name: /search/i });
+
+        // Type a search query
+        fireEvent.change(searchInput, { target: { value: "chicken soup" } });
+        fireEvent.click(searchButton);
+
+        // Wait for sessionStorage to be updated
+        await waitFor(() => {
+            const stored = sessionStorage.getItem('recipeFilters');
+            expect(stored).toBeTruthy();
+            const parsed = JSON.parse(stored!);
+            expect(parsed.search).toBe("chicken soup");
+        });
     });
 });

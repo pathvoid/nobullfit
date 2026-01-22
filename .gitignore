@@ -31,6 +31,7 @@ data/openfoodfacts/*.duckdb.wal
 *.sln
 *.sw?
 
+.claude/
 docs/
 temp/
 
