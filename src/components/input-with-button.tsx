@@ -3,6 +3,26 @@ import clsx from "clsx";
 import { forwardRef, ReactNode } from "react";
 import { Button } from "./button";
 
+// Button color type
+type ButtonColor = "dark/zinc" | "light" | "dark/white" | "dark" | "white" | "zinc" | "indigo" | "cyan" | "red" | "orange" | "amber" | "yellow" | "lime" | "green" | "emerald" | "teal" | "sky" | "blue" | "violet" | "purple" | "fuchsia" | "pink" | "rose";
+
+// Base button props shared across all variants
+interface BaseButtonProps {
+  type?: "button" | "submit" | "reset";
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  disabled?: boolean;
+  className?: string;
+  "aria-label"?: string;
+  title?: string;
+}
+
+// Button props with discriminated union for style variants
+type InternalButtonProps = BaseButtonProps & (
+  | { color?: ButtonColor; outline?: never; plain?: never }
+  | { color?: never; outline: true; plain?: never }
+  | { color?: never; outline?: never; plain: true }
+);
+
 interface InputWithButtonProps {
   inputProps: Omit<Headless.InputProps, "as" | "className"> & {
     className?: string;
@@ -20,7 +40,7 @@ interface InputWithButtonProps {
     | "time"
     | "week";
   };
-  buttonProps: React.ComponentPropsWithoutRef<typeof Button>;
+  buttonProps: InternalButtonProps;
   buttonContent: ReactNode;
   className?: string;
 }
@@ -78,16 +98,52 @@ export const InputWithButton = forwardRef<
         ])}
       />
       <div className="absolute inset-y-0 right-0 z-10 flex items-center pr-1.5">
-        <Button
-          {...buttonProps}
-          className={clsx(
-            buttonProps.className,
-            // Style button to be clearly visible inside the input
-            "h-7 px-2 text-sm border-0"
-          )}
-        >
-          {buttonContent}
-        </Button>
+        {buttonProps.outline ? (
+          <Button
+            type={buttonProps.type}
+            onClick={buttonProps.onClick}
+            disabled={buttonProps.disabled}
+            aria-label={buttonProps["aria-label"]}
+            title={buttonProps.title}
+            outline
+            className={clsx(
+              buttonProps.className,
+              "h-7 px-2 text-sm border-0"
+            )}
+          >
+            {buttonContent}
+          </Button>
+        ) : buttonProps.plain ? (
+          <Button
+            type={buttonProps.type}
+            onClick={buttonProps.onClick}
+            disabled={buttonProps.disabled}
+            aria-label={buttonProps["aria-label"]}
+            title={buttonProps.title}
+            plain
+            className={clsx(
+              buttonProps.className,
+              "h-7 px-2 text-sm border-0"
+            )}
+          >
+            {buttonContent}
+          </Button>
+        ) : (
+          <Button
+            type={buttonProps.type}
+            onClick={buttonProps.onClick}
+            disabled={buttonProps.disabled}
+            aria-label={buttonProps["aria-label"]}
+            title={buttonProps.title}
+            color={buttonProps.color}
+            className={clsx(
+              buttonProps.className,
+              "h-7 px-2 text-sm border-0"
+            )}
+          >
+            {buttonContent}
+          </Button>
+        )}
       </div>
     </span>
   );

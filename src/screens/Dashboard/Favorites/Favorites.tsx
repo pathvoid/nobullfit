@@ -120,10 +120,10 @@ const Favorites: React.FC = () => {
                                     <Table>
                                         <TableHead>
                                             <TableRow>
-                                                <TableHeader className="min-w-[250px]">Name</TableHeader>
-                                                <TableHeader className="hidden sm:table-cell min-w-[80px]">Type</TableHeader>
-                                                <TableHeader className="hidden md:table-cell min-w-[120px]">Brand</TableHeader>
-                                                <TableHeader className="min-w-[100px] text-right"></TableHeader>
+                                                <TableHeader className="min-w-62.5">Name</TableHeader>
+                                                <TableHeader className="hidden sm:table-cell min-w-20">Type</TableHeader>
+                                                <TableHeader className="hidden md:table-cell min-w-30">Brand</TableHeader>
+                                                <TableHeader className="min-w-25 text-right"></TableHeader>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>

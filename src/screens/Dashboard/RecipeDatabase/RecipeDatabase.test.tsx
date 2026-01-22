@@ -158,8 +158,11 @@ describe("RecipeDatabase", () => {
         await screen.findByRole("heading", { name: /recipe database/i });
 
         // Search button should be enabled even without search text because filter is active
-        const searchButton = screen.getByRole("button", { name: /search/i });
-        expect(searchButton).not.toBeDisabled();
+        // Wait for the button state to update based on URL params
+        await waitFor(() => {
+            const searchButton = screen.getByRole("button", { name: /search/i });
+            expect(searchButton).not.toBeDisabled();
+        });
     });
 
     it("should not submit search form when query is less than 3 characters and no filters", async () => {
