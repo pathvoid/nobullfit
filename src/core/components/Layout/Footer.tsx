@@ -8,6 +8,9 @@ const Footer: React.FC = () => {
             <div className="mx-auto max-w-6xl px-6">
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
+                        <Link href="/careers" className="text-sm font-medium text-zinc-950 hover:text-zinc-700 dark:text-white dark:hover:text-zinc-300">
+                            Careers
+                        </Link>
                         <Link href="/refund-policy" className="text-sm font-medium text-zinc-950 hover:text-zinc-700 dark:text-white dark:hover:text-zinc-300">
                             Refund Policy
                         </Link>
