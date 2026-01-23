@@ -154,20 +154,9 @@ const RecipeDetails: React.FC = () => {
   }, [isAddToListDialogOpen]);
 
   const handleBack = () => {
-    // Check if we came from the recipe database (stored in location state)
-    const fromRecipeDatabase = location.state?.fromRecipeDatabase;
-    const searchParams = location.state?.searchParams;
-
-    if (fromRecipeDatabase && searchParams) {
-      // Navigate back to recipe database with the preserved search params
-      navigate(`/dashboard/recipe-database?${searchParams}`);
-    } else if (fromRecipeDatabase) {
-      // Came from recipe database but no search params
-      navigate("/dashboard/recipe-database");
-    } else {
-      // Came from somewhere else (e.g., favorites), go to clean recipe database
-      navigate("/dashboard/recipe-database");
-    }
+    // Navigate back to recipe database
+    // Filters will be restored from sessionStorage automatically
+    navigate("/dashboard/recipe-database");
   };
 
   const handleEdit = () => {

@@ -25,8 +25,8 @@ import { useAuth } from "@core/contexts/AuthContext";
 import useHelmet from "@hooks/useHelmet";
 import { RECIPE_TAGS, getAllTags, type RecipeTagKey } from "@utils/recipeTags";
 import { Filter, X } from "lucide-react";
-import { FormEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
+import { FormEvent, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Link, useLoaderData, useLocation, useNavigate, useNavigationType, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 
@@ -136,6 +136,10 @@ const RecipeDatabase: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const isInitialMount = useRef(true);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // Set helmet values
   helmet.setTitle(loaderData.title);
@@ -144,21 +148,8 @@ const RecipeDatabase: React.FC = () => {
   const MIN_SEARCH_LENGTH = 3;
   const RECIPES_PER_PAGE = 20;
 
-  // Initialize filter state from sessionStorage or URL (on first load)
+  // Initialize filter state from URL params (for SSR compatibility)
   const [filterState, setFilterState] = useState(() => {
-    // Try to get from sessionStorage first (only in browser)
-    if (typeof window !== 'undefined') {
-      const stored = sessionStorage.getItem('recipeFilters');
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch (e) {
-          // If parsing fails, fall through to URL params
-        }
-      }
-    }
-
-    // Fall back to URL params
     const searchParam = searchParams.get("q") || "";
     const tagsParam = searchParams.get("tags") || "";
     const verifiedParam = searchParams.get("verified") === "true";
@@ -182,6 +173,62 @@ const RecipeDatabase: React.FC = () => {
     };
   });
 
+  // Restore from sessionStorage after hydration and when returning to page
+  useLayoutEffect(() => {
+    // Skip on initial mount to avoid hydration mismatch
+    if (isInitialMount.current) {
+      // But do restore if there are no URL params (navigated back)
+      const hasUrlParams = searchParams.toString().length > 0;
+      if (!hasUrlParams && typeof window !== 'undefined') {
+        const stored = sessionStorage.getItem('recipeFilters');
+        if (stored) {
+          try {
+            setIsRestoring(true);
+            const parsedFilters = JSON.parse(stored);
+            setFilterState(parsedFilters);
+            // Use queueMicrotask to ensure state update completes first, then allow saves
+            queueMicrotask(() => {
+              setIsRestoring(false);
+              isInitialMount.current = false;
+            });
+            return;
+          } catch (e) {
+            setIsRestoring(false);
+            isInitialMount.current = false;
+            // If parsing fails, keep default state
+          }
+        }
+      }
+      // No restoration needed, allow saves now
+      isInitialMount.current = false;
+      return;
+    }
+
+    // On subsequent navigations, check if it's a back/forward navigation
+    if (navigationType === 'POP') {
+      const hasUrlParams = searchParams.toString().length > 0;
+
+      // Only restore from sessionStorage if there are no URL params
+      if (!hasUrlParams && typeof window !== 'undefined') {
+        const stored = sessionStorage.getItem('recipeFilters');
+        if (stored) {
+          try {
+            setIsRestoring(true);
+            const parsedFilters = JSON.parse(stored);
+            setFilterState(parsedFilters);
+            // Use queueMicrotask to ensure state update completes first
+            queueMicrotask(() => {
+              setIsRestoring(false);
+            });
+          } catch (e) {
+            setIsRestoring(false);
+            // If parsing fails, keep default state
+          }
+        }
+      }
+    }
+  }, [location.key, searchParams, navigationType]); // Run on every navigation
+
   const [searchQuery, setSearchQuery] = useState(filterState.search);
   const [isSearching, setIsSearching] = useState(false);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -195,12 +242,22 @@ const RecipeDatabase: React.FC = () => {
     totalPages: number;
   } | null>(null);
 
-  // Save filter state to sessionStorage whenever it changes
+  // Save filter state to sessionStorage whenever it changes (but not during restoration)
   useEffect(() => {
+    // Don't save while restoration is in progress
+    if (isRestoring) {
+      return;
+    }
+
+    // Don't save on initial mount before any restoration attempt
+    if (isInitialMount.current) {
+      return;
+    }
+
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('recipeFilters', JSON.stringify(filterState));
     }
-  }, [filterState]);
+  }, [filterState, isRestoring]);
 
   // Sync search input with filter state
   useEffect(() => {
@@ -533,10 +590,6 @@ const RecipeDatabase: React.FC = () => {
                             <div className="flex items-center gap-3">
                               <Link
                                 to={`/dashboard/recipe-database/${recipe.id}`}
-                                state={{
-                                  fromRecipeDatabase: true,
-                                  searchParams: searchParams.toString() || undefined
-                                }}
                                 className="shrink-0"
                               >
                                 <img
@@ -555,10 +608,6 @@ const RecipeDatabase: React.FC = () => {
                                 <div className="inline-flex items-center gap-2 flex-wrap">
                                   <Link
                                     to={`/dashboard/recipe-database/${recipe.id}`}
-                                    state={{
-                                      fromRecipeDatabase: true,
-                                      searchParams: searchParams.toString() || undefined
-                                    }}
                                     className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline truncate"
                                   >
                                     {recipe.name}

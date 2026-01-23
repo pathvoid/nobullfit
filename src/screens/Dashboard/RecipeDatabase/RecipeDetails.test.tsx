@@ -316,7 +316,7 @@ describe("RecipeDetails", () => {
         });
     });
 
-    it("should navigate back to recipe database with search params when coming from search", async () => {
+    it("should navigate back to recipe database when coming from search", async () => {
         const router = createMemoryRouter([
             {
                 path: "/dashboard/recipe-database",
@@ -355,10 +355,10 @@ describe("RecipeDetails", () => {
         const backButton = screen.getByRole("button", { name: /back/i });
         fireEvent.click(backButton);
 
-        // Should navigate to recipe database with search params
+        // Should navigate to recipe database without search params (filters restored from sessionStorage)
         await waitFor(() => {
             expect(router.state.location.pathname).toBe("/dashboard/recipe-database");
-            expect(router.state.location.search).toBe("?q=test&verified=true");
+            expect(router.state.location.search).toBe("");
         });
     });
 

@@ -505,7 +505,7 @@ describe("RecipeDatabase", () => {
         });
     });
 
-    it("should prefer sessionStorage over URL params on initial load", async () => {
+    it("should prefer URL params over sessionStorage when URL params exist", async () => {
         // Pre-populate sessionStorage with different values than URL
         sessionStorage.setItem('recipeFilters', JSON.stringify({
             search: "pasta",
@@ -534,9 +534,9 @@ describe("RecipeDatabase", () => {
 
         await screen.findByRole("heading", { name: /recipe database/i });
 
-        // Should use sessionStorage value, not URL value
+        // Should use URL params value when they exist (for SSR compatibility)
         const searchInput = screen.getByPlaceholderText(/search recipes/i);
-        expect(searchInput).toHaveValue("pasta");
+        expect(searchInput).toHaveValue("chicken");
     });
 
     it("should clear filters and reset sessionStorage when clearFilters is called", async () => {
@@ -567,8 +567,10 @@ describe("RecipeDatabase", () => {
 
         await screen.findByRole("heading", { name: /recipe database/i });
 
-        // Filters panel should be visible with active filters
-        expect(screen.getByRole("heading", { name: /filters/i })).toBeInTheDocument();
+        // Wait for filters to be restored and panel to become visible
+        await waitFor(() => {
+            expect(screen.getByRole("heading", { name: /filters/i })).toBeInTheDocument();
+        });
 
         // Click clear all button
         const clearButton = screen.getByRole("button", { name: /clear all/i });
