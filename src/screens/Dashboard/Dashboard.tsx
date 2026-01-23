@@ -25,7 +25,10 @@ import {
     Legend,
     ResponsiveContainer
 } from "recharts";
-import { TrendingUp, TrendingDown, Activity, UtensilsCrossed, Flame, FileDown, Calendar } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, UtensilsCrossed, Flame, FileDown, Calendar, Crown } from "lucide-react";
+import { Checkbox, CheckboxField, CheckboxGroup } from "@components/checkbox";
+import { Fieldset, Legend as FieldsetLegend, Description, Label } from "@components/fieldset";
+import { Dialog, DialogActions, DialogBody, DialogDescription, DialogTitle } from "@components/dialog";
 
 interface DashboardStats {
     today: {
@@ -147,13 +150,40 @@ const Dashboard: React.FC = () => {
     const [period, setPeriod] = useState<"week" | "month" | "all">("week");
     const [isLoadingStats, setIsLoadingStats] = useState(false);
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-    
+
     // Pro feature: Goal insights
     const [goalInsights, setGoalInsights] = useState<GoalInsightsResponse | null>(null);
     const [isLoadingGoalInsights, setIsLoadingGoalInsights] = useState(false);
 
-    // Generate PDF report
-    const handleGenerateReport = async () => {
+    // Pro feature: Report customization dialog
+    const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+    const [reportSections, setReportSections] = useState({
+        summary: true,
+        foodLogs: true,
+        activityLogs: true,
+        weightHistory: true,
+        tdee: true,
+        dailyBreakdown: true
+    });
+
+    // Generate PDF report - opens dialog for Pro users, generates directly for non-Pro
+    const handleGenerateReport = () => {
+        if (isProUser) {
+            setIsReportDialogOpen(true);
+        } else {
+            handleGenerateReportWithOptions({
+                summary: true,
+                foodLogs: true,
+                activityLogs: true,
+                weightHistory: true,
+                tdee: true,
+                dailyBreakdown: true
+            });
+        }
+    };
+
+    // Generate PDF report with selected sections
+    const handleGenerateReportWithOptions = async (sections: typeof reportSections) => {
         setIsGeneratingReport(true);
         try {
             const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -165,20 +195,17 @@ const Dashboard: React.FC = () => {
                 credentials: "include",
                 body: JSON.stringify({
                     period,
-                    timezone: userTimezone
+                    timezone: userTimezone,
+                    sections
                 })
             });
 
             if (response.ok) {
-                // Get the PDF blob
                 const blob = await response.blob();
-                
-                // Create download link
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                
-                // Get filename from Content-Disposition header or use default
+
                 const contentDisposition = response.headers.get("Content-Disposition");
                 let filename = "NoBullFit_Report.pdf";
                 if (contentDisposition) {
@@ -187,12 +214,14 @@ const Dashboard: React.FC = () => {
                         filename = match[1];
                     }
                 }
-                
+
                 a.download = filename;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
+
+                setIsReportDialogOpen(false);
             } else {
                 console.error("Failed to generate report");
             }
@@ -926,6 +955,112 @@ const Dashboard: React.FC = () => {
                     </>
                 )}
             </div>
+
+            {/* Report Customization Dialog (Pro feature) */}
+            <Dialog
+                open={isReportDialogOpen}
+                onClose={(open) => {
+                    setIsReportDialogOpen(open);
+                    if (!open) {
+                        setReportSections({
+                            summary: true,
+                            foodLogs: true,
+                            activityLogs: true,
+                            weightHistory: true,
+                            tdee: true,
+                            dailyBreakdown: true
+                        });
+                    }
+                }}
+            >
+                <DialogTitle>
+                    <div className="flex items-center gap-2">
+                        <Crown className="h-5 w-5 text-amber-500" />
+                        Customize Report
+                    </div>
+                </DialogTitle>
+                <DialogDescription>
+                    Choose which sections to include in your PDF report.
+                </DialogDescription>
+                <DialogBody>
+                    <Fieldset>
+                        <FieldsetLegend>Report Sections</FieldsetLegend>
+                        <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                            Select the sections you want to include. At least one section must be selected.
+                        </Text>
+                        <CheckboxGroup>
+                            <CheckboxField>
+                                <Checkbox
+                                    checked={reportSections.summary}
+                                    onChange={(checked) => setReportSections(prev => ({ ...prev, summary: checked }))}
+                                />
+                                <Label>Executive Summary</Label>
+                                <Description>Overview of your stats, averages, and key metrics</Description>
+                            </CheckboxField>
+
+                            <CheckboxField>
+                                <Checkbox
+                                    checked={reportSections.tdee}
+                                    onChange={(checked) => setReportSections(prev => ({ ...prev, tdee: checked }))}
+                                />
+                                <Label>TDEE & Metabolic Profile</Label>
+                                <Description>Your BMR, TDEE, and activity level information</Description>
+                            </CheckboxField>
+
+                            <CheckboxField>
+                                <Checkbox
+                                    checked={reportSections.dailyBreakdown}
+                                    onChange={(checked) => setReportSections(prev => ({ ...prev, dailyBreakdown: checked }))}
+                                />
+                                <Label>Daily Summary Table</Label>
+                                <Description>Day-by-day breakdown of calories and macros</Description>
+                            </CheckboxField>
+
+                            <CheckboxField>
+                                <Checkbox
+                                    checked={reportSections.foodLogs}
+                                    onChange={(checked) => setReportSections(prev => ({ ...prev, foodLogs: checked }))}
+                                />
+                                <Label>Detailed Food Logs</Label>
+                                <Description>Complete list of all food entries with nutritional information</Description>
+                            </CheckboxField>
+
+                            <CheckboxField>
+                                <Checkbox
+                                    checked={reportSections.activityLogs}
+                                    onChange={(checked) => setReportSections(prev => ({ ...prev, activityLogs: checked }))}
+                                />
+                                <Label>Detailed Activity Logs</Label>
+                                <Description>Complete list of all activities and workouts</Description>
+                            </CheckboxField>
+
+                            <CheckboxField>
+                                <Checkbox
+                                    checked={reportSections.weightHistory}
+                                    onChange={(checked) => setReportSections(prev => ({ ...prev, weightHistory: checked }))}
+                                />
+                                <Label>Weight History</Label>
+                                <Description>Log of all weight entries and progress</Description>
+                            </CheckboxField>
+                        </CheckboxGroup>
+                    </Fieldset>
+                </DialogBody>
+                <DialogActions>
+                    <Button
+                        plain
+                        onClick={() => setIsReportDialogOpen(false)}
+                        disabled={isGeneratingReport}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={() => handleGenerateReportWithOptions(reportSections)}
+                        disabled={isGeneratingReport || Object.values(reportSections).every(v => !v)}
+                    >
+                        {isGeneratingReport ? "Generating..." : "Generate Report"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </SidebarLayout>
     );
 };

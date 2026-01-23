@@ -69,6 +69,14 @@ Pro users can set personalized weight goals with intelligent insights:
 - **Progress Tracking**: See your actual weekly weight change compared to your target, with visual feedback on whether you're on track.
 - **Goal Timeline Projection**: If a target weight is set, see a projected date for reaching your goal based on your current progress.
 
+### Customizable PDF Reports
+Pro users can personalize their health reports:
+
+- **Section Selection**: Choose exactly which sections to include in your PDF report before generating it.
+- **Flexible Reporting**: Select from Executive Summary, TDEE & Metabolic Profile, Daily Summary Table, Detailed Food Logs, Detailed Activity Logs, and Weight History.
+- **Optimized Generation**: Reports are generated faster by only processing the sections you need.
+- **Tailored Reports**: Create focused reports for specific purposes, like sharing only your activity logs with a trainer or just your nutrition data with a dietitian.
+
 ## Technology Stack
 
 NoBullFit is built with modern web technologies:

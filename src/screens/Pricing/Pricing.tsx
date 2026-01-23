@@ -103,6 +103,7 @@ const Pricing: React.FC = () => {
                                     <FeatureItem>Personalized macro recommendations</FeatureItem>
                                     <FeatureItem>Goal timeline projections</FeatureItem>
                                     <FeatureItem>Weekly progress insights</FeatureItem>
+                                    <FeatureItem>Customizable PDF report sections</FeatureItem>
                                     <li className="flex items-start gap-3">
                                         <Sparkles className="size-5 text-blue-500 shrink-0 mt-0.5" />
                                         <Text className="!mt-0 italic text-zinc-500 dark:text-zinc-400">And more features coming soon...</Text>

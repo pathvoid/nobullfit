@@ -102,6 +102,15 @@ interface DailyActivityLog {
     totalDuration: number;
 }
 
+interface ReportSections {
+    summary?: boolean;
+    foodLogs?: boolean;
+    activityLogs?: boolean;
+    weightHistory?: boolean;
+    tdee?: boolean;
+    dailyBreakdown?: boolean;
+}
+
 // Generate HTML for the PDF report
 function generateReportHTML(data: {
     userName: string;
@@ -149,8 +158,19 @@ function generateReportHTML(data: {
             tdee: number;
         } | null;
     };
+    sections?: ReportSections;
 }): string {
-    const { userName, period, generatedAt, stats } = data;
+    const { userName, period, generatedAt, stats, sections } = data;
+
+    // Default all sections to true for backward compatibility
+    const includeSections: ReportSections = {
+        summary: sections?.summary !== false,
+        foodLogs: sections?.foodLogs !== false,
+        activityLogs: sections?.activityLogs !== false,
+        weightHistory: sections?.weightHistory !== false,
+        tdee: sections?.tdee !== false,
+        dailyBreakdown: sections?.dailyBreakdown !== false
+    };
     const dateRangeLabel = getDateRangeLabel(period);
     const macroPercentages = calculateMacroPercentages(
         stats.averages.protein,
@@ -839,13 +859,14 @@ function generateReportHTML(data: {
         </div>
     </div>
     ` : `
+    ${includeSections.summary ? `
     <!-- Summary Page -->
     <div class="page content-page">
         <div class="page-header">
             <div class="page-title">Executive Summary</div>
         </div>
-        
-        ${hasTDEEData ? `
+
+        ${includeSections.tdee && hasTDEEData ? `
         <div class="section">
             <div class="section-title">Metabolic Profile</div>
             <div class="stat-grid">
@@ -863,7 +884,7 @@ function generateReportHTML(data: {
                 </div>
             </div>
         </div>
-        ` : `
+        ` : includeSections.tdee ? `
         <div class="section">
             <div class="section-title">Metabolic Profile</div>
             <div class="empty-state">
@@ -871,7 +892,7 @@ function generateReportHTML(data: {
                 <div class="empty-state-text">Set up your TDEE calculator to see your metabolic profile.</div>
             </div>
         </div>
-        `}
+        ` : ""}
         
         ${hasCalorieData ? `
         <div class="section">
@@ -953,8 +974,8 @@ function generateReportHTML(data: {
             </div>
         </div>
         ` : ""}
-        
-        ${hasCalorieData && stats.dailyStats.length > 0 ? `
+
+        ${includeSections.dailyBreakdown && hasCalorieData && stats.dailyStats.length > 0 ? `
         <div class="section">
             <div class="section-title">Daily Summary Overview</div>
             <table>
@@ -991,14 +1012,15 @@ function generateReportHTML(data: {
         </div>
         ` : ""}
     </div>
-    
+    ` : ""}
+
     <!-- Food Log Pages -->
-    ${generateFoodLogPages()}
-    
+    ${includeSections.foodLogs ? generateFoodLogPages() : ""}
+
     <!-- Activity Log Pages -->
-    ${generateActivityLogPages()}
-    
-    ${hasWeightData && stats.weightData.length > 0 ? `
+    ${includeSections.activityLogs ? generateActivityLogPages() : ""}
+
+    ${includeSections.weightHistory && hasWeightData && stats.weightData.length > 0 ? `
     <!-- Weight History Page -->
     <div class="page content-page">
         <div class="page-header">
@@ -1044,8 +1066,18 @@ export async function handleGenerateDashboardReport(req: Request, res: Response)
             return;
         }
 
-        const { period = "week" } = req.body;
+        const { period = "week", sections } = req.body;
         const userTimezone = req.body.timezone as string || "UTC";
+
+        // Default all sections to true for backward compatibility
+        const includeSections: ReportSections = {
+            summary: sections?.summary !== false,
+            foodLogs: sections?.foodLogs !== false,
+            activityLogs: sections?.activityLogs !== false,
+            weightHistory: sections?.weightHistory !== false,
+            tdee: sections?.tdee !== false,
+            dailyBreakdown: sections?.dailyBreakdown !== false
+        };
 
         const pool = await getPool();
         if (!pool) {
@@ -1145,36 +1177,59 @@ export async function handleGenerateDashboardReport(req: Request, res: Response)
             [userId, startDateStr]
         );
 
-        // Fetch DETAILED food entries (individual items)
-        const detailedFoodResult = await pool.query(
-            `SELECT 
-                date,
-                food_label,
-                category,
-                quantity,
-                COALESCE((nutrients->>'ENERC_KCAL')::numeric, 0) as calories,
-                COALESCE((nutrients->>'PROCNT')::numeric, 0) as protein,
-                COALESCE((nutrients->>'CHOCDF')::numeric, 0) as carbs,
-                COALESCE((nutrients->>'FAT')::numeric, 0) as fat
-             FROM food_tracking 
-             WHERE user_id = $1 AND date >= $2
-             ORDER BY date DESC, created_at DESC`,
-            [userId, startDateStr]
-        );
+        // Fetch DETAILED food entries (individual items) - only if foodLogs section is enabled
+        let detailedFoodResult = { rows: [] as Array<{
+            date: Date | string;
+            food_label: string;
+            category: string;
+            quantity: number;
+            calories: number;
+            protein: number;
+            carbs: number;
+            fat: number;
+        }> };
 
-        // Fetch DETAILED activity entries (individual activities)
-        const detailedActivityResult = await pool.query(
-            `SELECT 
-                date,
-                activity_type,
-                activity_name,
-                activity_data,
-                calories_burned
-             FROM progress_tracking 
-             WHERE user_id = $1 AND date >= $2
-             ORDER BY date DESC, created_at DESC`,
-            [userId, startDateStr]
-        );
+        if (includeSections.foodLogs) {
+            detailedFoodResult = await pool.query(
+                `SELECT
+                    date,
+                    food_label,
+                    category,
+                    quantity,
+                    COALESCE((nutrients->>'ENERC_KCAL')::numeric, 0) as calories,
+                    COALESCE((nutrients->>'PROCNT')::numeric, 0) as protein,
+                    COALESCE((nutrients->>'CHOCDF')::numeric, 0) as carbs,
+                    COALESCE((nutrients->>'FAT')::numeric, 0) as fat
+                 FROM food_tracking
+                 WHERE user_id = $1 AND date >= $2
+                 ORDER BY date DESC, created_at DESC`,
+                [userId, startDateStr]
+            );
+        }
+
+        // Fetch DETAILED activity entries (individual activities) - only if activityLogs section is enabled
+        let detailedActivityResult = { rows: [] as Array<{
+            date: Date | string;
+            activity_type: string;
+            activity_name: string;
+            activity_data: { duration_minutes?: number } | null;
+            calories_burned: number;
+        }> };
+
+        if (includeSections.activityLogs) {
+            detailedActivityResult = await pool.query(
+                `SELECT
+                    date,
+                    activity_type,
+                    activity_name,
+                    activity_data,
+                    calories_burned
+                 FROM progress_tracking
+                 WHERE user_id = $1 AND date >= $2
+                 ORDER BY date DESC, created_at DESC`,
+                [userId, startDateStr]
+            );
+        }
 
         // Process detailed food entries into daily logs
         const foodEntriesMap = new Map<string, FoodEntry[]>();
@@ -1299,35 +1354,44 @@ export async function handleGenerateDashboardReport(req: Request, res: Response)
         // Sort by date descending
         dailyActivityLogs.sort((a, b) => b.date.localeCompare(a.date));
 
-        // Fetch weight data
-        const weightResult = await pool.query(
-            `SELECT DISTINCT ON (date)
-                date,
-                weight,
-                unit,
-                created_at
-             FROM weight_tracking 
-             WHERE user_id = $1 AND date >= $2
-             ORDER BY date ASC, created_at DESC`,
-            [userId, startDateStr]
-        );
+        // Fetch weight data - only if weightHistory section is enabled
+        let weightResult = { rows: [] as Array<{
+            date: Date | string;
+            weight: number;
+            unit: string;
+            created_at: Date;
+        }> };
+
+        if (includeSections.weightHistory) {
+            weightResult = await pool.query(
+                `SELECT DISTINCT ON (date)
+                    date,
+                    weight,
+                    unit,
+                    created_at
+                 FROM weight_tracking
+                 WHERE user_id = $1 AND date >= $2
+                 ORDER BY date ASC, created_at DESC`,
+                [userId, startDateStr]
+            );
+        }
 
         // Process weight data
         const weightData: Array<{ date: string; weight: number; unit: string }> = [];
         let standardUnit: string = "kg";
-        
+
         if (weightResult.rows.length > 0) {
             const lastEntry = weightResult.rows[weightResult.rows.length - 1];
             standardUnit = lastEntry.unit || "kg";
-            
+
             weightResult.rows.forEach((row: { date: Date | string; weight: number; unit: string }) => {
-                const dateStr = row.date instanceof Date 
-                    ? row.date.toISOString().split("T")[0] 
+                const dateStr = row.date instanceof Date
+                    ? row.date.toISOString().split("T")[0]
                     : String(row.date);
-                
+
                 let convertedWeight = parseFloat(String(row.weight));
                 const entryUnit = row.unit || "kg";
-                
+
                 if (entryUnit !== standardUnit) {
                     if (entryUnit === "kg" && standardUnit === "lbs") {
                         convertedWeight = convertedWeight * 2.20462;
@@ -1335,7 +1399,7 @@ export async function handleGenerateDashboardReport(req: Request, res: Response)
                         convertedWeight = convertedWeight / 2.20462;
                     }
                 }
-                
+
                 weightData.push({
                     date: dateStr,
                     weight: Math.round(convertedWeight * 10) / 10,
@@ -1408,22 +1472,24 @@ export async function handleGenerateDashboardReport(req: Request, res: Response)
         const avgCarbs = dailyStats.reduce((sum, day) => sum + day.carbs, 0) / totalDays;
         const avgFat = dailyStats.reduce((sum, day) => sum + day.fat, 0) / totalDays;
 
-        // Get TDEE data
+        // Get TDEE data - only if tdee or summary section is enabled
         let tdee = null;
-        const tdeeResult = await pool.query(
-            "SELECT id, age, gender, height_cm, activity_level, bmr, tdee, created_at, updated_at FROM user_tdee WHERE user_id = $1",
-            [userId]
-        );
+        if (includeSections.tdee || includeSections.summary) {
+            const tdeeResult = await pool.query(
+                "SELECT id, age, gender, height_cm, activity_level, bmr, tdee, created_at, updated_at FROM user_tdee WHERE user_id = $1",
+                [userId]
+            );
 
-        if (tdeeResult.rows.length > 0) {
-            tdee = {
-                age: parseInt(String(tdeeResult.rows[0].age)),
-                gender: tdeeResult.rows[0].gender,
-                height_cm: parseFloat(String(tdeeResult.rows[0].height_cm)),
-                activity_level: tdeeResult.rows[0].activity_level,
-                bmr: parseFloat(String(tdeeResult.rows[0].bmr)),
-                tdee: parseFloat(String(tdeeResult.rows[0].tdee))
-            };
+            if (tdeeResult.rows.length > 0) {
+                tdee = {
+                    age: parseInt(String(tdeeResult.rows[0].age)),
+                    gender: tdeeResult.rows[0].gender,
+                    height_cm: parseFloat(String(tdeeResult.rows[0].height_cm)),
+                    activity_level: tdeeResult.rows[0].activity_level,
+                    bmr: parseFloat(String(tdeeResult.rows[0].bmr)),
+                    tdee: parseFloat(String(tdeeResult.rows[0].tdee))
+                };
+            }
         }
 
         // Build stats object
@@ -1457,7 +1523,8 @@ export async function handleGenerateDashboardReport(req: Request, res: Response)
             userName,
             period,
             generatedAt: now,
-            stats
+            stats,
+            sections: includeSections
         });
 
         // Launch Puppeteer and generate PDF
