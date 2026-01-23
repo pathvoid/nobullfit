@@ -30,7 +30,7 @@ data/openfoodfacts/*.duckdb.wal
 *.njsproj
 *.sln
 *.sw?
-
+Claude.md
 .claude
 docs/
 temp/
