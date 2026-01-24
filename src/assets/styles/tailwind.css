@@ -1,2 +1,58 @@
 @import "tailwindcss";
 
+/* Sonner toast positioning - top on mobile, bottom-right on desktop */
+@media (max-width: 639px) {
+    [data-sonner-toaster] {
+        /* Position below the mobile navbar (approx 56px + 16px padding) */
+        top: 72px !important;
+        bottom: auto !important;
+        right: 16px !important;
+        left: 16px !important;
+        transform: none !important;
+        /* Flip the vertical direction for stacking and animations */
+        --front-toast-height: 0px !important;
+    }
+
+    /* Reverse animation direction for top positioning */
+    [data-sonner-toaster] [data-sonner-toast] {
+        transform-origin: top center !important;
+    }
+
+    /* Entry animation - slide down from top */
+    [data-sonner-toaster] [data-sonner-toast][data-mounted="true"] {
+        animation: toast-slide-in-from-top 0.35s ease-out !important;
+    }
+
+    /* Exit animation - slide up to top (only for non-swiped dismissals) */
+    [data-sonner-toaster] [data-sonner-toast][data-removed="true"]:not([data-swiped="true"]) {
+        animation: toast-slide-out-to-top 0.2s ease-in forwards !important;
+    }
+
+    /* Let swiped toasts use their default swipe animation */
+    [data-sonner-toaster] [data-sonner-toast][data-swiped="true"] {
+        animation: none !important;
+    }
+
+    @keyframes toast-slide-in-from-top {
+        from {
+            opacity: 0;
+            transform: translateY(-100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes toast-slide-out-to-top {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-100%);
+        }
+    }
+}
+

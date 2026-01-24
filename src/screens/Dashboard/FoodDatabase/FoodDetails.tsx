@@ -14,7 +14,8 @@ import { Field, Label as FieldLabel } from "@components/fieldset";
 import { DescriptionList, DescriptionTerm, DescriptionDetails } from "@components/description-list";
 import { Dropdown, DropdownButton, DropdownItem, DropdownMenu } from "@components/dropdown";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
-import { ChevronDown, Star } from "lucide-react";
+import { ChevronDown, Star, ShoppingCart, UtensilsCrossed } from "lucide-react";
+import { MobileBottomMenu, MobileBottomMenuSpacer, type MobileBottomMenuItem } from "@components/mobile-bottom-menu";
 import { toast } from "sonner";
 
 // Get default category based on current time
@@ -468,9 +469,9 @@ const FoodDetails: React.FC = () => {
                             {(food.categoryLabel || food.category) && <span>{food.categoryLabel || food.category}</span>}
                         </div>
                     </div>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                    <div className="hidden sm:flex sm:flex-row sm:items-center sm:gap-3">
                         <Dropdown>
-                            <DropdownButton outline className="w-full sm:w-auto">
+                            <DropdownButton outline>
                                 More Actions
                                 <ChevronDown className="size-4" />
                             </DropdownButton>
@@ -911,6 +912,25 @@ const FoodDetails: React.FC = () => {
                     Back to Search
                 </Button>
             </div>
+
+            {/* Mobile Bottom Menu */}
+            <MobileBottomMenu
+                items={[
+                    {
+                        id: "add-to-grocery",
+                        label: "Add to Grocery",
+                        icon: <ShoppingCart className="h-5 w-5" />,
+                        onClick: () => setIsAddToListDialogOpen(true)
+                    },
+                    {
+                        id: "log-food",
+                        label: "Log Food",
+                        icon: <UtensilsCrossed className="h-5 w-5" />,
+                        onClick: () => setIsLogFoodDialogOpen(true)
+                    }
+                ]}
+            />
+            <MobileBottomMenuSpacer />
         </SidebarLayout>
     );
 };

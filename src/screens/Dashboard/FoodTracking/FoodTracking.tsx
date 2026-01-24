@@ -12,6 +12,7 @@ import { Select } from "@components/select";
 import { Dialog, DialogActions, DialogBody, DialogDescription, DialogTitle } from "@components/dialog";
 import { Field, Label as FieldLabel, Description } from "@components/fieldset";
 import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel } from "@components/dropdown";
+import { MobileBottomMenu, MobileBottomMenuSpacer, type MobileBottomMenuItem } from "@components/mobile-bottom-menu";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Copy, ClipboardPaste, Calendar, GripVertical, Crown, ChevronDown, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
@@ -682,6 +683,7 @@ const FoodTracking: React.FC = () => {
         if (!isProUser) return;
         const dateStr = formatDateForAPI(currentDate);
         setCopiedDate(dateStr);
+        toast.success("Day copied!");
     };
     
     // Paste copied day to current date (Pro feature)
@@ -1014,67 +1016,6 @@ const FoodTracking: React.FC = () => {
                         )}
                     </div>
                     
-                    {/* Action buttons - stacked on mobile, hidden on desktop for Pro users */}
-                    {/* For non-pro users on mobile: Today and Add Food buttons */}
-                    {/* For pro users on mobile: Today + Copy & Paste + Add Food */}
-                    <div className={`grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center ${isProUser ? "sm:hidden" : "sm:hidden"}`}>
-                        {/* Today button - shown on mobile only */}
-                        <div className="sm:hidden">
-                            <Button onClick={handleToday} outline className="w-full">
-                                Today
-                            </Button>
-                        </div>
-                        {/* Copy/Paste Day/Week dropdown - Pro feature (mobile only) */}
-                        {isProUser && (
-                            <div className="sm:hidden">
-                                <Dropdown>
-                                    <DropdownButton 
-                                        outline
-                                        className="w-full"
-                                    >
-                                        <Copy className="h-4 w-4" data-slot="icon" />
-                                        Copy & Paste
-                                        <ChevronDown className="h-4 w-4" data-slot="icon" />
-                                    </DropdownButton>
-                                    <DropdownMenu anchor="bottom start" className="min-w-48">
-                                        <DropdownItem 
-                                            onClick={handleCopyDay}
-                                            disabled={foods.length === 0}
-                                        >
-                                            <Copy className="h-4 w-4" data-slot="icon" />
-                                            <DropdownLabel>Copy Day</DropdownLabel>
-                                        </DropdownItem>
-                                        <DropdownItem 
-                                            onClick={handlePasteDay}
-                                            disabled={!copiedDate || copiedDate === formatDateForAPI(currentDate) || isPasting}
-                                        >
-                                            <ClipboardPaste className="h-4 w-4" data-slot="icon" />
-                                            <DropdownLabel>{isPasting ? "Pasting..." : "Paste Day"}</DropdownLabel>
-                                        </DropdownItem>
-                                        <DropdownItem 
-                                            onClick={() => setIsCopyWeekDialogOpen(true)}
-                                        >
-                                            <Calendar className="h-4 w-4" data-slot="icon" />
-                                            <DropdownLabel>Copy Week</DropdownLabel>
-                                        </DropdownItem>
-                                    </DropdownMenu>
-                                </Dropdown>
-                            </div>
-                        )}
-                        {/* Add Food button - mobile only */}
-                        <div className="sm:hidden">
-                            <Button 
-                                onClick={() => {
-                                    resetAddDialog();
-                                    setIsAddDialogOpen(true);
-                                }}
-                                className="w-full"
-                            >
-                                <Plus className="h-4 w-4" data-slot="icon" />
-                                Add Food
-                            </Button>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Grand Totals */}
@@ -1720,14 +1661,60 @@ const FoodTracking: React.FC = () => {
                     >
                         Cancel
                     </Button>
-                    <Button 
-                        onClick={handleCopyWeek} 
+                    <Button
+                        onClick={handleCopyWeek}
                         disabled={!copyWeekSourceStart || !copyWeekTargetStart || copyWeekSourceStart === copyWeekTargetStart || isCopyingWeek}
                     >
                         {isCopyingWeek ? "Copying..." : "Copy Week"}
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Mobile Bottom Menu */}
+            <MobileBottomMenu
+                items={(() => {
+                    const menuItems: MobileBottomMenuItem[] = [
+                        {
+                            id: "add-food",
+                            label: "Add Food",
+                            icon: <Plus className="h-5 w-5" />,
+                            onClick: () => {
+                                resetAddDialog();
+                                setIsAddDialogOpen(true);
+                            }
+                        }
+                    ];
+
+                    // Pro-only features
+                    if (isProUser) {
+                        menuItems.push(
+                            {
+                                id: "copy-day",
+                                label: "Copy Day",
+                                icon: <Copy className="h-5 w-5" />,
+                                onClick: handleCopyDay,
+                                disabled: foods.length === 0
+                            },
+                            {
+                                id: "paste-day",
+                                label: isPasting ? "Pasting..." : "Paste Day",
+                                icon: <ClipboardPaste className="h-5 w-5" />,
+                                onClick: handlePasteDay,
+                                disabled: !copiedDate || copiedDate === formatDateForAPI(currentDate) || isPasting
+                            },
+                            {
+                                id: "copy-week",
+                                label: "Copy Week",
+                                icon: <Calendar className="h-5 w-5" />,
+                                onClick: () => setIsCopyWeekDialogOpen(true)
+                            }
+                        );
+                    }
+
+                    return menuItems;
+                })()}
+            />
+            <MobileBottomMenuSpacer />
         </SidebarLayout>
     );
 };

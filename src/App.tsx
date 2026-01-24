@@ -14,8 +14,8 @@ function App(props: AppProps) {
 			<HelmetProvider onHelmetChange={props.onHelmetChange}>
 				<AuthProvider>
 					{props.children}
-					<Toaster 
-						position="bottom-right" 
+					<Toaster
+						position="bottom-right"
 						closeButton
 						theme="dark"
 						toastOptions={{

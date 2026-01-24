@@ -35,7 +35,8 @@ import {
     UnitSystem
 } from "@utils/ingredientUnits";
 import { RECIPE_TAGS, RecipeTagKey } from "@utils/recipeTags";
-import { ChevronDown, Star } from "lucide-react";
+import { ChevronDown, Star, ShoppingCart, Pencil, Copy, UtensilsCrossed } from "lucide-react";
+import { MobileBottomMenu, MobileBottomMenuSpacer, type MobileBottomMenuItem } from "@components/mobile-bottom-menu";
 import React, { useEffect, useState } from "react";
 import { useLoaderData, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -481,9 +482,9 @@ const RecipeDetails: React.FC = () => {
               </div>
             )}
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <div className="hidden sm:flex sm:flex-row sm:items-center sm:gap-3">
             <Dropdown>
-              <DropdownButton outline className="w-full sm:w-auto">
+              <DropdownButton outline>
                 More Actions
                 <ChevronDown className="size-4" />
               </DropdownButton>
@@ -967,6 +968,34 @@ const RecipeDetails: React.FC = () => {
           Back
         </Button>
       </div>
+
+      {/* Mobile Bottom Menu */}
+      <MobileBottomMenu
+        items={(() => {
+          const menuItems: MobileBottomMenuItem[] = [
+            {
+              id: "add-to-grocery",
+              label: "Add to Grocery",
+              icon: <ShoppingCart className="h-5 w-5" />,
+              onClick: () => setIsAddToListDialogOpen(true)
+            },
+            {
+              id: isOwnRecipe ? "edit-recipe" : "duplicate-recipe",
+              label: isOwnRecipe ? "Edit Recipe" : "Duplicate",
+              icon: isOwnRecipe ? <Pencil className="h-5 w-5" /> : <Copy className="h-5 w-5" />,
+              onClick: isOwnRecipe ? handleEdit : handleDuplicate
+            },
+            {
+              id: "log-recipe",
+              label: "Log Recipe",
+              icon: <UtensilsCrossed className="h-5 w-5" />,
+              onClick: () => setIsLogRecipeDialogOpen(true)
+            }
+          ];
+          return menuItems;
+        })()}
+      />
+      <MobileBottomMenuSpacer />
     </SidebarLayout>
   );
 };
