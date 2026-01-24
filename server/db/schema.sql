@@ -194,6 +194,8 @@ CREATE TABLE IF NOT EXISTS progress_tracking (
     -- Activity-specific data stored as JSONB for flexibility
     activity_data JSONB NOT NULL,
     calories_burned DECIMAL(10, 2),
+    -- Strava integration: track imported activities to prevent duplicates
+    strava_activity_id BIGINT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -204,6 +206,7 @@ CREATE INDEX IF NOT EXISTS idx_progress_tracking_date ON progress_tracking(date)
 CREATE INDEX IF NOT EXISTS idx_progress_tracking_activity_type ON progress_tracking(activity_type);
 CREATE INDEX IF NOT EXISTS idx_progress_tracking_user_date ON progress_tracking(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_progress_tracking_activity_name ON progress_tracking(activity_name);
+CREATE INDEX IF NOT EXISTS idx_progress_tracking_strava ON progress_tracking(strava_activity_id) WHERE strava_activity_id IS NOT NULL;
 
 -- Weight tracking table - stores user's weight entries
 CREATE TABLE IF NOT EXISTS weight_tracking (
@@ -274,4 +277,101 @@ CREATE TABLE IF NOT EXISTS user_settings (
 
 -- Index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
+
+-- Feature flags table - global system-wide feature toggles
+CREATE TABLE IF NOT EXISTS feature_flags (
+    id SERIAL PRIMARY KEY,
+    flag_key VARCHAR(100) UNIQUE NOT NULL,
+    flag_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    is_enabled BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for faster lookups by flag_key
+CREATE INDEX IF NOT EXISTS idx_feature_flags_key ON feature_flags(flag_key);
+CREATE INDEX IF NOT EXISTS idx_feature_flags_enabled ON feature_flags(is_enabled);
+
+-- Initial feature flags for integrations (run separately after table creation)
+-- INSERT INTO feature_flags (flag_key, flag_name, description, is_enabled) VALUES
+--     ('integration_apple_health', 'Apple Health Integration', 'Enable Apple Health data import', true),
+--     ('integration_google_fit', 'Google Fit Integration', 'Enable Google Fit data import', true),
+--     ('integration_samsung_health', 'Samsung Health Integration', 'Enable Samsung Health data import', true),
+--     ('integration_strava', 'Strava Integration', 'Enable Strava workout imports', true),
+--     ('integration_garmin', 'Garmin Integration', 'Enable Garmin workout imports', true),
+--     ('integration_fitbit', 'Fitbit Integration', 'Enable Fitbit data import', true),
+--     ('integration_withings', 'Withings Integration', 'Enable Withings smart scale data', true)
+-- ON CONFLICT (flag_key) DO NOTHING;
+
+-- Integration connections table - stores OAuth connections to health/fitness providers
+CREATE TABLE IF NOT EXISTS integration_connections (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL,
+    access_token_encrypted TEXT NOT NULL,
+    refresh_token_encrypted TEXT,
+    token_expires_at TIMESTAMP,
+    provider_user_id VARCHAR(255),
+    scopes JSONB DEFAULT '[]',
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'disconnected', 'expired', 'error')),
+    last_error TEXT,
+    last_sync_at TIMESTAMP,
+    last_successful_sync_at TIMESTAMP,
+    connected_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, provider)
+);
+
+-- Indexes for integration connections
+CREATE INDEX IF NOT EXISTS idx_integration_connections_user_id ON integration_connections(user_id);
+CREATE INDEX IF NOT EXISTS idx_integration_connections_provider ON integration_connections(provider);
+CREATE INDEX IF NOT EXISTS idx_integration_connections_status ON integration_connections(status);
+CREATE INDEX IF NOT EXISTS idx_integration_connections_user_provider ON integration_connections(user_id, provider);
+
+-- Auto-sync settings table - stores auto-sync configuration for Pro users
+CREATE TABLE IF NOT EXISTS integration_auto_sync (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL,
+    is_enabled BOOLEAN NOT NULL DEFAULT false,
+    sync_frequency_minutes INTEGER NOT NULL DEFAULT 60,
+    sync_data_types JSONB DEFAULT '["calories_burned", "workouts", "weight"]',
+    consecutive_failures INTEGER NOT NULL DEFAULT 0,
+    last_failure_at TIMESTAMP,
+    last_failure_reason TEXT,
+    disabled_due_to_failure BOOLEAN NOT NULL DEFAULT false,
+    failure_notification_sent BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, provider)
+);
+
+-- Indexes for auto-sync settings
+CREATE INDEX IF NOT EXISTS idx_integration_auto_sync_user ON integration_auto_sync(user_id);
+CREATE INDEX IF NOT EXISTS idx_integration_auto_sync_enabled ON integration_auto_sync(is_enabled);
+CREATE INDEX IF NOT EXISTS idx_integration_auto_sync_provider ON integration_auto_sync(provider);
+
+-- Integration sync history table - stores sync operation history for auditing
+CREATE TABLE IF NOT EXISTS integration_sync_history (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL,
+    sync_type VARCHAR(20) NOT NULL CHECK (sync_type IN ('manual', 'auto')),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('success', 'partial', 'failed')),
+    records_imported INTEGER DEFAULT 0,
+    data_types_synced JSONB DEFAULT '[]',
+    error_message TEXT,
+    error_code VARCHAR(50),
+    started_at TIMESTAMP NOT NULL,
+    completed_at TIMESTAMP,
+    duration_ms INTEGER,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for sync history
+CREATE INDEX IF NOT EXISTS idx_integration_sync_history_user ON integration_sync_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_integration_sync_history_provider ON integration_sync_history(provider);
+CREATE INDEX IF NOT EXISTS idx_integration_sync_history_created ON integration_sync_history(created_at);
+CREATE INDEX IF NOT EXISTS idx_integration_sync_history_user_provider ON integration_sync_history(user_id, provider);
 

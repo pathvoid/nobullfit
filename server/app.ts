@@ -70,6 +70,9 @@ import { handleGetUserPreferences, handleUpdateUserPreferences } from "./api/han
 import { handleGetGoalInsights } from "./api/handlers/goalInsightsHandler.js";
 import { handleGetSubscription, handleCreatePortalSession, handleInitCheckout, handleSyncSubscription, handleGetPaddleConfig } from "./api/handlers/billingHandler.js";
 import { handlePaddleWebhook } from "./api/handlers/paddleWebhookHandler.js";
+import { handleGetFeatureFlags, handleGetEnabledFlags, handleGetIntegrationFlags, handleGetEnabledIntegrations } from "./api/handlers/featureFlagsHandler.js";
+import { handleGetIntegrations, handleGetIntegration, handleConnectIntegration, handleOAuthCallback, handleDisconnectIntegration } from "./api/handlers/integrationsHandler.js";
+import { handleTriggerSync, handleGetSyncHistory, handleGetAutoSyncSettings, handleUpdateAutoSyncSettings, handleEnableAutoSync, handleDisableAutoSync } from "./api/handlers/integrationSyncHandler.js";
 
 // API router class - handles all /api routes
 class App {
@@ -179,6 +182,27 @@ class App {
         
         // Paddle webhook endpoint (signature verification happens in handler)
         this.router.post("/paddle/webhook", handlePaddleWebhook);
+
+        // Feature flags endpoints (public, cached)
+        this.router.get("/feature-flags", handleGetFeatureFlags);
+        this.router.get("/feature-flags/enabled", handleGetEnabledFlags);
+        this.router.get("/feature-flags/integrations", handleGetIntegrationFlags);
+        this.router.get("/feature-flags/integrations/enabled", handleGetEnabledIntegrations);
+
+        // Health & Fitness integrations endpoints
+        this.router.get("/integrations", handleGetIntegrations);
+        this.router.get("/integrations/:provider", handleGetIntegration);
+        this.router.post("/integrations/:provider/connect", handleConnectIntegration);
+        this.router.get("/integrations/oauth/callback/:provider", handleOAuthCallback);
+        this.router.delete("/integrations/:provider", handleDisconnectIntegration);
+
+        // Integration sync endpoints
+        this.router.post("/integrations/:provider/sync", handleTriggerSync);
+        this.router.get("/integrations/:provider/sync-history", handleGetSyncHistory);
+        this.router.get("/integrations/:provider/auto-sync", handleGetAutoSyncSettings);
+        this.router.put("/integrations/:provider/auto-sync", handleUpdateAutoSyncSettings);
+        this.router.post("/integrations/:provider/auto-sync/enable", handleEnableAutoSync);
+        this.router.post("/integrations/:provider/auto-sync/disable", handleDisableAutoSync);
     }
 }
 

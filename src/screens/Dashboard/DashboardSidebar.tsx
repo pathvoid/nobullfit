@@ -141,9 +141,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ currentPath: propCu
     // Determine which section should be expanded based on current path
     const foodNutritionPaths = ["/dashboard/food-database", "/dashboard/recipe-database"];
     const progressAnalyticsPaths = ["/dashboard/progress-tracking", "/dashboard/food-tracking", "/dashboard/tdee"];
+    const healthFitnessPaths = ["/dashboard/integrations"];
 
     const isFoodNutritionOpen = foodNutritionPaths.includes(currentPath);
     const isProgressAnalyticsOpen = progressAnalyticsPaths.includes(currentPath);
+    const isHealthFitnessOpen = healthFitnessPaths.includes(currentPath);
 
     return (
         <Sidebar>
@@ -164,7 +166,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ currentPath: propCu
                         <SidebarLabel>Recipe Database</SidebarLabel>
                     </SidebarItem>
                 </CollapsibleSidebarSection>
-                <CollapsibleSidebarSection title="Progress & Analytics" defaultOpen={isProgressAnalyticsOpen}>
+                <CollapsibleSidebarSection title="Health & Fitness Apps" defaultOpen={isHealthFitnessOpen} className="mb-2">
+                    <SidebarItem href="/dashboard/integrations" current={currentPath === "/dashboard/integrations"}>
+                        <SidebarLabel>Integrations</SidebarLabel>
+                    </SidebarItem>
+                </CollapsibleSidebarSection>
+                <CollapsibleSidebarSection title="Progress & Analytics" defaultOpen={isProgressAnalyticsOpen} className="mb-2">
                     <SidebarItem href="/dashboard/progress-tracking" current={currentPath === "/dashboard/progress-tracking"}>
                         <SidebarLabel>Progress Tracking</SidebarLabel>
                     </SidebarItem>

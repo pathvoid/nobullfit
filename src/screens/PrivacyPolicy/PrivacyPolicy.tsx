@@ -16,7 +16,7 @@ const PrivacyPolicy: React.FC = () => {
             <div className="py-16">
                 <Heading>Privacy Policy</Heading>
                 <div className="mt-8 space-y-4">
-                    <Text>Effective Date: 2026-01-18</Text>
+                    <Text>Effective Date: 2026-01-24</Text>
                     <Text>
                         At <Strong>NoBullFit</Strong>, your privacy is our top priority. As a <em>privacy-first</em> platform, we believe your data belongs to you — and we will <Strong>never</Strong> sell it. Ever.
                     </Text>
@@ -99,10 +99,33 @@ const PrivacyPolicy: React.FC = () => {
                             <Text>- <Strong>Paddle</Strong>: Payment processing for Pro subscriptions.</Text>
                             <Text>- <Strong>Amazon SES</Strong>: Email delivery for account notifications.</Text>
                             <Text>- <Strong>Cloudflare R2</Strong>: Secure storage for recipe images.</Text>
+                            <Text>- <Strong>Cloudflare Web Analytics</Strong>: Privacy-friendly website analytics that does not use cookies or track individuals.</Text>
                             <Text>- <Strong>Open Food Facts</Strong>: Food nutrition database (no user data shared).</Text>
                         </div>
                         <Text>
                             We only share the minimum data necessary with these services to provide our features, and we never share your health tracking data with any third party.
+                        </Text>
+                    </div>
+                    <div className="mt-10 space-y-4">
+                        <Heading level={2}>Health & Fitness App Integrations</Heading>
+                        <Text>
+                            NoBullFit allows you to connect third-party health and fitness apps to automatically sync your workout data. Currently supported integrations include:
+                        </Text>
+                        <div className="ml-4 space-y-2">
+                            <Text>- <Strong>Strava</Strong>: Import your running, cycling, and other workout activities.</Text>
+                        </div>
+                        <Text>
+                            When you connect a third-party app:
+                        </Text>
+                        <div className="ml-4 space-y-2">
+                            <Text>- You authorize NoBullFit to access specific data from that service (e.g., workout activities, duration, calories burned).</Text>
+                            <Text>- We securely store the authentication tokens required to sync your data. These tokens are encrypted at rest.</Text>
+                            <Text>- We only request the minimum permissions necessary to import your workout data.</Text>
+                            <Text>- Your imported data is stored in your NoBullFit account and is subject to this privacy policy.</Text>
+                            <Text>- You can disconnect any integration at any time from your settings. This revokes our access to that service.</Text>
+                        </div>
+                        <Text>
+                            We do not share your NoBullFit data back to these third-party services. The connection is one-way: we only import data from them to help you track your progress.
                         </Text>
                     </div>
                     <div className="mt-10 space-y-4">

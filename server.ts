@@ -8,6 +8,7 @@ import { ViteDevServer } from "vite";
 
 import api from "./server/app.js";
 import cookieParser from "cookie-parser";
+import { startAutoSyncScheduler, stopAutoSyncScheduler } from "./server/api/jobs/autoSyncWorker.js";
 
 dotenv.config();
 // Get directory name for ES modules (needed because __dirname doesn't exist in ES modules)
@@ -208,8 +209,22 @@ const createServer = async () => {
 // Start server (skip in test environment)
 if (!isTest) {
     createServer().then(({ app }) => {
-        app.listen(process.env.PORT || 3000, () => {
+        // Start auto-sync scheduler for Strava integration (runs every 12 hours)
+        const schedulerId = startAutoSyncScheduler(720);
+
+        const server = app.listen(process.env.PORT || 3000, () => {
             console.log(`Server running on http://localhost:${process.env.PORT || 3000}`);
+            console.log("[AutoSync] Scheduler started (interval: 12 hours)");
+        });
+
+        // Graceful shutdown
+        process.on("SIGTERM", () => {
+            console.log("SIGTERM received, shutting down gracefully...");
+            stopAutoSyncScheduler(schedulerId);
+            server.close(() => {
+                console.log("Server closed");
+                process.exit(0);
+            });
         });
     });
 }
