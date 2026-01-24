@@ -16,10 +16,10 @@
       "purpose": "any maskable"
     }
   ],
-  "theme_color": "#000000",
-  "background_color": "#000000",
+  "theme_color": "#18181b",
+  "background_color": "#18181b",
   "display": "standalone",
-  "start_url": "/",
+  "start_url": "https://nobull.fit/dashboard",
   "scope": "/",
   "orientation": "portrait-primary",
   "categories": ["fitness", "health", "food", "lifestyle"]
