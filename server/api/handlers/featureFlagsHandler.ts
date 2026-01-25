@@ -7,7 +7,7 @@ import {
     getEnabledFlags,
     getIntegrationFlags,
     getEnabledIntegrationProviders
-} from "../utils/featureFlagService";
+} from "../utils/featureFlagService.js";
 
 // Get all feature flags (public endpoint, cached)
 export async function handleGetFeatureFlags(req: Request, res: Response): Promise<void> {

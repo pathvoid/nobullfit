@@ -3,29 +3,29 @@ import type { Request, Response } from "express";
 import { handleGetIntegrations, handleDisconnectIntegration } from "./integrationsHandler";
 
 // Mock dependencies
-vi.mock("../../db/connection", () => ({
+vi.mock("../../db/connection.js", () => ({
     default: vi.fn()
 }));
 
-vi.mock("../utils/jwt", () => ({
+vi.mock("../utils/jwt.js", () => ({
     verifyToken: vi.fn(),
     generateToken: vi.fn()
 }));
 
-vi.mock("../utils/featureFlagService", () => ({
+vi.mock("../utils/featureFlagService.js", () => ({
     isIntegrationEnabled: vi.fn()
 }));
 
-vi.mock("../utils/integrationProviders", () => ({
+vi.mock("../utils/integrationProviders/index.js", () => ({
     getAllProviderConfigs: vi.fn(),
     getProviderConfig: vi.fn(),
     isValidProvider: vi.fn()
 }));
 
-import getPool from "../../db/connection";
-import { verifyToken } from "../utils/jwt";
-import { isIntegrationEnabled } from "../utils/featureFlagService";
-import { getAllProviderConfigs, isValidProvider } from "../utils/integrationProviders";
+import getPool from "../../db/connection.js";
+import { verifyToken } from "../utils/jwt.js";
+import { isIntegrationEnabled } from "../utils/featureFlagService.js";
+import { getAllProviderConfigs, isValidProvider } from "../utils/integrationProviders/index.js";
 
 describe("integrationsHandler", () => {
     let mockRequest: Partial<Request>;

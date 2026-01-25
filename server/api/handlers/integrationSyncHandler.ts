@@ -2,12 +2,12 @@
 // Manages sync operations and auto-sync settings
 
 import type { Request, Response } from "express";
-import getPool from "../../db/connection";
-import { verifyToken } from "../utils/jwt";
-import { decryptToken, encryptToken } from "../utils/encryptionService";
-import { isIntegrationEnabled } from "../utils/featureFlagService";
-import { isValidProvider, getProviderConfig } from "../utils/integrationProviders";
-import type { SyncResult, DataType } from "../utils/integrationProviders/types";
+import getPool from "../../db/connection.js";
+import { verifyToken } from "../utils/jwt.js";
+import { decryptToken, encryptToken } from "../utils/encryptionService.js";
+import { isIntegrationEnabled } from "../utils/featureFlagService.js";
+import { isValidProvider, getProviderConfig } from "../utils/integrationProviders/index.js";
+import type { SyncResult, DataType } from "../utils/integrationProviders/types.js";
 
 // Helper to get user ID from request
 async function getUserIdFromRequest(req: Request): Promise<number | null> {

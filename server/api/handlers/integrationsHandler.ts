@@ -3,16 +3,16 @@
 
 import type { Request, Response } from "express";
 import crypto from "crypto";
-import getPool from "../../db/connection";
-import { verifyToken, generateStateToken, verifyStateToken } from "../utils/jwt";
-import { encryptToken } from "../utils/encryptionService";
-import { isIntegrationEnabled } from "../utils/featureFlagService";
+import getPool from "../../db/connection.js";
+import { verifyToken, generateStateToken, verifyStateToken } from "../utils/jwt.js";
+import { encryptToken } from "../utils/encryptionService.js";
+import { isIntegrationEnabled } from "../utils/featureFlagService.js";
 import {
     getAllProviderConfigs,
     getProviderConfig,
     isValidProvider
-} from "../utils/integrationProviders";
-import type { IntegrationInfo, ConnectionStatus } from "../utils/integrationProviders/types";
+} from "../utils/integrationProviders/index.js";
+import type { IntegrationInfo, ConnectionStatus } from "../utils/integrationProviders/types.js";
 
 const APP_URL = process.env.APP_URL || "http://localhost:3000";
 
