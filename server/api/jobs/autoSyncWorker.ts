@@ -1,12 +1,12 @@
 // Auto-sync worker for background synchronization
 // Runs periodically to sync data for Pro users with auto-sync enabled
 
-import getPool from "../../db/connection";
-import { decryptToken, encryptToken } from "../utils/encryptionService";
-import { isIntegrationEnabled } from "../utils/featureFlagService";
-import { getProviderConfig } from "../utils/integrationProviders";
-import { sendAutoSyncFailureEmail } from "../utils/emailService";
-import { refreshStravaToken } from "../handlers/integrationSyncHandler";
+import getPool from "../../db/connection.js";
+import { decryptToken, encryptToken } from "../utils/encryptionService.js";
+import { isIntegrationEnabled } from "../utils/featureFlagService.js";
+import { getProviderConfig } from "../utils/integrationProviders/index.js";
+import { sendAutoSyncFailureEmail } from "../utils/emailService.js";
+import { refreshStravaToken } from "../handlers/integrationSyncHandler.js";
 
 // Maximum consecutive failures before disabling auto-sync
 const MAX_CONSECUTIVE_FAILURES = 3;

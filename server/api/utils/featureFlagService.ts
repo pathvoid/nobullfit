@@ -1,7 +1,7 @@
 // Feature flag service - provides cached access to feature flags
 // Caches flags in memory with a TTL to reduce database queries
 
-import getPool from "../../db/connection";
+import getPool from "../../db/connection.js";
 
 export interface FeatureFlag {
     id: number;
