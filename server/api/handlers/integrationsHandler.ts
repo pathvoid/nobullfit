@@ -130,7 +130,7 @@ export async function handleGetIntegration(req: Request, res: Response): Promise
             return;
         }
 
-        const { provider } = req.params;
+        const provider = req.params.provider as string;
 
         if (!isValidProvider(provider)) {
             res.status(400).json({ error: "Invalid provider" });
@@ -217,7 +217,7 @@ export async function handleConnectIntegration(req: Request, res: Response): Pro
             return;
         }
 
-        const { provider } = req.params;
+        const provider = req.params.provider as string;
 
         if (!isValidProvider(provider)) {
             res.status(400).json({ error: "Invalid provider" });
@@ -313,7 +313,7 @@ export async function handleConnectIntegration(req: Request, res: Response): Pro
 // OAuth callback handler
 export async function handleOAuthCallback(req: Request, res: Response): Promise<void> {
     try {
-        const { provider } = req.params;
+        const provider = req.params.provider as string;
         const { code, state, error: oauthError } = req.query;
 
         if (oauthError) {
@@ -412,7 +412,7 @@ export async function handleOAuthCallback(req: Request, res: Response): Promise<
         res.redirect(`${APP_URL}/dashboard/integrations?connected=${provider}`);
     } catch (error) {
         console.error("Error in OAuth callback:", error);
-        const { provider } = req.params;
+        const provider = req.params.provider as string;
         res.redirect(`${APP_URL}/dashboard/integrations?error=callback_error&provider=${provider}`);
     }
 }
@@ -426,7 +426,7 @@ export async function handleDisconnectIntegration(req: Request, res: Response): 
             return;
         }
 
-        const { provider } = req.params;
+        const provider = req.params.provider as string;
 
         if (!isValidProvider(provider)) {
             res.status(400).json({ error: "Invalid provider" });

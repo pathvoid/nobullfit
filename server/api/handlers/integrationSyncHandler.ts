@@ -48,7 +48,7 @@ export async function handleTriggerSync(req: Request, res: Response): Promise<vo
             return;
         }
 
-        const { provider } = req.params;
+        const provider = req.params.provider as string;
 
         if (!isValidProvider(provider)) {
             res.status(400).json({ error: "Invalid provider" });
@@ -222,7 +222,7 @@ export async function handleGetSyncHistory(req: Request, res: Response): Promise
             return;
         }
 
-        const { provider } = req.params;
+        const provider = req.params.provider as string;
         const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
         const offset = parseInt(req.query.offset as string) || 0;
 
@@ -290,7 +290,7 @@ export async function handleGetAutoSyncSettings(req: Request, res: Response): Pr
             return;
         }
 
-        const { provider } = req.params;
+        const provider = req.params.provider as string;
 
         if (!isValidProvider(provider)) {
             res.status(400).json({ error: "Invalid provider" });
@@ -356,7 +356,7 @@ export async function handleUpdateAutoSyncSettings(req: Request, res: Response):
             return;
         }
 
-        const { provider } = req.params;
+        const provider = req.params.provider as string;
 
         if (!isValidProvider(provider)) {
             res.status(400).json({ error: "Invalid provider" });
