@@ -406,7 +406,7 @@ const Integrations: React.FC = () => {
         <SidebarLayout
             navbar={
                 <Navbar>
-                    <Logo />
+                    <Logo href="/dashboard" />
                     <NavbarSpacer />
                     <NavbarSection>
                         <UserDropdown />

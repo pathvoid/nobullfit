@@ -447,7 +447,7 @@ const GroceryLists: React.FC = () => {
         <SidebarLayout
             navbar={
                 <Navbar>
-                    <Logo className="text-zinc-950 dark:text-white forced-colors:text-[CanvasText]" />
+                    <Logo href="/dashboard" className="text-zinc-950 dark:text-white forced-colors:text-[CanvasText]" />
                     <NavbarSpacer />
                     <NavbarSection>
                         <UserDropdown />
