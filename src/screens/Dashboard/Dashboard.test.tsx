@@ -12,6 +12,12 @@ vi.mock("@hooks/useHelmet", () => ({
     })
 }));
 
+// Mock usePWAInstallPrompt hook
+vi.mock("@hooks/usePWAInstallPrompt", () => ({
+    default: () => {},
+    usePWAInstallPrompt: () => {}
+}));
+
 // Mock MaintenanceBanner to prevent fetch interference
 vi.mock("@components/maintenance-banner", () => ({
     MaintenanceBanner: () => null

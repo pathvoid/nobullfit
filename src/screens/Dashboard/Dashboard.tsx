@@ -1,4 +1,5 @@
 import useHelmet from "@hooks/useHelmet";
+import usePWAInstallPrompt from "@hooks/usePWAInstallPrompt";
 import { useLoaderData, useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { SidebarLayout } from "@components/sidebar-layout";
@@ -142,6 +143,9 @@ const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const helmet = useHelmet();
     const { user, isLoading } = useAuth();
+
+    // Show PWA install prompt on mobile (first visit only)
+    usePWAInstallPrompt();
 
     // Check if user is Pro
     const isProUser = loaderData.user?.subscribed === true;
