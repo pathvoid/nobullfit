@@ -56,8 +56,8 @@ export function StackedLayout({
   // Swipe handler for mobile - opens sidebar when swiping right from left edge
   const swipeHandlers = useSwipeable({
     onSwipedRight: (eventData) => {
-      // Only open if swipe started near the left edge (within 20px) and sidebar is closed
-      if (!showSidebar && eventData.initial[0] < 20) {
+      // Only open if swipe started near the left edge (within 50px) and sidebar is closed
+      if (!showSidebar && eventData.initial[0] < 50) {
         setShowSidebar(true);
       }
     },
