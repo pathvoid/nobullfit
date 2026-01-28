@@ -495,8 +495,8 @@ function mapStravaActivityType(stravaType: string): string {
     return typeMap[stravaType] || stravaType;
 }
 
-// Perform actual sync with Strava
-async function performSync(
+// Perform actual sync with Strava (exported for initial sync on OAuth connect)
+export async function performSync(
     provider: string,
     accessToken: string,
     dataTypes: DataType[],

@@ -9,8 +9,6 @@ import { Text } from "@components/text";
 import { Button } from "@components/button";
 import { Dialog, DialogTitle, DialogDescription, DialogBody, DialogActions } from "@components/dialog";
 import { Badge } from "@components/badge";
-import { Switch, SwitchField } from "@components/switch";
-import { Label, Description } from "@components/fieldset";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { useAuth } from "@core/contexts/AuthContext";
 import { toast } from "sonner";
@@ -43,13 +41,6 @@ interface IntegrationsResponse {
     anyEnabled: boolean;
 }
 
-interface AutoSyncSettings {
-    isEnabled: boolean;
-    frequencyMinutes: number;
-    dataTypes: string[];
-    consecutiveFailures: number;
-    disabledDueToFailure: boolean;
-}
 
 const Integrations: React.FC = () => {
     const loaderData = useLoaderData() as { title?: string; meta?: unknown[]; user?: { subscribed?: boolean } } | undefined;
@@ -59,17 +50,13 @@ const Integrations: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     const [integrations, setIntegrations] = useState<IntegrationsResponse | null>(null);
-    const [autoSyncSettings, setAutoSyncSettings] = useState<Record<string, AutoSyncSettings>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [syncingProvider, setSyncingProvider] = useState<string | null>(null);
     const [disconnectDialog, setDisconnectDialog] = useState<{ open: boolean; provider: string; name: string }>({
         open: false,
         provider: "",
         name: ""
     });
-
-    const isPro = loaderData?.user?.subscribed === true;
 
     // Set helmet values
     if (loaderData?.title) {
@@ -128,34 +115,13 @@ const Integrations: React.FC = () => {
 
             const data: IntegrationsResponse = await response.json();
             setIntegrations(data);
-
-            // Fetch auto-sync settings for connected integrations (Pro users only)
-            if (isPro) {
-                const connectedProviders = data.integrations.filter(i => i.isConnected && i.connectionStatus === "active");
-                const settingsMap: Record<string, AutoSyncSettings> = {};
-
-                for (const integration of connectedProviders) {
-                    try {
-                        const settingsResponse = await fetch(`/api/integrations/${integration.provider}/auto-sync`, {
-                            credentials: "include"
-                        });
-                        if (settingsResponse.ok) {
-                            settingsMap[integration.provider] = await settingsResponse.json();
-                        }
-                    } catch {
-                        // Ignore errors fetching auto-sync settings
-                    }
-                }
-
-                setAutoSyncSettings(settingsMap);
-            }
         } catch (err) {
             console.error("Error fetching integrations:", err);
             setError(err instanceof Error ? err.message : "Unknown error");
         } finally {
             setIsLoading(false);
         }
-    }, [isPro]);
+    }, []);
 
     useEffect(() => {
         if (user) {
@@ -206,64 +172,6 @@ const Integrations: React.FC = () => {
         }
     };
 
-    // Handle sync
-    const handleSync = async (provider: string) => {
-        try {
-            setSyncingProvider(provider);
-
-            const response = await fetch(`/api/integrations/${provider}/sync`, {
-                method: "POST",
-                credentials: "include"
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || "Sync failed");
-            }
-
-            const data = await response.json();
-            if (data.success) {
-                toast.success(`Synced ${data.recordsImported} activities from Strava`);
-            } else {
-                toast.error(data.error || "Sync completed with errors");
-            }
-            fetchIntegrations();
-        } catch (err) {
-            console.error("Error syncing:", err);
-            toast.error(err instanceof Error ? err.message : "Sync failed");
-        } finally {
-            setSyncingProvider(null);
-        }
-    };
-
-    // Handle auto-sync toggle (Pro only)
-    const handleAutoSyncToggle = async (provider: string, enabled: boolean) => {
-        try {
-            const response = await fetch(`/api/integrations/${provider}/auto-sync`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ isEnabled: enabled })
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || "Failed to update auto-sync");
-            }
-
-            toast.success(enabled ? "Auto-sync enabled" : "Auto-sync disabled");
-
-            // Update local state
-            setAutoSyncSettings(prev => ({
-                ...prev,
-                [provider]: { ...prev[provider], isEnabled: enabled }
-            }));
-        } catch (err) {
-            console.error("Error updating auto-sync:", err);
-            toast.error(err instanceof Error ? err.message : "Failed to update");
-        }
-    };
-
     // Format last sync time
     const formatLastSync = (dateStr?: string) => {
         if (!dateStr) return "Never synced";
@@ -303,8 +211,6 @@ const Integrations: React.FC = () => {
 
     // Render integration card
     const renderIntegrationCard = (integration: IntegrationInfo) => {
-        const autoSync = autoSyncSettings[integration.provider];
-
         return (
             <div
                 key={integration.provider}
@@ -351,53 +257,21 @@ const Integrations: React.FC = () => {
                             />
                         </button>
                     ) : (
-                        <>
-                            <Button
-                                onClick={() => handleSync(integration.provider)}
-                                disabled={syncingProvider === integration.provider}
-                            >
-                                <RefreshCw
-                                    className={`size-4 ${syncingProvider === integration.provider ? "animate-spin" : ""}`}
-                                    data-slot="icon"
-                                />
-                                {syncingProvider === integration.provider ? "Syncing..." : "Sync Now"}
-                            </Button>
-                            <Button
-                                plain
-                                onClick={() =>
-                                    setDisconnectDialog({
-                                        open: true,
-                                        provider: integration.provider,
-                                        name: integration.providerName
-                                    })
-                                }
-                            >
-                                <Unlink className="size-4" data-slot="icon" />
-                                Disconnect
-                            </Button>
-                        </>
+                        <Button
+                            plain
+                            onClick={() =>
+                                setDisconnectDialog({
+                                    open: true,
+                                    provider: integration.provider,
+                                    name: integration.providerName
+                                })
+                            }
+                        >
+                            <Unlink className="size-4" data-slot="icon" />
+                            Disconnect
+                        </Button>
                     )}
                 </div>
-
-                {/* Auto-sync toggle for Pro users */}
-                {isPro && integration.isConnected && integration.connectionStatus === "active" && (
-                    <div className="mt-4 border-t border-zinc-200 pt-4 dark:border-zinc-700">
-                        <SwitchField>
-                            <Label>Auto-sync (every 12 hours)</Label>
-                            <Description>Automatically sync activities in the background</Description>
-                            <Switch
-                                name={`auto-sync-${integration.provider}`}
-                                checked={autoSync?.isEnabled ?? false}
-                                onChange={(checked) => handleAutoSyncToggle(integration.provider, checked)}
-                            />
-                        </SwitchField>
-                        {autoSync?.disabledDueToFailure && (
-                            <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                                Auto-sync was disabled due to repeated failures. Re-enable to try again.
-                            </p>
-                        )}
-                    </div>
-                )}
             </div>
         );
     };

@@ -8,7 +8,6 @@ import { ViteDevServer } from "vite";
 
 import api from "./server/app.js";
 import cookieParser from "cookie-parser";
-import { startAutoSyncScheduler, stopAutoSyncScheduler } from "./server/api/jobs/autoSyncWorker.js";
 import { startWebhookEventScheduler, stopWebhookEventScheduler } from "./server/api/jobs/webhookEventProcessor.js";
 import { ensureWebhookSubscription } from "./server/api/handlers/stravaWebhookHandler.js";
 
@@ -211,15 +210,11 @@ const createServer = async () => {
 // Start server (skip in test environment)
 if (!isTest) {
     createServer().then(async ({ app }) => {
-        // Start auto-sync scheduler for Strava integration (runs every 12 hours)
-        const autoSyncSchedulerId = startAutoSyncScheduler(720);
-
         // Start webhook event processor (runs every 30 seconds)
         const webhookProcessorId = startWebhookEventScheduler(30);
 
         const server = app.listen(process.env.PORT || 3000, async () => {
             console.log(`Server running on http://localhost:${process.env.PORT || 3000}`);
-            console.log("[AutoSync] Scheduler started (interval: 12 hours)");
             console.log("[WebhookProcessor] Scheduler started (interval: 30 seconds)");
 
             // Auto-setup Strava webhook subscription in production
@@ -235,7 +230,6 @@ if (!isTest) {
         // Graceful shutdown
         process.on("SIGTERM", () => {
             console.log("SIGTERM received, shutting down gracefully...");
-            stopAutoSyncScheduler(autoSyncSchedulerId);
             stopWebhookEventScheduler(webhookProcessorId);
             server.close(() => {
                 console.log("Server closed");

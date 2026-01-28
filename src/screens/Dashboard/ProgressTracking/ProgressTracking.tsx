@@ -1008,11 +1008,71 @@ const ProgressTracking: React.FC = () => {
                                                 {Object.keys(activityData).map((key) => {
                                                     const value = activityData[key];
                                                     if (value === null || value === undefined || value === "") return null;
-                                                    
+
+                                                    // Hide internal Strava fields from display
+                                                    const hiddenStravaFields = ["source", "strava_id", "sport_type", "average_speed_mps", "max_speed_mps"];
+                                                    if (hiddenStravaFields.includes(key)) return null;
+
+                                                    // Format Strava-specific fields with proper labels and units
+                                                    const stravaFieldFormatters: Record<string, { label: string; format: (v: unknown) => string }> = {
+                                                        distance_meters: {
+                                                            label: "Distance",
+                                                            format: (v) => `${((v as number) / 1000).toFixed(2)} km`
+                                                        },
+                                                        moving_time_seconds: {
+                                                            label: "Duration",
+                                                            format: (v) => {
+                                                                const secs = v as number;
+                                                                const hours = Math.floor(secs / 3600);
+                                                                const minutes = Math.floor((secs % 3600) / 60);
+                                                                const seconds = secs % 60;
+                                                                if (hours > 0) {
+                                                                    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+                                                                }
+                                                                return `${minutes}:${String(seconds).padStart(2, "0")}`;
+                                                            }
+                                                        },
+                                                        elapsed_time_seconds: {
+                                                            label: "Elapsed Time",
+                                                            format: (v) => {
+                                                                const secs = v as number;
+                                                                const hours = Math.floor(secs / 3600);
+                                                                const minutes = Math.floor((secs % 3600) / 60);
+                                                                const seconds = secs % 60;
+                                                                if (hours > 0) {
+                                                                    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+                                                                }
+                                                                return `${minutes}:${String(seconds).padStart(2, "0")}`;
+                                                            }
+                                                        },
+                                                        elevation_gain_meters: {
+                                                            label: "Elevation Gain",
+                                                            format: (v) => `${(v as number).toFixed(0)} m`
+                                                        },
+                                                        average_heartrate: {
+                                                            label: "Avg Heart Rate",
+                                                            format: (v) => `${(v as number).toFixed(0)} bpm`
+                                                        },
+                                                        max_heartrate: {
+                                                            label: "Max Heart Rate",
+                                                            format: (v) => `${(v as number).toFixed(0)} bpm`
+                                                        }
+                                                    };
+
+                                                    // Check if it's a Strava field that needs special formatting
+                                                    const stravaFormatter = stravaFieldFormatters[key];
+                                                    if (stravaFormatter) {
+                                                        return (
+                                                            <Text key={key} className="text-sm text-zinc-600 dark:text-zinc-400">
+                                                                {stravaFormatter.label}: {stravaFormatter.format(value)}
+                                                            </Text>
+                                                        );
+                                                    }
+
                                                     const field = config?.fields.find(f => f.key === key);
                                                     const label = field?.label || key;
                                                     const unit = field?.unit || "";
-                                                    
+
                                                     return (
                                                         <Text key={key} className="text-sm text-zinc-600 dark:text-zinc-400">
                                                             {label}: {String(value)} {unit}
@@ -1072,42 +1132,48 @@ const ProgressTracking: React.FC = () => {
                 </DialogDescription>
                 <DialogBody>
                     <div className="space-y-6">
-                        {/* Quick Add Section */}
-                        {recentActivities.length > 0 && (
-                            <div className="border-b border-zinc-950/10 pb-6 dark:border-white/10">
-                                <Field>
-                                    <FieldLabel>Quick Add (Previously Logged)</FieldLabel>
-                                    <Select
-                                        value={quickAddActivity ? `${quickAddActivity.activity_type}:${quickAddActivity.activity_name}` : ""}
-                                        onChange={(e) => {
-                                            if (e.target.value) {
-                                                const [type, name] = e.target.value.split(":");
-                                                const activity = recentActivities.find(
-                                                    a => a.activity_type === type && a.activity_name === name
-                                                );
-                                                if (activity) {
-                                                    handleQuickAddSelect(activity);
+                        {/* Quick Add Section - filter out Strava-imported activities */}
+                        {(() => {
+                            const manualActivities = recentActivities.filter(
+                                a => a.activity_data?.source !== "strava"
+                            );
+                            if (manualActivities.length === 0) return null;
+                            return (
+                                <div className="border-b border-zinc-950/10 pb-6 dark:border-white/10">
+                                    <Field>
+                                        <FieldLabel>Quick Add (Previously Logged)</FieldLabel>
+                                        <Select
+                                            value={quickAddActivity ? `${quickAddActivity.activity_type}:${quickAddActivity.activity_name}` : ""}
+                                            onChange={(e) => {
+                                                if (e.target.value) {
+                                                    const [type, name] = e.target.value.split(":");
+                                                    const activity = manualActivities.find(
+                                                        a => a.activity_type === type && a.activity_name === name
+                                                    );
+                                                    if (activity) {
+                                                        handleQuickAddSelect(activity);
+                                                    }
+                                                } else {
+                                                    setUseQuickAdd(false);
+                                                    setQuickAddActivity(null);
                                                 }
-                                            } else {
-                                                setUseQuickAdd(false);
-                                                setQuickAddActivity(null);
-                                            }
-                                        }}
-                                        disabled={isSaving}
-                                    >
-                                        <option value="">Select a previous activity...</option>
-                                        {recentActivities.map((activity, index) => (
-                                            <option key={index} value={`${activity.activity_type}:${activity.activity_name}`}>
-                                                {activity.activity_name} ({getActivityTypeConfig(activity.activity_type)?.label || activity.activity_type})
-                                            </option>
-                                        ))}
-                                    </Select>
-                                    <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                                        Quickly re-add an activity you've logged before.
-                                    </Text>
-                                </Field>
-                            </div>
-                        )}
+                                            }}
+                                            disabled={isSaving}
+                                        >
+                                            <option value="">Select a previous activity...</option>
+                                            {manualActivities.map((activity, index) => (
+                                                <option key={index} value={`${activity.activity_type}:${activity.activity_name}`}>
+                                                    {activity.activity_name} ({getActivityTypeConfig(activity.activity_type)?.label || activity.activity_type})
+                                                </option>
+                                            ))}
+                                        </Select>
+                                        <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                                            Quickly re-add an activity you've logged before.
+                                        </Text>
+                                    </Field>
+                                </div>
+                            );
+                        })()}
 
                         {/* Activity Type */}
                         <Field>

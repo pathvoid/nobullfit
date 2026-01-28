@@ -13,7 +13,8 @@ import {
     getProviderConfig,
     isValidProvider
 } from "../utils/integrationProviders/index.js";
-import type { IntegrationInfo, ConnectionStatus } from "../utils/integrationProviders/types.js";
+import type { IntegrationInfo, ConnectionStatus, DataType } from "../utils/integrationProviders/types.js";
+import { performSync } from "./integrationSyncHandler.js";
 
 const APP_URL = process.env.APP_URL || "http://localhost:3000";
 
@@ -316,12 +317,14 @@ export async function handleConnectIntegration(req: Request, res: Response): Pro
 
 // OAuth callback handler
 export async function handleOAuthCallback(req: Request, res: Response): Promise<void> {
+    const provider = req.params.provider as string;
+    let tokenData: { accessToken: string; refreshToken?: string; expiresAt?: Date; scopes?: string[] } | null = null;
+
     try {
-        const provider = req.params.provider as string;
         const { code, state, error: oauthError } = req.query;
 
         if (oauthError) {
-            // OAuth error from provider
+            // OAuth error from provider (user clicked Cancel on Strava)
             res.redirect(`${APP_URL}/dashboard/integrations?error=oauth_denied&provider=${provider}`);
             return;
         }
@@ -364,7 +367,7 @@ export async function handleOAuthCallback(req: Request, res: Response): Promise<
 
         // Exchange code for tokens
         const redirectUri = `${APP_URL}/api/integrations/oauth/callback/${provider}`;
-        const tokenData = await exchangeCodeForTokens(provider, code as string, redirectUri);
+        tokenData = await exchangeCodeForTokens(provider, code as string, redirectUri);
 
         if (!tokenData) {
             res.redirect(`${APP_URL}/dashboard/integrations?error=token_exchange_failed&provider=${provider}`);
@@ -373,6 +376,10 @@ export async function handleOAuthCallback(req: Request, res: Response): Promise<
 
         const pool = await getPool();
         if (!pool) {
+            // Deauthorize since we got tokens but can't save them
+            if (provider === "strava") {
+                await deauthorizeStrava(tokenData.accessToken);
+            }
             res.redirect(`${APP_URL}/dashboard/integrations?error=database_error&provider=${provider}`);
             return;
         }
@@ -413,10 +420,34 @@ export async function handleOAuthCallback(req: Request, res: Response): Promise<
             ]
         );
 
+        // Perform initial sync in the background (don't block the redirect)
+        const dataTypes = config.supportedDataTypes as DataType[];
+        performSync(provider, tokenData.accessToken, dataTypes, userId)
+            .then(result => {
+                if (result.success) {
+                    console.log(`[Initial Sync] Successfully synced ${result.recordsImported} activities for user ${userId}`);
+                } else {
+                    console.warn(`[Initial Sync] Sync failed for user ${userId}: ${result.error}`);
+                }
+            })
+            .catch(err => {
+                console.error(`[Initial Sync] Error for user ${userId}:`, err);
+            });
+
         res.redirect(`${APP_URL}/dashboard/integrations?connected=${provider}`);
     } catch (error) {
         console.error("Error in OAuth callback:", error);
-        const provider = req.params.provider as string;
+
+        // If we received tokens but failed to save, deauthorize on Strava's side
+        if (tokenData && provider === "strava") {
+            try {
+                await deauthorizeStrava(tokenData.accessToken);
+                console.log("[OAuth Callback] Deauthorized Strava after callback failure");
+            } catch (deauthError) {
+                console.error("[OAuth Callback] Failed to deauthorize Strava:", deauthError);
+            }
+        }
+
         res.redirect(`${APP_URL}/dashboard/integrations?error=callback_error&provider=${provider}`);
     }
 }
