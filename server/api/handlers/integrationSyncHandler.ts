@@ -530,7 +530,9 @@ async function performSync(
 
         // Sync workouts from Strava
         if (dataTypes.includes("workouts")) {
+            console.log(`[Strava Sync] Fetching activities for user ${userId}...`);
             const activities = await fetchStravaActivities(accessToken);
+            console.log(`[Strava Sync] Fetched ${activities?.length ?? 0} activities from Strava API`);
 
             if (activities && activities.length > 0) {
                 // Get existing strava_activity_ids to avoid duplicates
@@ -543,9 +545,11 @@ async function performSync(
                     existingResult.rows.map(r => r.strava_activity_id?.toString())
                 );
 
+                let skippedDuplicates = 0;
                 for (const activity of activities) {
                     // Skip if already imported
                     if (existingIds.has(activity.id.toString())) {
+                        skippedDuplicates++;
                         continue;
                     }
 
@@ -554,6 +558,7 @@ async function performSync(
                         recordsImported++;
                     }
                 }
+                console.log(`[Strava Sync] Imported ${recordsImported} new activities, skipped ${skippedDuplicates} duplicates`)
 
                 syncedTypes.push("workouts");
             }
@@ -624,11 +629,16 @@ async function fetchStravaActivities(accessToken: string): Promise<StravaActivit
 
     if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Strava API error (${response.status}):`, errorText);
+        console.error(`[Strava Sync] API error (${response.status}):`, errorText);
         throw new Error(`Strava API returned ${response.status}: ${errorText}`);
     }
 
-    return await response.json();
+    const activities = await response.json();
+    console.log(`[Strava Sync] API returned ${activities.length} activities`);
+    if (activities.length > 0) {
+        console.log(`[Strava Sync] First activity: ${activities[0].name} (${activities[0].type}) on ${activities[0].start_date_local}`);
+    }
+    return activities;
 }
 
 // Import a single Strava activity to progress_tracking

@@ -217,15 +217,19 @@ if (!isTest) {
         // Start webhook event processor (runs every 30 seconds)
         const webhookProcessorId = startWebhookEventScheduler(30);
 
-        // Auto-setup Strava webhook subscription in production
-        if (isProd) {
-            await ensureWebhookSubscription();
-        }
-
-        const server = app.listen(process.env.PORT || 3000, () => {
+        const server = app.listen(process.env.PORT || 3000, async () => {
             console.log(`Server running on http://localhost:${process.env.PORT || 3000}`);
             console.log("[AutoSync] Scheduler started (interval: 12 hours)");
             console.log("[WebhookProcessor] Scheduler started (interval: 30 seconds)");
+
+            // Auto-setup Strava webhook subscription in production
+            // Must run AFTER server is listening so Strava's validation callback can reach us
+            if (isProd) {
+                // Small delay to ensure server is fully ready
+                setTimeout(async () => {
+                    await ensureWebhookSubscription();
+                }, 2000);
+            }
         });
 
         // Graceful shutdown
