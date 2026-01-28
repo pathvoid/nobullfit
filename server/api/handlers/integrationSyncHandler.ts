@@ -472,27 +472,50 @@ interface StravaActivity {
     max_speed?: number;
 }
 
-// Map Strava activity types to our activity types
+// Map Strava activity types to our activity types (must match ActivityType in activityTypes.ts)
 function mapStravaActivityType(stravaType: string): string {
     const typeMap: Record<string, string> = {
-        Run: "Running",
-        Ride: "Cycling",
-        Swim: "Swimming",
-        Walk: "Walking",
-        Hike: "Hiking",
-        WeightTraining: "Weight Training",
-        Workout: "Workout",
-        Yoga: "Yoga",
-        Crossfit: "CrossFit",
-        Elliptical: "Elliptical",
-        StairStepper: "Stair Climbing",
-        Rowing: "Rowing",
-        Golf: "Golf",
-        Tennis: "Tennis",
-        Soccer: "Soccer",
-        Basketball: "Basketball"
+        // Cardio activities
+        Run: "running",
+        Ride: "cycling",
+        Swim: "swimming",
+        Walk: "walking",
+        Hike: "walking",
+        VirtualRun: "running",
+        VirtualRide: "cycling",
+        // Strength/gym activities
+        WeightTraining: "weightlifting",
+        Workout: "cardio",
+        Crossfit: "hiit",
+        // Mind/body activities
+        Yoga: "yoga",
+        Pilates: "pilates",
+        // Cardio machines
+        Elliptical: "cardio",
+        StairStepper: "cardio",
+        Rowing: "cardio",
+        // Sports
+        Golf: "sports",
+        Tennis: "sports",
+        Soccer: "sports",
+        Basketball: "sports",
+        Badminton: "sports",
+        Squash: "sports",
+        Pickleball: "sports",
+        TableTennis: "sports",
+        RacquetSports: "sports",
+        // Other activities map to "other"
+        Skateboard: "other",
+        Snowboard: "other",
+        Ski: "other",
+        Surfing: "other",
+        Kitesurf: "other",
+        Windsurf: "other",
+        RockClimbing: "other",
+        IceSkate: "other",
+        InlineSkate: "other"
     };
-    return typeMap[stravaType] || stravaType;
+    return typeMap[stravaType] || "other";
 }
 
 // Perform actual sync with Strava (exported for initial sync on OAuth connect)
