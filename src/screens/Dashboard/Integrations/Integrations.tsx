@@ -12,7 +12,7 @@ import { Badge } from "@components/badge";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { useAuth } from "@core/contexts/AuthContext";
 import { toast } from "sonner";
-import { RefreshCw, Unlink, Clock, AlertCircle, CheckCircle2 } from "lucide-react";
+import { RefreshCw, Unlink, AlertCircle, CheckCircle2 } from "lucide-react";
 
 // Integration info from API
 interface IntegrationInfo {
@@ -172,23 +172,6 @@ const Integrations: React.FC = () => {
         }
     };
 
-    // Format last sync time
-    const formatLastSync = (dateStr?: string) => {
-        if (!dateStr) return "Never synced";
-        const date = new Date(dateStr);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-
-        if (diffMins < 1) return "Just now";
-        if (diffMins < 60) return `${diffMins} min ago`;
-        if (diffHours < 24) return `${diffHours} hr ago`;
-        if (diffDays < 7) return `${diffDays} days ago`;
-        return date.toLocaleDateString();
-    };
-
     // Get status badge
     const getStatusBadge = (integration: IntegrationInfo) => {
         if (!integration.isConnected) {
@@ -228,18 +211,10 @@ const Integrations: React.FC = () => {
                     </p>
                 </div>
 
-                {integration.isConnected && (
-                    <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-                        <div className="flex items-center gap-1.5">
-                            <Clock className="size-4" />
-                            <span>Last sync: {formatLastSync(integration.lastSyncAt)}</span>
-                        </div>
-                        {integration.providerUserId && (
-                            <div className="flex items-center gap-1.5">
-                                <CheckCircle2 className="size-4 text-green-500" />
-                                <span>ID: {integration.providerUserId}</span>
-                            </div>
-                        )}
+                {integration.isConnected && integration.providerUserId && (
+                    <div className="mt-4 flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400">
+                        <CheckCircle2 className="size-4 text-green-500" />
+                        <span>Strava ID: {integration.providerUserId}</span>
                     </div>
                 )}
 
