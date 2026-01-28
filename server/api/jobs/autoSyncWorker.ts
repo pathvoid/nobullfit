@@ -7,6 +7,7 @@ import { isIntegrationEnabled } from "../utils/featureFlagService.js";
 import { getProviderConfig } from "../utils/integrationProviders/index.js";
 import { sendAutoSyncFailureEmail } from "../utils/emailService.js";
 import { refreshStravaToken } from "../handlers/integrationSyncHandler.js";
+import { stravaFetch, canMakeReadRequest, getRetryAfterMs } from "../utils/stravaRateLimitService.js";
 
 // Maximum consecutive failures before disabling auto-sync
 const MAX_CONSECUTIVE_FAILURES = 3;
@@ -121,7 +122,7 @@ async function processAutoSyncJob(pool: import("pg").Pool, job: AutoSyncJob): Pr
             }
 
             const refreshToken = decryptToken(job.refreshTokenEncrypted);
-            const newTokens = await refreshStravaToken(job.userId, refreshToken);
+            const newTokens = await refreshStravaToken(refreshToken);
 
             if (!newTokens) {
                 throw new Error("Failed to refresh access token");
@@ -337,6 +338,18 @@ async function performStravaSync(
 ): Promise<{ success: boolean; recordsImported: number; dataTypesSynced: string[]; error?: string }> {
     console.log(`[AutoSync] Performing Strava sync for user ${userId} with types: ${dataTypes.join(", ")}`);
 
+    // Check rate limits before making request
+    if (!canMakeReadRequest()) {
+        const retryAfter = getRetryAfterMs();
+        console.log(`[AutoSync] Rate limit approaching, skipping sync for user ${userId}. Retry after ${Math.ceil(retryAfter / 1000)}s`);
+        return {
+            success: false,
+            recordsImported: 0,
+            dataTypesSynced: [],
+            error: `Rate limit approaching. Retry after ${Math.ceil(retryAfter / 1000)} seconds.`
+        };
+    }
+
     try {
         let recordsImported = 0;
         const syncedTypes: string[] = [];
@@ -345,7 +358,7 @@ async function performStravaSync(
             // Fetch last 30 days of activities
             const thirtyDaysAgo = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
 
-            const response = await fetch(
+            const response = await stravaFetch(
                 `https://www.strava.com/api/v3/athlete/activities?per_page=100&after=${thirtyDaysAgo}`,
                 { headers: { Authorization: `Bearer ${accessToken}` } }
             );

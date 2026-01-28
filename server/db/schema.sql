@@ -375,3 +375,25 @@ CREATE INDEX IF NOT EXISTS idx_integration_sync_history_provider ON integration_
 CREATE INDEX IF NOT EXISTS idx_integration_sync_history_created ON integration_sync_history(created_at);
 CREATE INDEX IF NOT EXISTS idx_integration_sync_history_user_provider ON integration_sync_history(user_id, provider);
 
+-- Strava webhook events queue table - stores incoming webhook events for async processing
+CREATE TABLE IF NOT EXISTS strava_webhook_events (
+    id SERIAL PRIMARY KEY,
+    object_type VARCHAR(20) NOT NULL,
+    object_id BIGINT NOT NULL,
+    aspect_type VARCHAR(20) NOT NULL,
+    owner_id BIGINT NOT NULL,
+    subscription_id INTEGER NOT NULL,
+    event_time TIMESTAMP NOT NULL,
+    updates JSONB,
+    processed BOOLEAN NOT NULL DEFAULT false,
+    processed_at TIMESTAMP,
+    error_message TEXT,
+    retry_count INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for webhook events
+CREATE INDEX IF NOT EXISTS idx_strava_webhook_events_processed ON strava_webhook_events(processed, created_at);
+CREATE INDEX IF NOT EXISTS idx_strava_webhook_events_owner ON strava_webhook_events(owner_id);
+CREATE INDEX IF NOT EXISTS idx_strava_webhook_events_object ON strava_webhook_events(object_type, object_id);
+

@@ -4,6 +4,8 @@ import { verifyToken } from "../utils/jwt.js";
 import bcrypt from "bcryptjs";
 import { sendAccountDeletionConfirmationEmail } from "../utils/emailService.js";
 import { cancelAllCustomerSubscriptions } from "../utils/paddleService.js";
+import { decryptToken } from "../utils/encryptionService.js";
+import { deauthorizeStrava } from "./integrationsHandler.js";
 
 export async function handleDeleteAccount(req: Request, res: Response) {
     try {
@@ -59,6 +61,31 @@ export async function handleDeleteAccount(req: Request, res: Response) {
                 // Log error but don't fail the deletion
                 console.error("Failed to cancel Paddle subscriptions:", paddleError);
             }
+        }
+
+        // Deauthorize all integration connections before deleting
+        try {
+            const connectionsResult = await pool.query(
+                `SELECT provider, access_token_encrypted
+                 FROM integration_connections
+                 WHERE user_id = $1`,
+                [userId]
+            );
+
+            for (const connection of connectionsResult.rows) {
+                if (connection.provider === "strava" && connection.access_token_encrypted) {
+                    try {
+                        const accessToken = decryptToken(connection.access_token_encrypted);
+                        await deauthorizeStrava(accessToken);
+                    } catch (deauthError) {
+                        // Log but don't fail - cascade delete will clean up locally
+                        console.error(`Failed to deauthorize ${connection.provider}:`, deauthError);
+                    }
+                }
+            }
+        } catch (integrationsError) {
+            // Log error but don't fail the deletion
+            console.error("Failed to deauthorize integrations:", integrationsError);
         }
 
         // Send confirmation email before deletion

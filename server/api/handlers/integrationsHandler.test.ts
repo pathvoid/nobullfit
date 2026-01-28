@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
-import { handleGetIntegrations, handleDisconnectIntegration } from "./integrationsHandler";
+import { handleGetIntegrations, handleDisconnectIntegration, deauthorizeStrava } from "./integrationsHandler";
 
 // Mock dependencies
 vi.mock("../../db/connection.js", () => ({
@@ -13,7 +13,9 @@ vi.mock("../utils/jwt.js", () => ({
 }));
 
 vi.mock("../utils/featureFlagService.js", () => ({
-    isIntegrationEnabled: vi.fn()
+    isIntegrationEnabled: vi.fn(),
+    // TEMP: Mock the new function for Strava demo bypass
+    isIntegrationEnabledForUser: vi.fn()
 }));
 
 vi.mock("../utils/integrationProviders/index.js", () => ({
@@ -22,10 +24,21 @@ vi.mock("../utils/integrationProviders/index.js", () => ({
     isValidProvider: vi.fn()
 }));
 
+vi.mock("../utils/encryptionService.js", () => ({
+    encryptToken: vi.fn(),
+    decryptToken: vi.fn()
+}));
+
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
-import { isIntegrationEnabled } from "../utils/featureFlagService.js";
+// TEMP: Using isIntegrationEnabledForUser for Strava demo bypass
+import { isIntegrationEnabledForUser } from "../utils/featureFlagService.js";
 import { getAllProviderConfigs, isValidProvider } from "../utils/integrationProviders/index.js";
+import { decryptToken } from "../utils/encryptionService.js";
+
+// Mock global fetch
+const mockFetch = vi.fn();
+vi.stubGlobal("fetch", mockFetch);
 
 describe("integrationsHandler", () => {
     let mockRequest: Partial<Request>;
@@ -87,7 +100,7 @@ describe("integrationsHandler", () => {
             mockRequest.headers = { authorization: "Bearer valid_token" };
 
             (getAllProviderConfigs as ReturnType<typeof vi.fn>).mockReturnValue(mockProviderConfigs);
-            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
             // Mock no existing connections
             mockPool.query.mockResolvedValue({ rows: [] });
@@ -113,7 +126,7 @@ describe("integrationsHandler", () => {
             mockRequest.headers = { authorization: "Bearer valid_token" };
 
             (getAllProviderConfigs as ReturnType<typeof vi.fn>).mockReturnValue([mockProviderConfigs[0]]);
-            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
             // Mock existing connection
             mockPool.query.mockResolvedValue({
@@ -139,7 +152,7 @@ describe("integrationsHandler", () => {
             mockRequest.headers = { authorization: "Bearer valid_token" };
 
             (getAllProviderConfigs as ReturnType<typeof vi.fn>).mockReturnValue(mockProviderConfigs);
-            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(false);
 
             mockPool.query.mockResolvedValue({ rows: [] });
 
@@ -181,10 +194,21 @@ describe("integrationsHandler", () => {
             mockRequest.params = { provider: "strava" };
 
             (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
+            (decryptToken as ReturnType<typeof vi.fn>).mockReturnValue("decrypted_token");
+
+            const mockConnection = {
+                id: 1,
+                access_token_encrypted: "encrypted_token",
+                refresh_token_encrypted: null,
+                token_expires_at: null
+            };
 
             mockPool.query
-                .mockResolvedValueOnce({ rowCount: 1, rows: [{ id: 1 }] }) // Delete connection
+                .mockResolvedValueOnce({ rows: [mockConnection] }) // Get connection
+                .mockResolvedValueOnce({ rowCount: 1 }) // Delete connection
                 .mockResolvedValueOnce({ rowCount: 0 }); // Delete auto-sync settings
+
+            mockFetch.mockResolvedValue({ ok: true, status: 200 });
 
             await handleDisconnectIntegration(mockRequest as Request, mockResponse as Response);
 
@@ -208,6 +232,108 @@ describe("integrationsHandler", () => {
 
             expect(mockResponse.status).toHaveBeenCalledWith(404);
             expect(mockResponse.json).toHaveBeenCalledWith({ error: "Connection not found" });
+        });
+
+        it("should call deauthorize endpoint before deleting Strava connection", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer valid_token" };
+            mockRequest.params = { provider: "strava" };
+
+            (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
+            (decryptToken as ReturnType<typeof vi.fn>).mockReturnValue("decrypted_access_token");
+
+            const mockConnection = {
+                id: 1,
+                access_token_encrypted: "encrypted_token",
+                refresh_token_encrypted: "encrypted_refresh",
+                token_expires_at: new Date()
+            };
+
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [mockConnection] }) // Get connection
+                .mockResolvedValueOnce({ rowCount: 1 }) // Delete connection
+                .mockResolvedValueOnce({ rowCount: 0 }); // Delete auto-sync
+
+            mockFetch.mockResolvedValue({ ok: true, status: 200 });
+
+            await handleDisconnectIntegration(mockRequest as Request, mockResponse as Response);
+
+            // Should call deauthorize endpoint
+            expect(mockFetch).toHaveBeenCalledWith(
+                "https://www.strava.com/oauth/deauthorize",
+                expect.objectContaining({
+                    method: "POST",
+                    headers: { "Authorization": "Bearer decrypted_access_token" }
+                })
+            );
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+        });
+
+        it("should still disconnect even if deauthorization fails", async () => {
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
+            mockRequest.headers = { authorization: "Bearer valid_token" };
+            mockRequest.params = { provider: "strava" };
+
+            (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
+            (decryptToken as ReturnType<typeof vi.fn>).mockReturnValue("decrypted_token");
+
+            const mockConnection = {
+                id: 1,
+                access_token_encrypted: "encrypted_token",
+                refresh_token_encrypted: null,
+                token_expires_at: null
+            };
+
+            mockPool.query
+                .mockResolvedValueOnce({ rows: [mockConnection] }) // Get connection
+                .mockResolvedValueOnce({ rowCount: 1 }) // Delete connection
+                .mockResolvedValueOnce({ rowCount: 0 }); // Delete auto-sync
+
+            // Deauthorization fails
+            mockFetch.mockRejectedValue(new Error("Network error"));
+
+            await handleDisconnectIntegration(mockRequest as Request, mockResponse as Response);
+
+            // Should still succeed
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                message: "Integration disconnected"
+            });
+        });
+    });
+
+    describe("deauthorizeStrava", () => {
+        it("should return true on successful deauthorization", async () => {
+            mockFetch.mockResolvedValue({ ok: true, status: 200 });
+
+            const result = await deauthorizeStrava("valid_token");
+
+            expect(result).toBe(true);
+            expect(mockFetch).toHaveBeenCalledWith(
+                "https://www.strava.com/oauth/deauthorize",
+                expect.objectContaining({
+                    method: "POST",
+                    headers: { "Authorization": "Bearer valid_token" }
+                })
+            );
+        });
+
+        it("should return false on failed deauthorization", async () => {
+            mockFetch.mockResolvedValue({ ok: false, status: 401 });
+
+            const result = await deauthorizeStrava("invalid_token");
+
+            expect(result).toBe(false);
+        });
+
+        it("should return false on network error", async () => {
+            mockFetch.mockRejectedValue(new Error("Network error"));
+
+            const result = await deauthorizeStrava("any_token");
+
+            expect(result).toBe(false);
         });
     });
 });

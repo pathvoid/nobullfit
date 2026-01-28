@@ -5,8 +5,9 @@ import type { Request, Response } from "express";
 import crypto from "crypto";
 import getPool from "../../db/connection.js";
 import { verifyToken, generateStateToken, verifyStateToken } from "../utils/jwt.js";
-import { encryptToken } from "../utils/encryptionService.js";
-import { isIntegrationEnabled } from "../utils/featureFlagService.js";
+import { encryptToken, decryptToken } from "../utils/encryptionService.js";
+// TEMP: Using isIntegrationEnabledForUser instead of isIntegrationEnabled for Strava demo bypass
+import { isIntegrationEnabledForUser } from "../utils/featureFlagService.js";
 import {
     getAllProviderConfigs,
     getProviderConfig,
@@ -79,7 +80,8 @@ export async function handleGetIntegrations(req: Request, res: Response): Promis
         // Build integration info for each provider
         const integrations: IntegrationInfo[] = await Promise.all(
             allProviders.map(async (config) => {
-                const isEnabled = await isIntegrationEnabled(config.providerKey);
+                // TEMP: Pass userId to allow user 2 to bypass Strava feature flag
+                const isEnabled = await isIntegrationEnabledForUser(config.providerKey, userId);
                 const connection = connectionsMap.get(config.providerKey);
 
                 return {
@@ -149,7 +151,8 @@ export async function handleGetIntegration(req: Request, res: Response): Promise
             return;
         }
 
-        const isEnabled = await isIntegrationEnabled(provider);
+        // TEMP: Pass userId to allow user 2 to bypass Strava feature flag
+        const isEnabled = await isIntegrationEnabledForUser(provider, userId);
 
         // Get connection if exists
         const connectionResult = await pool.query(
@@ -225,7 +228,8 @@ export async function handleConnectIntegration(req: Request, res: Response): Pro
         }
 
         // Check if integration is enabled via feature flag
-        const isEnabled = await isIntegrationEnabled(provider);
+        // TEMP: Pass userId to allow user 2 to bypass Strava feature flag
+        const isEnabled = await isIntegrationEnabledForUser(provider, userId);
         if (!isEnabled) {
             res.status(403).json({ error: "This integration is currently not available" });
             return;
@@ -417,6 +421,28 @@ export async function handleOAuthCallback(req: Request, res: Response): Promise<
     }
 }
 
+// Deauthorize a Strava connection (revokes access on Strava's side)
+export async function deauthorizeStrava(accessToken: string): Promise<boolean> {
+    try {
+        const response = await fetch("https://www.strava.com/oauth/deauthorize", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`
+            }
+        });
+
+        if (!response.ok) {
+            console.error(`Strava deauthorization failed with status ${response.status}`);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error deauthorizing Strava:", error);
+        return false;
+    }
+}
+
 // Disconnect integration
 export async function handleDisconnectIntegration(req: Request, res: Response): Promise<void> {
     try {
@@ -439,16 +465,40 @@ export async function handleDisconnectIntegration(req: Request, res: Response): 
             return;
         }
 
-        // Delete connection
-        const result = await pool.query(
-            "DELETE FROM integration_connections WHERE user_id = $1 AND provider = $2 RETURNING id",
+        // Get connection with tokens before deleting
+        const connectionResult = await pool.query(
+            `SELECT id, access_token_encrypted, refresh_token_encrypted, token_expires_at
+             FROM integration_connections
+             WHERE user_id = $1 AND provider = $2`,
             [userId, provider]
         );
 
-        if (result.rowCount === 0) {
+        if (connectionResult.rows.length === 0) {
             res.status(404).json({ error: "Connection not found" });
             return;
         }
+
+        const connection = connectionResult.rows[0];
+
+        // Deauthorize on provider's side before deleting locally
+        if (provider === "strava" && connection.access_token_encrypted) {
+            try {
+                const accessToken = decryptToken(connection.access_token_encrypted);
+                const deauthorized = await deauthorizeStrava(accessToken);
+                if (!deauthorized) {
+                    console.warn(`Failed to deauthorize Strava for user ${userId}, continuing with local disconnect`);
+                }
+            } catch (deauthError) {
+                // Log but don't fail - we still want to clean up locally
+                console.error("Error during Strava deauthorization:", deauthError);
+            }
+        }
+
+        // Delete connection
+        await pool.query(
+            "DELETE FROM integration_connections WHERE user_id = $1 AND provider = $2",
+            [userId, provider]
+        );
 
         // Also delete auto-sync settings
         await pool.query(

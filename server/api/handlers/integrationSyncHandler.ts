@@ -5,9 +5,11 @@ import type { Request, Response } from "express";
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
 import { decryptToken, encryptToken } from "../utils/encryptionService.js";
-import { isIntegrationEnabled } from "../utils/featureFlagService.js";
+// TEMP: Using isIntegrationEnabledForUser instead of isIntegrationEnabled for Strava demo bypass
+import { isIntegrationEnabledForUser } from "../utils/featureFlagService.js";
 import { isValidProvider, getProviderConfig } from "../utils/integrationProviders/index.js";
 import type { SyncResult, DataType } from "../utils/integrationProviders/types.js";
+import { stravaFetch, canMakeReadRequest, getRetryAfterMs } from "../utils/stravaRateLimitService.js";
 
 // Helper to get user ID from request
 async function getUserIdFromRequest(req: Request): Promise<number | null> {
@@ -56,7 +58,8 @@ export async function handleTriggerSync(req: Request, res: Response): Promise<vo
         }
 
         // Check if integration is enabled
-        const isEnabled = await isIntegrationEnabled(provider);
+        // TEMP: Pass userId to allow user 2 to bypass Strava feature flag
+        const isEnabled = await isIntegrationEnabledForUser(provider, userId);
         if (!isEnabled) {
             res.status(403).json({ error: "This integration is currently not available" });
             return;
@@ -117,7 +120,7 @@ export async function handleTriggerSync(req: Request, res: Response): Promise<vo
                 }
 
                 const refreshToken = decryptToken(connection.refresh_token_encrypted);
-                const newTokens = await refreshStravaToken(userId, refreshToken);
+                const newTokens = await refreshStravaToken(refreshToken);
 
                 if (!newTokens) {
                     throw new Error("Failed to refresh access token. Please reconnect your Strava account.");
@@ -364,7 +367,8 @@ export async function handleUpdateAutoSyncSettings(req: Request, res: Response):
         }
 
         // Check if integration is enabled
-        const isEnabled = await isIntegrationEnabled(provider);
+        // TEMP: Pass userId to allow user 2 to bypass Strava feature flag
+        const isEnabled = await isIntegrationEnabledForUser(provider, userId);
         if (!isEnabled) {
             res.status(403).json({ error: "This integration is currently not available" });
             return;
@@ -602,10 +606,16 @@ async function performSync(
 
 // Fetch activities from Strava API
 async function fetchStravaActivities(accessToken: string): Promise<StravaActivity[]> {
+    // Check rate limits before making request
+    if (!canMakeReadRequest()) {
+        const retryAfter = getRetryAfterMs();
+        throw new Error(`Rate limit approaching. Retry after ${Math.ceil(retryAfter / 1000)} seconds.`);
+    }
+
     // Fetch last 30 days of activities (up to 100)
     const thirtyDaysAgo = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
 
-    const response = await fetch(
+    const response = await stravaFetch(
         `https://www.strava.com/api/v3/athlete/activities?per_page=100&after=${thirtyDaysAgo}`,
         {
             headers: { Authorization: `Bearer ${accessToken}` }
@@ -680,7 +690,6 @@ async function importStravaActivity(
 
 // Refresh Strava access token if expired
 export async function refreshStravaToken(
-    userId: number,
     refreshToken: string
 ): Promise<{ accessToken: string; refreshToken: string; expiresAt: Date } | null> {
     const clientId = process.env.STRAVA_CLIENT_ID;
@@ -692,6 +701,8 @@ export async function refreshStravaToken(
     }
 
     try {
+        // Token refresh uses rate limits, but we use regular fetch since it's critical
+        // and stravaFetch might throw if limits are approached
         const response = await fetch("https://www.strava.com/oauth/token", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
