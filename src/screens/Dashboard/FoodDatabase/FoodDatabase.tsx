@@ -14,9 +14,7 @@ import {
     Pagination,
     PaginationGap,
     PaginationList,
-    PaginationNext,
-    PaginationPage,
-    PaginationPrevious
+    PaginationPage
 } from "@components/pagination";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { toast } from "sonner";
@@ -231,8 +229,25 @@ const FoodDatabase: React.FC = () => {
         }
     };
 
+    const handlePageClick = async (page: number) => {
+        if (originalQuery && page !== currentPage) {
+            const newOffset = (page - 1) * 20;
+            await performSearch(originalQuery, newOffset);
+        }
+    };
+
+    const ITEMS_PER_PAGE = 20;
+    const totalPages = totalCount !== null && totalCount >= 0
+        ? Math.ceil(totalCount / ITEMS_PER_PAGE)
+        : null;
+
     const renderPagination = () => {
         if (!searchResults || searchResults.hints.length === 0) {
+            return null;
+        }
+
+        // Only show pagination if we have more than one page
+        if (totalPages !== null && totalPages <= 1) {
             return null;
         }
 
@@ -242,8 +257,8 @@ const FoodDatabase: React.FC = () => {
         return (
             <Pagination>
                 <span className="grow basis-0">
-                    <Button 
-                        plain 
+                    <Button
+                        plain
                         aria-label="Previous page"
                         disabled={!hasPrevious}
                         onClick={handlePreviousPage}
@@ -260,13 +275,80 @@ const FoodDatabase: React.FC = () => {
                     </Button>
                 </span>
                 <PaginationList>
-                    <PaginationPage href="#" current>
-                        {currentPage}
-                    </PaginationPage>
+                    {totalPages !== null ? (
+                        (() => {
+                            const pages: React.ReactNode[] = [];
+
+                            // Always show first page
+                            if (currentPage > 3) {
+                                pages.push(
+                                    <Button
+                                        key={1}
+                                        plain
+                                        aria-label="Page 1"
+                                        onClick={() => handlePageClick(1)}
+                                        className="min-w-9 before:absolute before:-inset-px before:rounded-lg"
+                                    >
+                                        <span className="-mx-0.5">1</span>
+                                    </Button>
+                                );
+                                if (currentPage > 4) {
+                                    pages.push(<PaginationGap key="gap-start" />);
+                                }
+                            }
+
+                            // Show pages around current page
+                            const start = Math.max(1, currentPage - 2);
+                            const end = Math.min(totalPages, currentPage + 2);
+
+                            for (let i = start; i <= end; i++) {
+                                pages.push(
+                                    <Button
+                                        key={i}
+                                        plain
+                                        aria-label={`Page ${i}`}
+                                        aria-current={i === currentPage ? "page" : undefined}
+                                        onClick={() => handlePageClick(i)}
+                                        className={`min-w-9 before:absolute before:-inset-px before:rounded-lg ${
+                                            i === currentPage
+                                                ? "before:bg-zinc-950/5 dark:before:bg-white/10"
+                                                : ""
+                                        }`}
+                                    >
+                                        <span className="-mx-0.5">{i}</span>
+                                    </Button>
+                                );
+                            }
+
+                            // Always show last page
+                            if (currentPage < totalPages - 2) {
+                                if (currentPage < totalPages - 3) {
+                                    pages.push(<PaginationGap key="gap-end" />);
+                                }
+                                pages.push(
+                                    <Button
+                                        key={totalPages}
+                                        plain
+                                        aria-label={`Page ${totalPages}`}
+                                        onClick={() => handlePageClick(totalPages)}
+                                        className="min-w-9 before:absolute before:-inset-px before:rounded-lg"
+                                    >
+                                        <span className="-mx-0.5">{totalPages}</span>
+                                    </Button>
+                                );
+                            }
+
+                            return pages;
+                        })()
+                    ) : (
+                        <PaginationPage href="#" current>
+                            {currentPage}
+                        </PaginationPage>
+                    )}
                 </PaginationList>
                 <span className="flex grow basis-0 justify-end">
-                    <Button 
-                        plain 
+                    <Button
+                        plain
                         aria-label="Next page"
                         disabled={!hasNext}
                         onClick={handleNextPage}
@@ -371,6 +453,11 @@ const FoodDatabase: React.FC = () => {
                     </div>
                 ) : searchResults && searchResults.hints.length > 0 ? (
                     <div className="space-y-4">
+                        <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                            {totalCount !== null && totalCount >= 0
+                                ? `${totalCount.toLocaleString()} ${totalCount === 1 ? "result" : "results"} found`
+                                : `${searchResults.hints.length}+ results found`}
+                        </Text>
                         <div className="overflow-x-auto">
                             <div className="inline-block min-w-full align-middle">
                                 <div className="overflow-hidden">

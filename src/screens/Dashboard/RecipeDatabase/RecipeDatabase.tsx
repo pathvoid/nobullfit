@@ -573,8 +573,14 @@ const RecipeDatabase: React.FC = () => {
             </Text>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <div className="inline-block min-w-full align-middle">
+          <>
+            {pagination && (
+              <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                {pagination.total.toLocaleString()} {pagination.total === 1 ? "result" : "results"} found
+              </Text>
+            )}
+            <div className="overflow-x-auto">
+              <div className="inline-block min-w-full align-middle">
               <div className="overflow-hidden">
                 <Table>
                   <TableHead>
@@ -698,6 +704,7 @@ const RecipeDatabase: React.FC = () => {
               </div>
             </div>
           </div>
+          </>
         )}
 
         {pagination && pagination.totalPages > 1 && (

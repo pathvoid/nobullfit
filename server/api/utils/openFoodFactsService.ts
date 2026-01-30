@@ -467,7 +467,7 @@ export async function searchFoods(query: string, limit: number = 20, offset: num
     
     const rows = await result.getRows();
     const columns = result.columnNames();
-    
+
     const products: OFFRawProduct[] = rows.map(row => {
         const obj: Record<string, unknown> = {};
         columns.forEach((col, i) => {
@@ -475,11 +475,32 @@ export async function searchFoods(query: string, limit: number = 20, offset: num
         });
         return obj as unknown as OFFRawProduct;
     });
-    
+
     const foods = products.map(convertToOFFFood);
-    
-    // Estimate count based on results (avoid full scan for count)
-    const count = foods.length < limit ? offset + foods.length : -1;
+
+    // Get total count - use indexed database for fast count, estimate for Parquet
+    let count: number;
+    if (foods.length < limit) {
+        // We have all results, no need for separate count query
+        count = offset + foods.length;
+    } else if (useIndexedDb) {
+        // Run count query on indexed database (fast with index)
+        const whereConditions = termPatterns.map((_, i) =>
+            `(product_name ILIKE $${i + 1} OR brands ILIKE $${i + 1})`
+        ).join(" AND ");
+
+        const countResult = await conn.run(`
+            SELECT COUNT(*) as total
+            FROM products
+            WHERE ${whereConditions}
+        `, termPatterns);
+
+        const countRows = await countResult.getRows();
+        count = Number(countRows[0]?.[0] ?? -1);
+    } else {
+        // Parquet: estimate to avoid slow full scan
+        count = -1;
+    }
     
     const response: OFFSearchResult = {
         text: query,
