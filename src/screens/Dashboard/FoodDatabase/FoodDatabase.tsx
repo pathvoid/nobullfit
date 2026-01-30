@@ -219,6 +219,18 @@ const FoodDatabase: React.FC = () => {
         }
     };
 
+    const clearSearch = () => {
+        setSearchQuery("");
+        setSearchResults(null);
+        setCurrentPage(1);
+        setNextUrl(null);
+        setOriginalQuery("");
+        setTotalCount(null);
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('foodSearchState');
+        }
+    };
+
     const renderPagination = () => {
         if (!searchResults || searchResults.hints.length === 0) {
             return null;
@@ -287,7 +299,7 @@ const FoodDatabase: React.FC = () => {
             }
             sidebar={<DashboardSidebar currentPath="/dashboard/food-database" />}
         >
-            <div className="space-y-8">
+            <div className="space-y-6">
                 <div>
                     <Heading level={1}>Food Database</Heading>
                     <Text className="mt-2 text-zinc-600 dark:text-zinc-400">
@@ -296,7 +308,7 @@ const FoodDatabase: React.FC = () => {
                 </div>
 
                 <form onSubmit={handleSearch} className="space-y-4">
-                    <div className="flex gap-4">
+                    <div className="flex gap-2">
                         <Input
                             type="text"
                             placeholder="Search for food (e.g., apple, chicken, pasta)"
@@ -316,6 +328,16 @@ const FoodDatabase: React.FC = () => {
                         >
                             {isSearching ? "Searching..." : "Search"}
                         </Button>
+                        {(searchQuery || searchResults) && (
+                            <Button
+                                type="button"
+                                outline
+                                onClick={clearSearch}
+                                disabled={isSearching}
+                            >
+                                Clear
+                            </Button>
+                        )}
                     </div>
                 </form>
 
