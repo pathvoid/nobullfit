@@ -994,12 +994,12 @@ const ProgressTracking: React.FC = () => {
                             return (
                                 <div
                                     key={activity.id}
-                                    className="group rounded-lg border border-zinc-950/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-800/50"
+                                    className="group rounded-lg border border-l-4 border-zinc-950/10 !border-l-blue-500 bg-white p-4 dark:border-white/10 dark:bg-zinc-800/50"
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2">
-                                                <Text className="font-medium">{activity.activity_name}</Text>
+                                                <Text className="font-medium !text-white">{activity.activity_name}</Text>
                                                 <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-400/10 dark:text-blue-400">
                                                     {config?.label || activity.activity_type}
                                                 </span>

@@ -1122,9 +1122,9 @@ const FoodTracking: React.FC = () => {
                                                 return (
                                                     <div
                                                         key={food.id}
-                                                        className={`group rounded-lg border bg-white p-4 dark:bg-zinc-800/50 ${
-                                                            isDragging 
-                                                                ? "border-blue-400 opacity-50 dark:border-blue-500" 
+                                                        className={`group rounded-lg border border-l-4 !border-l-blue-500 bg-white p-4 dark:bg-zinc-800/50 ${
+                                                            isDragging
+                                                                ? "border-blue-400 opacity-50 dark:border-blue-500"
                                                                 : "border-zinc-950/10 dark:border-white/10"
                                                         } ${isProUser ? "cursor-grab active:cursor-grabbing" : ""}`}
                                                         draggable={isProUser}
@@ -1143,7 +1143,7 @@ const FoodTracking: React.FC = () => {
                                                                 onClick={() => handleFoodClick(food)}
                                                             >
                                                                 <div className="flex items-center gap-2">
-                                                                    <Text className="font-medium">{food.food_label}</Text>
+                                                                    <Text className="font-medium !text-white">{food.food_label}</Text>
                                                                     {food.item_type === "recipe" && (
                                                                         <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-400/10 dark:text-blue-400">
                                                                             Recipe
