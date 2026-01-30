@@ -109,6 +109,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -142,11 +143,12 @@ describe("RecipeDatabase", () => {
         expect(searchButton).not.toBeDisabled();
     });
 
-    it("should enable search button with less than 3 characters when filters are active via URL", async () => {
+    it("should enable search button with less than 3 characters when myRecipes filter is active", async () => {
         const router = createMemoryRouter([
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -154,7 +156,35 @@ describe("RecipeDatabase", () => {
                 })
             }
         ], {
-            // Start with verified filter in URL
+            // Start with myRecipes filter in URL (only myRecipes bypasses 3 char requirement)
+            initialEntries: ["/dashboard/recipe-database?myRecipes=true"]
+        });
+
+        render(<RouterProvider router={router} />);
+
+        await screen.findByRole("heading", { name: /recipe database/i });
+
+        // Search button should be enabled even without search text because myRecipes is active
+        await waitFor(() => {
+            const searchButton = screen.getByRole("button", { name: /search/i });
+            expect(searchButton).not.toBeDisabled();
+        });
+    });
+
+    it("should keep search button disabled with less than 3 characters when only verified filter is active", async () => {
+        const router = createMemoryRouter([
+            {
+                path: "/dashboard/recipe-database",
+                element: <RecipeDatabase />,
+                HydrateFallback: () => null,
+                loader: async () => ({
+                    title: "Recipe Database - NoBullFit",
+                    meta: [{ name: "description", content: "Browse and search recipes" }],
+                    user: { id: 1, email: "test@example.com", full_name: "Test User" }
+                })
+            }
+        ], {
+            // verified filter does NOT bypass the 3 character requirement
             initialEntries: ["/dashboard/recipe-database?verified=true"]
         });
 
@@ -162,12 +192,9 @@ describe("RecipeDatabase", () => {
 
         await screen.findByRole("heading", { name: /recipe database/i });
 
-        // Search button should be enabled even without search text because filter is active
-        // Wait for the button state to update based on URL params
-        await waitFor(() => {
-            const searchButton = screen.getByRole("button", { name: /search/i });
-            expect(searchButton).not.toBeDisabled();
-        });
+        // Search button should be disabled because verified alone doesn't bypass 3 char requirement
+        const searchButton = screen.getByRole("button", { name: /search/i });
+        expect(searchButton).toBeDisabled();
     });
 
     it("should not submit search form when query is less than 3 characters and no filters", async () => {
@@ -178,6 +205,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -205,7 +233,7 @@ describe("RecipeDatabase", () => {
         );
     });
 
-    it("should load recipes when URL has valid search query", async () => {
+    it("should populate search input from URL but not auto-search", async () => {
         const fetchSpy = createMockFetch();
         global.fetch = fetchSpy;
 
@@ -213,6 +241,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -228,13 +257,13 @@ describe("RecipeDatabase", () => {
 
         await screen.findByRole("heading", { name: /recipe database/i });
 
-        // Wait for fetch to be called with search param
-        await waitFor(() => {
-            expect(fetchSpy).toHaveBeenCalledWith(
-                expect.stringContaining("search=chicken"),
-                expect.anything()
-            );
-        });
+        // Search input should be populated from URL
+        const searchInput = screen.getByPlaceholderText(/search recipes/i);
+        expect(searchInput).toHaveValue("chicken");
+
+        // But search should NOT auto-trigger - user must click Search button
+        // Show the "Search for Recipes" empty state since no search has been performed
+        expect(screen.getByRole("heading", { name: /search for recipes/i })).toBeInTheDocument();
     });
 
     it("should ignore search query in URL if less than 3 characters without filters", async () => {
@@ -245,6 +274,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -264,14 +294,12 @@ describe("RecipeDatabase", () => {
         expect(screen.getByRole("heading", { name: /search for recipes/i })).toBeInTheDocument();
     });
 
-    it("should load recipes with filters from URL params", async () => {
-        const fetchSpy = createMockFetch();
-        global.fetch = fetchSpy;
-
+    it("should initialize filter state from URL params but not auto-search", async () => {
         const router = createMemoryRouter([
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -279,7 +307,7 @@ describe("RecipeDatabase", () => {
                 })
             }
         ], {
-            // URL with filters
+            // URL with filters but no search query meeting 3 char requirement
             initialEntries: ["/dashboard/recipe-database?verified=true&tags=breakfast,easy"]
         });
 
@@ -287,23 +315,20 @@ describe("RecipeDatabase", () => {
 
         await screen.findByRole("heading", { name: /recipe database/i });
 
-        // Wait for fetch to be called with filter params (tags are URL-encoded, comma becomes %2C)
-        await waitFor(() => {
-            expect(fetchSpy).toHaveBeenCalledWith(
-                expect.stringContaining("tags=breakfast%2Ceasy"),
-                expect.anything()
-            );
-        });
+        // Should show the "Search for Recipes" prompt since no valid search criteria
+        // (verified and tags don't bypass the 3 char requirement, only myRecipes does)
+        expect(screen.getByRole("heading", { name: /search for recipes/i })).toBeInTheDocument();
+
+        // Filter badges should be visible showing active filters (use getAllByText since "Verified" may appear multiple places)
+        expect(screen.getAllByText(/verified/i).length).toBeGreaterThanOrEqual(1);
     });
 
-    it("should ignore invalid tags in URL params", async () => {
-        const fetchSpy = createMockFetch();
-        global.fetch = fetchSpy;
-
+    it("should filter out invalid tags from URL params", async () => {
         const router = createMemoryRouter([
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -319,23 +344,34 @@ describe("RecipeDatabase", () => {
 
         await screen.findByRole("heading", { name: /recipe database/i });
 
-        // Wait for fetch to be called - should only include valid tags
-        await waitFor(() => {
-            expect(fetchSpy).toHaveBeenCalledWith(
-                expect.stringContaining("tags=breakfast%2Ceasy"),
-                expect.anything()
-            );
-        });
+        // Open filters to see tag buttons
+        const filterButton = screen.getByRole("button", { name: /filter/i });
+        fireEvent.click(filterButton);
+
+        // Valid tags should be selected (shown as active buttons)
+        const breakfastTag = screen.getByRole("button", { name: /breakfast/i });
+        const easyTag = screen.getByRole("button", { name: /easy/i });
+
+        // These should have the selected styling (bg-blue-600)
+        expect(breakfastTag).toHaveClass("bg-blue-600");
+        expect(easyTag).toHaveClass("bg-blue-600");
     });
 
     it("should handle invalid page number in URL by defaulting to page 1", async () => {
-        const fetchSpy = createMockFetch();
-        global.fetch = fetchSpy;
+        // Pre-populate sessionStorage with state that includes the page
+        sessionStorage.setItem('recipeFilters', JSON.stringify({
+            search: "chicken",
+            tags: [],
+            verified: false,
+            myRecipes: false,
+            page: 5 // This should be overridden by URL
+        }));
 
         const router = createMemoryRouter([
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -343,7 +379,7 @@ describe("RecipeDatabase", () => {
                 })
             }
         ], {
-            // URL with invalid page number and valid search
+            // URL with invalid page number - should default to page 1
             initialEntries: ["/dashboard/recipe-database?q=chicken&page=-5"]
         });
 
@@ -351,12 +387,20 @@ describe("RecipeDatabase", () => {
 
         await screen.findByRole("heading", { name: /recipe database/i });
 
-        // Wait for fetch to be called with page=1 (default)
+        // Search input should have the query from URL
+        const searchInput = screen.getByPlaceholderText(/search recipes/i);
+        expect(searchInput).toHaveValue("chicken");
+
+        // The internal state should use page 1 (default for invalid page)
+        // We can verify this by checking sessionStorage after a search triggers
+        const searchButton = screen.getByRole("button", { name: /search/i });
+        fireEvent.click(searchButton);
+
         await waitFor(() => {
-            expect(fetchSpy).toHaveBeenCalledWith(
-                expect.stringContaining("page=1"),
-                expect.anything()
-            );
+            const stored = sessionStorage.getItem('recipeFilters');
+            expect(stored).toBeTruthy();
+            const parsed = JSON.parse(stored!);
+            expect(parsed.page).toBe(1);
         });
     });
 
@@ -365,6 +409,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -383,11 +428,12 @@ describe("RecipeDatabase", () => {
         expect(searchInput).toHaveValue("pasta");
     });
 
-    it("should show filters panel when filter params are in URL", async () => {
+    it("should keep filters panel closed even when filter params are in URL", async () => {
         const router = createMemoryRouter([
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -402,10 +448,16 @@ describe("RecipeDatabase", () => {
 
         await screen.findByRole("heading", { name: /recipe database/i });
 
-        // Filters panel should be visible
-        expect(screen.getByRole("heading", { name: /filters/i })).toBeInTheDocument();
+        // Filters panel should NOT be visible by default (closed)
+        expect(screen.queryByRole("heading", { name: /filters/i })).not.toBeInTheDocument();
 
-        // Verified checkbox should be checked
+        // But the active filter badge should be visible (use getAllByText since "Verified" may appear multiple places)
+        expect(screen.getAllByText(/verified/i).length).toBeGreaterThanOrEqual(1);
+
+        // Opening the filter panel should show the checkbox as checked
+        const filterButton = screen.getByRole("button", { name: /filter/i });
+        fireEvent.click(filterButton);
+
         const verifiedCheckbox = screen.getByRole("checkbox", { name: /verified recipes only/i });
         expect(verifiedCheckbox).toBeChecked();
     });
@@ -415,6 +467,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -446,7 +499,7 @@ describe("RecipeDatabase", () => {
         });
     });
 
-    it("should load filter state from sessionStorage on initial render", async () => {
+    it("should load filter state from sessionStorage on initial render and trigger search", async () => {
         // Pre-populate sessionStorage
         sessionStorage.setItem('recipeFilters', JSON.stringify({
             search: "chicken",
@@ -463,6 +516,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -481,14 +535,20 @@ describe("RecipeDatabase", () => {
         const searchInput = screen.getByPlaceholderText(/search recipes/i);
         expect(searchInput).toHaveValue("chicken");
 
-        // Filters panel should be visible
-        expect(screen.getByRole("heading", { name: /filters/i })).toBeInTheDocument();
+        // Filters panel should NOT be visible by default (stays closed)
+        expect(screen.queryByRole("heading", { name: /filters/i })).not.toBeInTheDocument();
 
-        // Verified checkbox should be checked
+        // But filter badges should show active filters (use getAllByText since "Verified" may appear multiple places)
+        expect(screen.getAllByText(/verified/i).length).toBeGreaterThanOrEqual(1);
+
+        // Open filters to verify checkbox state
+        const filterButton = screen.getByRole("button", { name: /filter/i });
+        fireEvent.click(filterButton);
+
         const verifiedCheckbox = screen.getByRole("checkbox", { name: /verified recipes only/i });
         expect(verifiedCheckbox).toBeChecked();
 
-        // Verify API was called with stored filters
+        // Verify API was called with stored filters (auto-search on restore)
         await waitFor(() => {
             expect(fetchSpy).toHaveBeenCalledWith(
                 expect.stringContaining("search=chicken"),
@@ -519,6 +579,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -553,6 +614,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -567,28 +629,27 @@ describe("RecipeDatabase", () => {
 
         await screen.findByRole("heading", { name: /recipe database/i });
 
-        // Wait for filters to be restored and panel to become visible
+        // Wait for filters to be restored (check by badge visibility, use getAllByText since "Verified" may appear multiple places)
         await waitFor(() => {
-            expect(screen.getByRole("heading", { name: /filters/i })).toBeInTheDocument();
+            expect(screen.getAllByText(/verified/i).length).toBeGreaterThanOrEqual(1);
         });
+
+        // Open filters panel to access Clear All button
+        const filterButton = screen.getByRole("button", { name: /filter/i });
+        fireEvent.click(filterButton);
 
         // Click clear all button
         const clearButton = screen.getByRole("button", { name: /clear all/i });
         fireEvent.click(clearButton);
 
-        // sessionStorage should be reset to empty state
+        // Search input should be empty
+        const searchInput = screen.getByPlaceholderText(/search recipes/i);
         await waitFor(() => {
-            const stored = sessionStorage.getItem('recipeFilters');
-            expect(stored).toBeTruthy();
-            const parsed = JSON.parse(stored!);
-            expect(parsed).toEqual({
-                search: "",
-                tags: [],
-                verified: false,
-                myRecipes: false,
-                page: 1
-            });
+            expect(searchInput).toHaveValue("");
         });
+
+        // Active filters should be gone (no "Verified" badge visible outside panel)
+        expect(screen.queryByText(/^verified$/i)).not.toBeInTheDocument();
     });
 
     it("should update sessionStorage when tags are toggled", async () => {
@@ -596,6 +657,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],
@@ -632,6 +694,7 @@ describe("RecipeDatabase", () => {
             {
                 path: "/dashboard/recipe-database",
                 element: <RecipeDatabase />,
+                HydrateFallback: () => null,
                 loader: async () => ({
                     title: "Recipe Database - NoBullFit",
                     meta: [{ name: "description", content: "Browse and search recipes" }],

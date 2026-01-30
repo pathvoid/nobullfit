@@ -543,7 +543,7 @@ const RecipeDatabase: React.FC = () => {
           </div>
         </div>
 
-        {!(filterState.search.length >= MIN_SEARCH_LENGTH || filterState.myRecipes) ? (
+        {(pagination === null && !isSearching) || !(filterState.search.length >= MIN_SEARCH_LENGTH || filterState.myRecipes) ? (
           <div className="rounded-lg border border-zinc-950/10 bg-zinc-50 p-12 text-center dark:border-white/10 dark:bg-zinc-800/50">
             <img
               src="https://cdn.nobull.fit/cooking-pot.png"
