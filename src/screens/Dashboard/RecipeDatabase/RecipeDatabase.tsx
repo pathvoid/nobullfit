@@ -140,6 +140,8 @@ const RecipeDatabase: React.FC = () => {
   const navigationType = useNavigationType();
   const isInitialMount = useRef(true);
   const [isRestoring, setIsRestoring] = useState(false);
+  // Ref to track when we should actually perform a search (user clicked Search or changed page)
+  const shouldSearch = useRef(false);
 
   // Set helmet values
   helmet.setTitle(loaderData.title);
@@ -175,6 +177,10 @@ const RecipeDatabase: React.FC = () => {
 
   // Restore from sessionStorage after hydration and when returning to page
   useLayoutEffect(() => {
+    // Helper to check if filters have valid search criteria
+    const hasValidSearchCriteria = (filters: typeof filterState) =>
+      filters.search.length >= MIN_SEARCH_LENGTH || filters.myRecipes;
+
     // Skip on initial mount to avoid hydration mismatch
     if (isInitialMount.current) {
       // But do restore if there are no URL params (navigated back)
@@ -186,6 +192,10 @@ const RecipeDatabase: React.FC = () => {
             setIsRestoring(true);
             const parsedFilters = JSON.parse(stored);
             setFilterState(parsedFilters);
+            // Trigger search if restored filters have valid criteria
+            if (hasValidSearchCriteria(parsedFilters)) {
+              shouldSearch.current = true;
+            }
             // Use queueMicrotask to ensure state update completes first, then allow saves
             queueMicrotask(() => {
               setIsRestoring(false);
@@ -216,6 +226,10 @@ const RecipeDatabase: React.FC = () => {
             setIsRestoring(true);
             const parsedFilters = JSON.parse(stored);
             setFilterState(parsedFilters);
+            // Trigger search if restored filters have valid criteria
+            if (hasValidSearchCriteria(parsedFilters)) {
+              shouldSearch.current = true;
+            }
             // Use queueMicrotask to ensure state update completes first
             queueMicrotask(() => {
               setIsRestoring(false);
@@ -232,9 +246,7 @@ const RecipeDatabase: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(filterState.search);
   const [isSearching, setIsSearching] = useState(false);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [showFilters, setShowFilters] = useState(() =>
-    filterState.tags.length > 0 || filterState.verified || filterState.myRecipes
-  );
+  const [showFilters, setShowFilters] = useState(false);
   const [pagination, setPagination] = useState<{
     page: number;
     limit: number;
@@ -264,12 +276,6 @@ const RecipeDatabase: React.FC = () => {
     setSearchQuery(filterState.search);
   }, [filterState.search]);
 
-  // Keep filters open if there are active filters
-  useEffect(() => {
-    if (filterState.tags.length > 0 || filterState.verified || filterState.myRecipes) {
-      setShowFilters(true);
-    }
-  }, [filterState.tags.length, filterState.verified, filterState.myRecipes]);
 
   // Update filter state (stored in sessionStorage, no URL changes)
   const updateFilters = useCallback(
@@ -290,10 +296,9 @@ const RecipeDatabase: React.FC = () => {
 
   // Load recipes based on filter state
   const loadRecipes = useCallback(async () => {
-    // Don't load if no valid search criteria
-    const hasFilters = filterState.tags.length > 0 || filterState.verified || filterState.myRecipes;
-    const shouldSearch = filterState.search.length >= MIN_SEARCH_LENGTH || hasFilters;
-    if (!shouldSearch) return;
+    // Don't load if no valid search criteria (myRecipes allows empty search)
+    const canSearch = filterState.search.length >= MIN_SEARCH_LENGTH || filterState.myRecipes;
+    if (!canSearch) return;
 
     // Use a timeout to delay showing loading state for fast responses
     let showLoadingTimeout: NodeJS.Timeout | null = null;
@@ -351,19 +356,27 @@ const RecipeDatabase: React.FC = () => {
     }
   }, [filterState, user]);
 
-  // Load recipes when URL state changes
+  // Load recipes only when explicitly triggered (search button or page change)
   useEffect(() => {
-    loadRecipes();
-  }, [loadRecipes]);
+    if (shouldSearch.current) {
+      // Only reset the flag and search if we have valid criteria
+      // This handles the case where the flag is set before filterState is updated
+      const canSearch = filterState.search.length >= MIN_SEARCH_LENGTH || filterState.myRecipes;
+      if (canSearch) {
+        shouldSearch.current = false;
+        loadRecipes();
+      }
+    }
+  }, [filterState, loadRecipes]);
 
   const handleSearch = async (e: FormEvent) => {
     e.preventDefault();
-    // Require minimum characters for search (unless filters are active)
-    const hasFilters = filterState.tags.length > 0 || filterState.verified || filterState.myRecipes;
-    if (!hasFilters && searchQuery.trim().length < MIN_SEARCH_LENGTH) {
+    // Require minimum characters for search (unless myRecipes filter is active)
+    if (!filterState.myRecipes && searchQuery.trim().length < MIN_SEARCH_LENGTH) {
       return;
     }
-    // Update filter state - this will trigger loadRecipes via useEffect
+    // Set flag to trigger search, then update filter state
+    shouldSearch.current = true;
     updateFilters({ search: searchQuery.trim(), page: 1 });
   };
 
@@ -385,6 +398,7 @@ const RecipeDatabase: React.FC = () => {
   };
 
   const handlePageChange = (page: number) => {
+    shouldSearch.current = true;
     updateFilters({ page });
     // Scroll to top when page changes
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -476,14 +490,10 @@ const RecipeDatabase: React.FC = () => {
                 disabled={
                   isSearching ||
                   (searchQuery.trim().length < MIN_SEARCH_LENGTH &&
-                    filterState.tags.length === 0 &&
-                    !filterState.verified &&
                     !filterState.myRecipes)
                 }
                 title={
                   searchQuery.trim().length < MIN_SEARCH_LENGTH &&
-                  filterState.tags.length === 0 &&
-                  !filterState.verified &&
                   !filterState.myRecipes
                     ? `Enter at least ${MIN_SEARCH_LENGTH} characters to search`
                     : undefined
@@ -533,7 +543,7 @@ const RecipeDatabase: React.FC = () => {
           </div>
         </div>
 
-        {!(filterState.search.length >= MIN_SEARCH_LENGTH || filterState.tags.length > 0 || filterState.verified || filterState.myRecipes) ? (
+        {!(filterState.search.length >= MIN_SEARCH_LENGTH || filterState.myRecipes) ? (
           <div className="rounded-lg border border-zinc-950/10 bg-zinc-50 p-12 text-center dark:border-white/10 dark:bg-zinc-800/50">
             <img
               src="https://cdn.nobull.fit/cooking-pot.png"
@@ -544,8 +554,8 @@ const RecipeDatabase: React.FC = () => {
               Search for Recipes
             </Heading>
             <Text className="mt-2 text-zinc-600 dark:text-zinc-400">
-              Enter a search term or use the filters to find recipes from the
-              NoBullFit community.
+              Enter a search term or check "Show only my recipes" to find
+              recipes from the NoBullFit community.
             </Text>
           </div>
         ) : sortedRecipes.length === 0 && !isSearching ? (
