@@ -1,6 +1,6 @@
 import useHelmet from "@hooks/useHelmet";
-import { useLoaderData } from "react-router-dom";
-import { useState, FormEvent } from "react";
+import { useLoaderData, useLocation, useNavigationType } from "react-router-dom";
+import { useState, FormEvent, useLayoutEffect, useRef, useEffect } from "react";
 import { SidebarLayout } from "@components/sidebar-layout";
 import { Navbar, NavbarSection, NavbarSpacer } from "@components/navbar";
 import { Logo } from "@components/logo";
@@ -63,13 +63,28 @@ interface OFFResponse {
     };
 }
 
+// Type for saved search state
+interface SavedFoodSearchState {
+    searchQuery: string;
+    originalQuery: string;
+    currentPage: number;
+    totalCount: number | null;
+    nextUrl: string | null;
+}
+
 const FoodDatabase: React.FC = () => {
     const loaderData = useLoaderData() as { title: string; meta: unknown[]; user?: unknown };
     const helmet = useHelmet();
+    const location = useLocation();
+    const navigationType = useNavigationType();
+    const isInitialMount = useRef(true);
+    const shouldSearch = useRef(false);
 
     // Set helmet values
     helmet.setTitle(loaderData.title);
     helmet.setMeta(loaderData.meta as Parameters<typeof helmet.setMeta>[0]);
+
+    const MIN_SEARCH_LENGTH = 3;
 
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
@@ -79,25 +94,65 @@ const FoodDatabase: React.FC = () => {
     const [originalQuery, setOriginalQuery] = useState<string>("");
     const [totalCount, setTotalCount] = useState<number | null>(null);
 
-    const handleSearch = async (e: FormEvent, offset?: number) => {
-        e.preventDefault();
-        
-        if (!searchQuery.trim() && offset === undefined) {
-            return;
+    // Restore search state from sessionStorage on mount or back navigation
+    useLayoutEffect(() => {
+        if (isInitialMount.current || navigationType === 'POP') {
+            if (typeof window !== 'undefined') {
+                const stored = sessionStorage.getItem('foodSearchState');
+                if (stored) {
+                    try {
+                        const parsedState: SavedFoodSearchState = JSON.parse(stored);
+                        setSearchQuery(parsedState.searchQuery);
+                        setOriginalQuery(parsedState.originalQuery);
+                        setCurrentPage(parsedState.currentPage);
+                        setTotalCount(parsedState.totalCount);
+                        setNextUrl(parsedState.nextUrl);
+                        // Trigger search to restore results if query meets minimum length
+                        if (parsedState.originalQuery && parsedState.originalQuery.length >= MIN_SEARCH_LENGTH) {
+                            shouldSearch.current = true;
+                        }
+                    } catch (e) {
+                        // If parsing fails, keep default state
+                    }
+                }
+            }
+            isInitialMount.current = false;
         }
+    }, [location.key, navigationType]);
+
+    // Save search state to sessionStorage whenever it changes
+    useEffect(() => {
+        if (isInitialMount.current) return;
+        if (!originalQuery) return; // Don't save if no search has been performed
+
+        if (typeof window !== 'undefined') {
+            const stateToSave: SavedFoodSearchState = {
+                searchQuery,
+                originalQuery,
+                currentPage,
+                totalCount,
+                nextUrl
+            };
+            sessionStorage.setItem('foodSearchState', JSON.stringify(stateToSave));
+        }
+    }, [searchQuery, originalQuery, currentPage, totalCount, nextUrl]);
+
+    // Core search function that can be called programmatically
+    const performSearch = async (query: string, offset?: number, isNewSearch: boolean = false) => {
+        if (query.trim().length < MIN_SEARCH_LENGTH) return;
 
         setIsSearching(true);
 
         try {
             const params = new URLSearchParams();
-            params.append("query", originalQuery || searchQuery.trim());
+            params.append("query", query.trim());
             if (offset !== undefined) {
                 params.append("offset", offset.toString());
             }
             params.append("limit", "20");
 
             const response = await fetch(`/api/food-database/search?${params.toString()}`);
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || "Failed to search food database");
@@ -105,18 +160,18 @@ const FoodDatabase: React.FC = () => {
 
             const data: OFFResponse = await response.json();
             setSearchResults(data);
-            
+
             // Update pagination state
             if (offset !== undefined && offset > 0) {
                 // Calculate page from offset
                 setCurrentPage(Math.floor(offset / 20) + 1);
-            } else {
+            } else if (isNewSearch) {
                 // New search, reset pagination and store original query and total count
                 setCurrentPage(1);
-                setOriginalQuery(searchQuery.trim());
+                setOriginalQuery(query.trim());
                 setTotalCount(data.count);
             }
-            
+
             setNextUrl(data._links?.next?.href || null);
         } catch (err) {
             toast.error(err instanceof Error ? err.message : "An error occurred");
@@ -126,12 +181,32 @@ const FoodDatabase: React.FC = () => {
         }
     };
 
+    // Trigger search when shouldSearch flag is set (on restore)
+    useEffect(() => {
+        if (shouldSearch.current && originalQuery && originalQuery.length >= MIN_SEARCH_LENGTH) {
+            shouldSearch.current = false;
+            // Calculate offset from current page
+            const offset = currentPage > 1 ? (currentPage - 1) * 20 : undefined;
+            performSearch(originalQuery, offset);
+        }
+    }, [originalQuery, currentPage]);
+
+    const handleSearch = async (e: FormEvent) => {
+        e.preventDefault();
+
+        if (searchQuery.trim().length < MIN_SEARCH_LENGTH) {
+            return;
+        }
+
+        await performSearch(searchQuery, undefined, true);
+    };
+
     const handleNextPage = async (e: React.MouseEvent) => {
         e.preventDefault();
-        if (nextUrl) {
+        if (nextUrl && originalQuery) {
             // Calculate offset from current page
             const newOffset = currentPage * 20;
-            await handleSearch(e as unknown as FormEvent, newOffset);
+            await performSearch(originalQuery, newOffset);
         }
     };
 
@@ -140,7 +215,7 @@ const FoodDatabase: React.FC = () => {
         if (originalQuery && currentPage > 1) {
             // Calculate offset for previous page
             const newOffset = (currentPage - 2) * 20;
-            await handleSearch(e as unknown as FormEvent, newOffset);
+            await performSearch(originalQuery, newOffset);
         }
     };
 
@@ -230,7 +305,15 @@ const FoodDatabase: React.FC = () => {
                             className="flex-1"
                             disabled={isSearching}
                         />
-                        <Button type="submit" disabled={isSearching || !searchQuery.trim()}>
+                        <Button
+                            type="submit"
+                            disabled={isSearching || searchQuery.trim().length < MIN_SEARCH_LENGTH}
+                            title={
+                                searchQuery.trim().length < MIN_SEARCH_LENGTH
+                                    ? `Enter at least ${MIN_SEARCH_LENGTH} characters to search`
+                                    : undefined
+                            }
+                        >
                             {isSearching ? "Searching..." : "Search"}
                         </Button>
                     </div>

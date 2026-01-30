@@ -172,7 +172,13 @@ const FoodDetails: React.FC = () => {
     }, [isLogFoodDialogOpen, foodData]);
 
     const handleBack = () => {
-        navigate("/dashboard/food-database");
+        // Use browser history to go back, which preserves search state
+        // Check if there's history to go back to, otherwise navigate directly
+        if (window.history.length > 1) {
+            navigate(-1);
+        } else {
+            navigate("/dashboard/food-database");
+        }
     };
 
     const handleToggleFavorite = async () => {
