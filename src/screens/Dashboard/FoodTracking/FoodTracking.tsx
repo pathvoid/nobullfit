@@ -1,6 +1,8 @@
-import useHelmet from "@hooks/useHelmet";
+import useHelmet from "@hooks/useHelmet.js";
+import useDesktopOnly from "@hooks/useDesktopOnly.js";
 import { useLoaderData, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { SidebarLayout } from "@components/sidebar-layout";
 import { Navbar, NavbarSection, NavbarSpacer } from "@components/navbar";
 import { Logo } from "@components/logo";
@@ -12,7 +14,8 @@ import { Select } from "@components/select";
 import { Dialog, DialogActions, DialogBody, DialogDescription, DialogTitle } from "@components/dialog";
 import { Field, Label as FieldLabel, Description } from "@components/fieldset";
 import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel } from "@components/dropdown";
-import { MobileBottomMenu, MobileBottomMenuSpacer, type MobileBottomMenuItem } from "@components/mobile-bottom-menu";
+import { MobileBottomMenu, MobileBottomMenuSpacer, type MobileBottomMenuItem } from "@components/mobile-bottom-menu.js";
+import { KeyboardHints, KeyboardHintsSpacer, type KeyboardHint } from "@components/keyboard-hints.js";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Copy, ClipboardPaste, Calendar, GripVertical, Crown, ChevronDown, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
@@ -148,6 +151,9 @@ const FoodTracking: React.FC = () => {
     // Set helmet values
     helmet.setTitle(loaderData.title);
     helmet.setMeta(loaderData.meta as Parameters<typeof helmet.setMeta>[0]);
+
+    // Desktop detection for keyboard shortcuts
+    const isDesktop = useDesktopOnly();
 
     // Fetch foods for the current date
     const fetchFoods = useCallback(async (date: Date) => {
@@ -894,6 +900,31 @@ const FoodTracking: React.FC = () => {
         },
         { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
+
+    // Keyboard shortcuts (desktop only, disabled in form inputs by default)
+    useHotkeys("left", handlePreviousDay, { enabled: isDesktop, preventDefault: true });
+    useHotkeys("right", handleNextDay, { enabled: isDesktop, preventDefault: true });
+    useHotkeys("t", handleToday, { enabled: isDesktop });
+    useHotkeys("a", () => {
+        resetAddDialog();
+        setIsAddDialogOpen(true);
+    }, { enabled: isDesktop });
+    useHotkeys("c", handleCopyDay, { enabled: isDesktop && isProUser && foods.length > 0 }, [isProUser, foods]);
+    useHotkeys("v", handlePasteDay, { enabled: isDesktop && isProUser && !!copiedDate && copiedDate !== formatDateForAPI(currentDate) && !isPasting }, [isProUser, copiedDate, currentDate, isPasting]);
+
+    // Build keyboard hints for display
+    const keyboardHints: KeyboardHint[] = [
+        { keys: ["←"], label: "Previous" },
+        { keys: ["→"], label: "Next" },
+        { keys: ["T"], label: "Today" },
+        { keys: ["A"], label: "Add Food" },
+    ];
+    if (isProUser) {
+        keyboardHints.push(
+            { keys: ["C"], label: "Copy Day" },
+            { keys: ["V"], label: "Paste Day" }
+        );
+    }
 
     return (
         <SidebarLayout
@@ -1715,6 +1746,10 @@ const FoodTracking: React.FC = () => {
                 })()}
             />
             <MobileBottomMenuSpacer />
+
+            {/* Desktop Keyboard Hints */}
+            {isDesktop && <KeyboardHints hints={keyboardHints} />}
+            {isDesktop && <KeyboardHintsSpacer />}
         </SidebarLayout>
     );
 };

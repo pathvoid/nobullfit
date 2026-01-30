@@ -1,6 +1,8 @@
-import useHelmet from "@hooks/useHelmet";
+import useHelmet from "@hooks/useHelmet.js";
+import useDesktopOnly from "@hooks/useDesktopOnly.js";
 import { useLoaderData } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { SidebarLayout } from "@components/sidebar-layout";
 import { Navbar, NavbarSection, NavbarSpacer } from "@components/navbar";
 import { Logo } from "@components/logo";
@@ -12,7 +14,8 @@ import { Select } from "@components/select";
 import { Dialog, DialogActions, DialogBody, DialogDescription, DialogTitle } from "@components/dialog";
 import { Field, Label as FieldLabel, Description } from "@components/fieldset";
 import { Dropdown, DropdownButton, DropdownMenu, DropdownItem, DropdownLabel } from "@components/dropdown";
-import { MobileBottomMenu, MobileBottomMenuSpacer, type MobileBottomMenuItem } from "@components/mobile-bottom-menu";
+import { MobileBottomMenu, MobileBottomMenuSpacer, type MobileBottomMenuItem } from "@components/mobile-bottom-menu.js";
+import { KeyboardHints, KeyboardHintsSpacer, type KeyboardHint } from "@components/keyboard-hints.js";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 import { ChevronLeft, ChevronRight, Pencil, Trash2, Plus, Scale, MoreVertical, Copy, ClipboardPaste, Calendar, Crown, ChevronDown } from "lucide-react";
 import { ActivityType, ACTIVITY_TYPES, getActivityTypeConfig, type ActivityTypeConfig } from "@utils/activityTypes";
@@ -160,6 +163,9 @@ const ProgressTracking: React.FC = () => {
     // Set helmet values
     helmet.setTitle(loaderData.title);
     helmet.setMeta(loaderData.meta as Parameters<typeof helmet.setMeta>[0]);
+
+    // Desktop detection for keyboard shortcuts
+    const isDesktop = useDesktopOnly();
 
     // Fetch activities for the current date
     const fetchActivities = useCallback(async (date: Date) => {
@@ -812,6 +818,33 @@ const ProgressTracking: React.FC = () => {
             </Field>
         ]);
     };
+
+    // Keyboard shortcuts (desktop only, disabled in form inputs by default)
+    useHotkeys("left", handlePreviousDay, { enabled: isDesktop, preventDefault: true });
+    useHotkeys("right", handleNextDay, { enabled: isDesktop, preventDefault: true });
+    useHotkeys("t", handleToday, { enabled: isDesktop });
+    useHotkeys("a", () => {
+        resetAddDialog();
+        setIsAddDialogOpen(true);
+    }, { enabled: isDesktop });
+    useHotkeys("w", handleOpenWeightDialog, { enabled: isDesktop });
+    useHotkeys("c", handleCopyDay, { enabled: isDesktop && isProUser && activities.length > 0 }, [isProUser, activities]);
+    useHotkeys("v", handlePasteDay, { enabled: isDesktop && isProUser && !!copiedDate && copiedDate !== formatDateForAPI(currentDate) && !isPasting }, [isProUser, copiedDate, currentDate, isPasting]);
+
+    // Build keyboard hints for display
+    const keyboardHints: KeyboardHint[] = [
+        { keys: ["←"], label: "Previous" },
+        { keys: ["→"], label: "Next" },
+        { keys: ["T"], label: "Today" },
+        { keys: ["A"], label: "Add Activity" },
+        { keys: ["W"], label: "Weight" },
+    ];
+    if (isProUser) {
+        keyboardHints.push(
+            { keys: ["C"], label: "Copy Day" },
+            { keys: ["V"], label: "Paste Day" }
+        );
+    }
 
     return (
         <SidebarLayout
@@ -1476,6 +1509,10 @@ const ProgressTracking: React.FC = () => {
                 })()}
             />
             <MobileBottomMenuSpacer />
+
+            {/* Desktop Keyboard Hints */}
+            {isDesktop && <KeyboardHints hints={keyboardHints} />}
+            {isDesktop && <KeyboardHintsSpacer />}
         </SidebarLayout>
     );
 };
