@@ -11,6 +11,17 @@ vi.mock("@hooks/useHelmet", () => ({
     })
 }));
 
+// Mock useDesktopOnly hook
+vi.mock("@hooks/useDesktopOnly", () => ({
+    default: () => false,
+    useDesktopOnly: () => false
+}));
+
+// Mock react-hotkeys-hook
+vi.mock("react-hotkeys-hook", () => ({
+    useHotkeys: vi.fn()
+}));
+
 // Mock MaintenanceBanner to prevent fetch interference
 vi.mock("@components/maintenance-banner", () => ({
     MaintenanceBanner: () => null

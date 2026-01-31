@@ -819,32 +819,28 @@ const ProgressTracking: React.FC = () => {
         ]);
     };
 
-    // Keyboard shortcuts (desktop only, disabled in form inputs by default)
-    useHotkeys("left", handlePreviousDay, { enabled: isDesktop, preventDefault: true });
-    useHotkeys("right", handleNextDay, { enabled: isDesktop, preventDefault: true });
-    useHotkeys("t", handleToday, { enabled: isDesktop });
+    // Keyboard shortcuts (Pro feature, desktop only, disabled in form inputs by default)
+    useHotkeys("left", handlePreviousDay, { enabled: isDesktop && isProUser, preventDefault: true }, [isProUser]);
+    useHotkeys("right", handleNextDay, { enabled: isDesktop && isProUser, preventDefault: true }, [isProUser]);
+    useHotkeys("t", handleToday, { enabled: isDesktop && isProUser }, [isProUser]);
     useHotkeys("a", () => {
         resetAddDialog();
         setIsAddDialogOpen(true);
-    }, { enabled: isDesktop });
-    useHotkeys("w", handleOpenWeightDialog, { enabled: isDesktop });
+    }, { enabled: isDesktop && isProUser }, [isProUser]);
+    useHotkeys("w", handleOpenWeightDialog, { enabled: isDesktop && isProUser }, [isProUser]);
     useHotkeys("c", handleCopyDay, { enabled: isDesktop && isProUser && activities.length > 0 }, [isProUser, activities]);
     useHotkeys("v", handlePasteDay, { enabled: isDesktop && isProUser && !!copiedDate && copiedDate !== formatDateForAPI(currentDate) && !isPasting }, [isProUser, copiedDate, currentDate, isPasting]);
 
-    // Build keyboard hints for display
+    // Build keyboard hints for display (Pro feature)
     const keyboardHints: KeyboardHint[] = [
         { keys: ["←"], label: "Previous" },
         { keys: ["→"], label: "Next" },
         { keys: ["T"], label: "Today" },
         { keys: ["A"], label: "Add Activity" },
         { keys: ["W"], label: "Weight" },
+        { keys: ["C"], label: "Copy Day" },
+        { keys: ["V"], label: "Paste Day" },
     ];
-    if (isProUser) {
-        keyboardHints.push(
-            { keys: ["C"], label: "Copy Day" },
-            { keys: ["V"], label: "Paste Day" }
-        );
-    }
 
     return (
         <SidebarLayout
@@ -1510,9 +1506,9 @@ const ProgressTracking: React.FC = () => {
             />
             <MobileBottomMenuSpacer />
 
-            {/* Desktop Keyboard Hints */}
-            {isDesktop && <KeyboardHints hints={keyboardHints} />}
-            {isDesktop && <KeyboardHintsSpacer />}
+            {/* Desktop Keyboard Hints (Pro feature) */}
+            {isDesktop && isProUser && <KeyboardHints hints={keyboardHints} />}
+            {isDesktop && isProUser && <KeyboardHintsSpacer />}
         </SidebarLayout>
     );
 };

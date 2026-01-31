@@ -373,6 +373,7 @@ const ChoosePlan: React.FC = () => {
                                 <FeatureItem>Goal timeline projections</FeatureItem>
                                 <FeatureItem>Weekly progress insights</FeatureItem>
                                 <FeatureItem>Customizable PDF report sections</FeatureItem>
+                                <FeatureItem>Keyboard shortcuts for power users (desktop)</FeatureItem>
                                 <li className="flex items-start gap-3">
                                     <Sparkles className="size-5 text-blue-500 shrink-0 mt-0.5" />
                                     <Text className="!mt-0 italic text-zinc-500 dark:text-zinc-400">And more features coming soon...</Text>
