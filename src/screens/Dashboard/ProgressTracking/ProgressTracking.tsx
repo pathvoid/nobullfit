@@ -592,21 +592,77 @@ const ProgressTracking: React.FC = () => {
     const handleEditActivity = (activity: LoggedActivity) => {
         setEditingActivity(activity);
         setEditActivityName(activity.activity_name);
-        
+
         // Convert activity data to form data with proper formatting
         const config = getActivityTypeConfig(activity.activity_type);
         const formData: Record<string, string> = {};
-        Object.keys(activity.activity_data).forEach((key) => {
-            const value = activity.activity_data[key];
-            if (value !== null && value !== undefined) {
-                const field = config?.fields.find(f => f.key === key);
-                if (field && (typeof value === "string" || typeof value === "number")) {
-                    formData[key] = formatFieldValue(value, field.type, field.key);
-                } else {
-                    formData[key] = String(value);
+
+        // Check if this is a Strava-imported activity and map fields accordingly
+        const isStravaActivity = activity.activity_data.source === "strava";
+
+        if (isStravaActivity) {
+            // Check if activity type uses meters for distance (swimming)
+            const distanceField = config?.fields.find(f => f.key === "distance");
+            const useMetersForDistance = distanceField?.unit === "m";
+
+            // Map Strava fields to form fields with activity-type-aware transforms
+            const stravaToFormMapping: Record<string, { formKey: string; transform: (v: unknown) => string }> = {
+                distance_meters: {
+                    formKey: "distance",
+                    transform: (v) => useMetersForDistance
+                        ? (v as number).toFixed(0)
+                        : ((v as number) / 1000).toFixed(2)
+                },
+                moving_time_seconds: {
+                    formKey: "duration",
+                    transform: (v) => {
+                        const secs = v as number;
+                        const hours = Math.floor(secs / 3600);
+                        const minutes = Math.floor((secs % 3600) / 60);
+                        const seconds = secs % 60;
+                        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+                    }
+                },
+                average_speed_mps: {
+                    formKey: "average_speed",
+                    transform: (v) => ((v as number) * 3.6).toFixed(1) // m/s to km/h
                 }
-            }
-        });
+            };
+
+            Object.keys(activity.activity_data).forEach((key) => {
+                const value = activity.activity_data[key];
+                if (value !== null && value !== undefined) {
+                    const mapping = stravaToFormMapping[key];
+                    if (mapping) {
+                        // Check if this field exists in the activity config
+                        const field = config?.fields.find(f => f.key === mapping.formKey);
+                        if (field) {
+                            formData[mapping.formKey] = mapping.transform(value);
+                        }
+                    } else {
+                        // Also load additional fields that aren't Strava-specific (e.g., steps, pace)
+                        const field = config?.fields.find(f => f.key === key);
+                        if (field && (typeof value === "string" || typeof value === "number")) {
+                            formData[key] = formatFieldValue(value, field.type, field.key);
+                        }
+                    }
+                }
+            });
+        } else {
+            // Standard activity - use direct field mapping
+            Object.keys(activity.activity_data).forEach((key) => {
+                const value = activity.activity_data[key];
+                if (value !== null && value !== undefined) {
+                    const field = config?.fields.find(f => f.key === key);
+                    if (field && (typeof value === "string" || typeof value === "number")) {
+                        formData[key] = formatFieldValue(value, field.type, field.key);
+                    } else {
+                        formData[key] = String(value);
+                    }
+                }
+            });
+        }
+
         if (activity.calories_burned !== null && activity.calories_burned !== undefined) {
             formData.calories_burned = formatFieldValue(activity.calories_burned, "number", "calories_burned");
         }
@@ -623,29 +679,121 @@ const ProgressTracking: React.FC = () => {
             const config = getActivityTypeConfig(editingActivity.activity_type);
             if (!config) return;
 
-            // Build activity data from form (exclude calories_burned as it's stored separately) with proper formatting
-            const activityData: Record<string, unknown> = {};
-            config.fields.forEach((field) => {
-                if (field.key !== "calories_burned" && editActivityFormData[field.key]) {
-                    const value = editActivityFormData[field.key];
-                    if (value && value.trim() !== "") {
-                        // Format the value before storing
-                        const formattedValue = formatFieldValue(value, field.type, field.key);
-                        if (formattedValue) {
-                            if (field.type === "number") {
-                                const numValue = parseFloat(formattedValue);
-                                if (!isNaN(numValue)) {
-                                    activityData[field.key] = numValue;
+            const isStravaActivity = editingActivity.activity_data.source === "strava";
+            let activityData: Record<string, unknown> = {};
+
+            if (isStravaActivity) {
+                // Preserve all non-editable Strava fields
+                const preserveFields = [
+                    "source", "strava_id", "sport_type",
+                    "elevation_gain_meters", "average_heartrate", "max_heartrate",
+                    "max_speed_mps"
+                ];
+                preserveFields.forEach((key) => {
+                    if (editingActivity.activity_data[key] !== undefined) {
+                        activityData[key] = editingActivity.activity_data[key];
+                    }
+                });
+
+                // Check if activity type uses meters for distance (swimming)
+                const distanceField = config.fields.find(f => f.key === "distance");
+                const useMetersForDistance = distanceField?.unit === "m";
+
+                // Handle distance - map form field back to Strava format or preserve original
+                if (editActivityFormData.distance && editActivityFormData.distance.trim() !== "") {
+                    const distanceValue = parseFloat(editActivityFormData.distance);
+                    if (!isNaN(distanceValue)) {
+                        activityData.distance_meters = useMetersForDistance ? distanceValue : distanceValue * 1000;
+                    }
+                } else if (editingActivity.activity_data.distance_meters !== undefined) {
+                    activityData.distance_meters = editingActivity.activity_data.distance_meters;
+                }
+
+                // Handle duration - map form field back to Strava format or preserve original
+                let durationUpdated = false;
+                if (editActivityFormData.duration && editActivityFormData.duration.trim() !== "") {
+                    const parts = editActivityFormData.duration.split(":").map(p => parseInt(p, 10));
+                    let totalSeconds = 0;
+                    if (parts.length === 3) {
+                        totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+                    } else if (parts.length === 2) {
+                        totalSeconds = parts[0] * 60 + parts[1];
+                    }
+                    // Allow 0 seconds as a valid value
+                    activityData.moving_time_seconds = totalSeconds;
+                    durationUpdated = true;
+                    // Update elapsed_time proportionally if it was originally equal to moving_time
+                    const originalMoving = editingActivity.activity_data.moving_time_seconds as number;
+                    const originalElapsed = editingActivity.activity_data.elapsed_time_seconds as number;
+                    if (originalMoving === originalElapsed) {
+                        activityData.elapsed_time_seconds = totalSeconds;
+                    } else {
+                        activityData.elapsed_time_seconds = originalElapsed;
+                    }
+                }
+                // Preserve original time fields if not edited
+                if (!durationUpdated) {
+                    if (editingActivity.activity_data.moving_time_seconds !== undefined) {
+                        activityData.moving_time_seconds = editingActivity.activity_data.moving_time_seconds;
+                    }
+                    if (editingActivity.activity_data.elapsed_time_seconds !== undefined) {
+                        activityData.elapsed_time_seconds = editingActivity.activity_data.elapsed_time_seconds;
+                    }
+                }
+
+                // Handle cycling average_speed (form has km/h, Strava uses m/s)
+                if (editActivityFormData.average_speed && editActivityFormData.average_speed.trim() !== "") {
+                    const speedKmh = parseFloat(editActivityFormData.average_speed);
+                    if (!isNaN(speedKmh)) {
+                        activityData.average_speed_mps = speedKmh / 3.6;
+                    }
+                } else if (editingActivity.activity_data.average_speed_mps !== undefined) {
+                    activityData.average_speed_mps = editingActivity.activity_data.average_speed_mps;
+                }
+
+                // Also save any additional form fields that aren't Strava-specific (e.g., steps, pace)
+                const stravaHandledFields = ["distance", "duration", "average_speed", "calories_burned"];
+                config.fields.forEach((field) => {
+                    if (!stravaHandledFields.includes(field.key) && editActivityFormData[field.key]) {
+                        const value = editActivityFormData[field.key];
+                        if (value && value.trim() !== "") {
+                            const formattedValue = formatFieldValue(value, field.type, field.key);
+                            if (formattedValue) {
+                                if (field.type === "number") {
+                                    const numValue = parseFloat(formattedValue);
+                                    if (!isNaN(numValue)) {
+                                        activityData[field.key] = numValue;
+                                    }
+                                } else {
+                                    activityData[field.key] = formattedValue;
                                 }
-                            } else {
-                                activityData[field.key] = formattedValue;
                             }
                         }
                     }
-                }
-            });
+                });
+            } else {
+                // Standard activity - use direct field mapping
+                config.fields.forEach((field) => {
+                    if (field.key !== "calories_burned" && editActivityFormData[field.key]) {
+                        const value = editActivityFormData[field.key];
+                        if (value && value.trim() !== "") {
+                            const formattedValue = formatFieldValue(value, field.type, field.key);
+                            if (formattedValue) {
+                                if (field.type === "number") {
+                                    const numValue = parseFloat(formattedValue);
+                                    if (!isNaN(numValue)) {
+                                        activityData[field.key] = numValue;
+                                    }
+                                } else {
+                                    activityData[field.key] = formattedValue;
+                                }
+                            }
+                        }
+                    }
+                });
+            }
 
-            const caloriesBurned = editActivityFormData.calories_burned && editActivityFormData.calories_burned.trim() !== "" 
+            const caloriesBurned = editActivityFormData.calories_burned && editActivityFormData.calories_burned.trim() !== ""
                 ? parseFloat(formatFieldValue(editActivityFormData.calories_burned, "number", "calories_burned")) || null
                 : null;
 
