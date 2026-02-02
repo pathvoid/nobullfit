@@ -5,8 +5,7 @@ import type { Request, Response } from "express";
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
 import { decryptToken, encryptToken } from "../utils/encryptionService.js";
-// TEMP: Using isIntegrationEnabledForUser instead of isIntegrationEnabled for Strava demo bypass
-import { isIntegrationEnabledForUser } from "../utils/featureFlagService.js";
+import { isIntegrationEnabled } from "../utils/featureFlagService.js";
 import { isValidProvider, getProviderConfig } from "../utils/integrationProviders/index.js";
 import type { SyncResult, DataType } from "../utils/integrationProviders/types.js";
 import { stravaFetch, canMakeReadRequest, getRetryAfterMs } from "../utils/stravaRateLimitService.js";
@@ -58,8 +57,7 @@ export async function handleTriggerSync(req: Request, res: Response): Promise<vo
         }
 
         // Check if integration is enabled
-        // TEMP: Pass userId to allow user 2 to bypass Strava feature flag
-        const isEnabled = await isIntegrationEnabledForUser(provider, userId);
+        const isEnabled = await isIntegrationEnabled(provider);
         if (!isEnabled) {
             res.status(403).json({ error: "This integration is currently not available" });
             return;
@@ -367,8 +365,7 @@ export async function handleUpdateAutoSyncSettings(req: Request, res: Response):
         }
 
         // Check if integration is enabled
-        // TEMP: Pass userId to allow user 2 to bypass Strava feature flag
-        const isEnabled = await isIntegrationEnabledForUser(provider, userId);
+        const isEnabled = await isIntegrationEnabled(provider);
         if (!isEnabled) {
             res.status(403).json({ error: "This integration is currently not available" });
             return;

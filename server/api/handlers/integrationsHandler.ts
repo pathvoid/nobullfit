@@ -6,8 +6,7 @@ import crypto from "crypto";
 import getPool from "../../db/connection.js";
 import { verifyToken, generateStateToken, verifyStateToken } from "../utils/jwt.js";
 import { encryptToken, decryptToken } from "../utils/encryptionService.js";
-// TEMP: Using isIntegrationEnabledForUser instead of isIntegrationEnabled for Strava demo bypass
-import { isIntegrationEnabledForUser } from "../utils/featureFlagService.js";
+import { isIntegrationEnabled } from "../utils/featureFlagService.js";
 import {
     getAllProviderConfigs,
     getProviderConfig,
@@ -81,8 +80,7 @@ export async function handleGetIntegrations(req: Request, res: Response): Promis
         // Build integration info for each provider
         const integrations: IntegrationInfo[] = await Promise.all(
             allProviders.map(async (config) => {
-                // TEMP: Pass userId to allow user 2 to bypass Strava feature flag
-                const isEnabled = await isIntegrationEnabledForUser(config.providerKey, userId);
+                const isEnabled = await isIntegrationEnabled(config.providerKey);
                 const connection = connectionsMap.get(config.providerKey);
 
                 return {
@@ -152,8 +150,7 @@ export async function handleGetIntegration(req: Request, res: Response): Promise
             return;
         }
 
-        // TEMP: Pass userId to allow user 2 to bypass Strava feature flag
-        const isEnabled = await isIntegrationEnabledForUser(provider, userId);
+        const isEnabled = await isIntegrationEnabled(provider);
 
         // Get connection if exists
         const connectionResult = await pool.query(
@@ -229,8 +226,7 @@ export async function handleConnectIntegration(req: Request, res: Response): Pro
         }
 
         // Check if integration is enabled via feature flag
-        // TEMP: Pass userId to allow user 2 to bypass Strava feature flag
-        const isEnabled = await isIntegrationEnabledForUser(provider, userId);
+        const isEnabled = await isIntegrationEnabled(provider);
         if (!isEnabled) {
             res.status(403).json({ error: "This integration is currently not available" });
             return;

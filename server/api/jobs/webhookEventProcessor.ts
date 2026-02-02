@@ -66,8 +66,6 @@ function mapStravaActivityType(stravaType: string): string {
 
 // Run the webhook event processor
 export async function runWebhookEventProcessor(): Promise<void> {
-    console.log("[WebhookProcessor] Starting event processing run...");
-
     const pool = await getPool();
     if (!pool) {
         console.error("[WebhookProcessor] Database pool not available");
@@ -84,13 +82,17 @@ export async function runWebhookEventProcessor(): Promise<void> {
             LIMIT $2
         `, [MAX_RETRIES, BATCH_SIZE]);
 
-        console.log(`[WebhookProcessor] Found ${eventsResult.rows.length} events to process`);
+        if (eventsResult.rows.length > 0) {
+            console.log(`[WebhookProcessor] Found ${eventsResult.rows.length} events to process`);
+        }
 
         for (const event of eventsResult.rows) {
             await processEvent(pool, event);
         }
 
-        console.log("[WebhookProcessor] Processing run complete");
+        if (eventsResult.rows.length > 0) {
+            console.log("[WebhookProcessor] Processing run complete");
+        }
     } catch (error) {
         console.error("[WebhookProcessor] Error:", error);
     }

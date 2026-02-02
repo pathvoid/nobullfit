@@ -101,19 +101,6 @@ export async function isIntegrationEnabled(provider: string): Promise<boolean> {
     return isFeatureEnabled(flagKey);
 }
 
-// TEMP: Strava demo bypass for user ID 2
-// This allows user 2 to use Strava integration even when the feature flag is disabled
-// Remove this function and revert call sites once Strava approval is complete
-const STRAVA_DEMO_USER_ID = 2;
-
-export async function isIntegrationEnabledForUser(provider: string, userId?: number): Promise<boolean> {
-    // TEMP: Allow user 2 to bypass Strava feature flag for demo purposes
-    if (provider === "strava" && userId === STRAVA_DEMO_USER_ID) {
-        return true;
-    }
-    return isIntegrationEnabled(provider);
-}
-
 // Update a feature flag (admin use only)
 export async function updateFeatureFlag(flagKey: string, isEnabled: boolean): Promise<boolean> {
     const pool = await getPool();

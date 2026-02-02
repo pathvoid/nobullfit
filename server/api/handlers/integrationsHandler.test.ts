@@ -13,9 +13,7 @@ vi.mock("../utils/jwt.js", () => ({
 }));
 
 vi.mock("../utils/featureFlagService.js", () => ({
-    isIntegrationEnabled: vi.fn(),
-    // TEMP: Mock the new function for Strava demo bypass
-    isIntegrationEnabledForUser: vi.fn()
+    isIntegrationEnabled: vi.fn()
 }));
 
 vi.mock("../utils/integrationProviders/index.js", () => ({
@@ -31,8 +29,7 @@ vi.mock("../utils/encryptionService.js", () => ({
 
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
-// TEMP: Using isIntegrationEnabledForUser for Strava demo bypass
-import { isIntegrationEnabledForUser } from "../utils/featureFlagService.js";
+import { isIntegrationEnabled } from "../utils/featureFlagService.js";
 import { getAllProviderConfigs, isValidProvider } from "../utils/integrationProviders/index.js";
 import { decryptToken } from "../utils/encryptionService.js";
 
@@ -100,7 +97,7 @@ describe("integrationsHandler", () => {
             mockRequest.headers = { authorization: "Bearer valid_token" };
 
             (getAllProviderConfigs as ReturnType<typeof vi.fn>).mockReturnValue(mockProviderConfigs);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
             // Mock no existing connections
             mockPool.query.mockResolvedValue({ rows: [] });
@@ -126,7 +123,7 @@ describe("integrationsHandler", () => {
             mockRequest.headers = { authorization: "Bearer valid_token" };
 
             (getAllProviderConfigs as ReturnType<typeof vi.fn>).mockReturnValue([mockProviderConfigs[0]]);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
             // Mock existing connection
             mockPool.query.mockResolvedValue({
@@ -152,7 +149,7 @@ describe("integrationsHandler", () => {
             mockRequest.headers = { authorization: "Bearer valid_token" };
 
             (getAllProviderConfigs as ReturnType<typeof vi.fn>).mockReturnValue(mockProviderConfigs);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(false);
 
             mockPool.query.mockResolvedValue({ rows: [] });
 

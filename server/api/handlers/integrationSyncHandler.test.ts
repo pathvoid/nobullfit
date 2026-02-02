@@ -19,9 +19,7 @@ vi.mock("../utils/jwt", () => ({
 }));
 
 vi.mock("../utils/featureFlagService", () => ({
-    isIntegrationEnabled: vi.fn(),
-    // TEMP: Mock the new function for Strava demo bypass
-    isIntegrationEnabledForUser: vi.fn()
+    isIntegrationEnabled: vi.fn()
 }));
 
 vi.mock("../utils/integrationProviders/index", () => ({
@@ -36,8 +34,7 @@ vi.mock("../utils/encryptionService", () => ({
 
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
-// TEMP: Using isIntegrationEnabledForUser for Strava demo bypass
-import { isIntegrationEnabledForUser } from "../utils/featureFlagService.js";
+import { isIntegrationEnabled } from "../utils/featureFlagService.js";
 import { isValidProvider, getProviderConfig } from "../utils/integrationProviders/index.js";
 
 describe("integrationSyncHandler", () => {
@@ -96,7 +93,7 @@ describe("integrationSyncHandler", () => {
         it("should return 403 if integration is not enabled", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
             (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(false);
             mockRequest.headers = { authorization: "Bearer valid_token" };
             mockRequest.params = { provider: "strava" };
 
@@ -111,7 +108,7 @@ describe("integrationSyncHandler", () => {
         it("should return 500 if database connection fails", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
             (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
             (getPool as ReturnType<typeof vi.fn>).mockResolvedValue(null);
             mockRequest.headers = { authorization: "Bearer valid_token" };
             mockRequest.params = { provider: "strava" };
@@ -127,7 +124,7 @@ describe("integrationSyncHandler", () => {
         it("should return 404 if integration not connected", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
             (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
             mockPool.query.mockResolvedValue({ rows: [] });
             mockRequest.headers = { authorization: "Bearer valid_token" };
             mockRequest.params = { provider: "strava" };
@@ -141,7 +138,7 @@ describe("integrationSyncHandler", () => {
         it("should return 400 if integration connection is not active", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
             (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
             mockPool.query.mockResolvedValue({
                 rows: [{ id: 1, status: "disconnected" }]
             });
@@ -371,7 +368,7 @@ describe("integrationSyncHandler", () => {
         it("should return 400 if integration not connected", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
             (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
             mockPool.query
                 .mockResolvedValueOnce({ rows: [{ subscribed: true }] })
@@ -392,7 +389,7 @@ describe("integrationSyncHandler", () => {
         it("should update settings successfully", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
             (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
             (getProviderConfig as ReturnType<typeof vi.fn>).mockReturnValue({
                 supportedDataTypes: ["workouts", "calories_burned"]
             });
@@ -420,7 +417,7 @@ describe("integrationSyncHandler", () => {
         it("should enforce minimum frequency of 15 minutes", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
             (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
             (getProviderConfig as ReturnType<typeof vi.fn>).mockReturnValue({
                 supportedDataTypes: ["workouts"]
             });
@@ -446,7 +443,7 @@ describe("integrationSyncHandler", () => {
         it("should set isEnabled to true and call update handler", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
             (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
             (getProviderConfig as ReturnType<typeof vi.fn>).mockReturnValue({
                 supportedDataTypes: ["workouts"]
             });
@@ -471,7 +468,7 @@ describe("integrationSyncHandler", () => {
         it("should set isEnabled to false and call update handler", async () => {
             (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
             (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabledForUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
             (getProviderConfig as ReturnType<typeof vi.fn>).mockReturnValue({
                 supportedDataTypes: ["workouts"]
             });
