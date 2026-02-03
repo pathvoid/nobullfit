@@ -60,6 +60,7 @@ const Pricing: React.FC = () => {
                                 <FeatureItem>Create and share recipes with the community</FeatureItem>
                                 <FeatureItem>Grocery list management</FeatureItem>
                                 <FeatureItem>Activity and exercise logging</FeatureItem>
+                                <FeatureItem>Strava integration with automatic sync</FeatureItem>
                                 <FeatureItem>Weight tracking with trends</FeatureItem>
                                 <FeatureItem>TDEE and BMR calculator</FeatureItem>
                                 <FeatureItem>Dashboard analytics with charts</FeatureItem>
@@ -295,6 +296,13 @@ const Pricing: React.FC = () => {
                                         <TableCell className="text-center"><Check className="size-5 text-emerald-500 mx-auto" /></TableCell>
                                         <TableCell className="text-center"><Check className="size-5 text-emerald-500 mx-auto" /></TableCell>
                                         <TableCell className="text-center"><Check className="size-5 text-emerald-500 mx-auto" /></TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className="font-medium">Strava integration</TableCell>
+                                        <TableCell className="text-center"><Check className="size-5 text-emerald-500 mx-auto" /></TableCell>
+                                        <TableCell className="text-center text-zinc-500">Paid</TableCell>
+                                        <TableCell className="text-center text-zinc-500">Paid</TableCell>
+                                        <TableCell className="text-center text-zinc-500">Paid</TableCell>
                                     </TableRow>
                                     <TableRow>
                                         <TableCell className="font-medium">Weight tracking</TableCell>

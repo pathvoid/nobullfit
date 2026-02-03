@@ -322,6 +322,7 @@ const ChoosePlan: React.FC = () => {
                             <FeatureItem>Create and share recipes</FeatureItem>
                             <FeatureItem>Grocery list management</FeatureItem>
                             <FeatureItem>Activity and weight tracking</FeatureItem>
+                            <FeatureItem>Strava integration with automatic sync</FeatureItem>
                             <FeatureItem>Dashboard analytics with charts</FeatureItem>
                             <FeatureItem>PDF health reports</FeatureItem>
                             <FeatureItem>Full data export</FeatureItem>

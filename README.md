@@ -22,6 +22,9 @@ Discover and create recipes with complete nutritional breakdowns. Save your own 
 ### Progress Tracking
 Monitor your fitness activities and exercises. Log various activity types including running, weightlifting, HIIT, and more. Track calories burned, activity-specific metrics (distance, duration, pace, reps, sets, etc.), and view your activity history over time.
 
+### Strava Integration
+Connect your Strava account to automatically sync your activities. Workouts recorded on Strava are imported with all their data including distance, duration, elapsed time, elevation gain, and heart rate metrics. Activities sync automatically via webhooks.
+
 ### Weight Tracking
 Record and monitor your weight over time with support for both kilograms and pounds. Automatic unit conversion ensures consistent tracking regardless of your preferred unit. View weight trends in the dashboard overview.
 
