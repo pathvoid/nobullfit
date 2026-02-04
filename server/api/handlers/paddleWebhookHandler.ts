@@ -177,13 +177,6 @@ async function handleSubscriptionCanceled(event: PaddleWebhookEvent): Promise<vo
         console.error("Failed to clean up future Pro data:", cleanupError);
     }
 
-    // Disable auto-sync for integrations (Pro-only feature)
-    try {
-        await disableAutoSyncForUser(customerId);
-    } catch (autoSyncError) {
-        console.error("Failed to disable auto-sync:", autoSyncError);
-    }
-
     // Send cancellation email
     const user = await getUserByPaddleCustomerId(customerId);
     if (user) {
@@ -217,13 +210,6 @@ async function handleSubscriptionPaused(event: PaddleWebhookEvent): Promise<void
         subscriptionStatus: "paused",
         subscribed: false
     });
-
-    // Disable auto-sync for integrations (Pro-only feature)
-    try {
-        await disableAutoSyncForUser(customerId);
-    } catch (autoSyncError) {
-        console.error("Failed to disable auto-sync:", autoSyncError);
-    }
 
     // Send paused email
     const user = await getUserByPaddleCustomerId(customerId);
@@ -554,34 +540,3 @@ async function cleanupFutureProData(paddleCustomerId: string): Promise<void> {
     }
 }
 
-// Disable auto-sync for all integrations when subscription is canceled
-// Auto-sync is a Pro-only feature
-async function disableAutoSyncForUser(paddleCustomerId: string): Promise<void> {
-    const pool = await getPool();
-    if (!pool) {
-        console.error("Database connection not available");
-        return;
-    }
-
-    const userId = await getUserIdByPaddleCustomerId(paddleCustomerId);
-    if (!userId) {
-        console.warn(`Cannot disable auto-sync: no user found for paddle_customer_id ${paddleCustomerId}`);
-        return;
-    }
-
-    try {
-        const result = await pool.query(
-            `UPDATE integration_auto_sync
-             SET is_enabled = false, updated_at = CURRENT_TIMESTAMP
-             WHERE user_id = $1 AND is_enabled = true`,
-            [userId]
-        );
-
-        if (result.rowCount && result.rowCount > 0) {
-            console.log(`Disabled auto-sync for ${result.rowCount} integration(s) for user ${userId}`);
-        }
-    } catch (error) {
-        console.error("Error disabling auto-sync for user:", error);
-        throw error;
-    }
-}

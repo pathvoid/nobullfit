@@ -163,14 +163,6 @@ async function processAthleteEvent(pool: import("pg").Pool, event: WebhookEvent)
             [userId]
         );
 
-        // Disable auto-sync if enabled
-        await pool.query(
-            `UPDATE integration_auto_sync
-             SET is_enabled = false, updated_at = CURRENT_TIMESTAMP
-             WHERE user_id = $1 AND provider = 'strava'`,
-            [userId]
-        );
-
         console.log(`[WebhookProcessor] Marked Strava connection as disconnected for user ${userId}`);
     }
 }

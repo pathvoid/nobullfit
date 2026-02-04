@@ -34,19 +34,6 @@ async function getUserIdFromRequest(req: Request): Promise<number | null> {
     return decoded.userId as number;
 }
 
-// Helper to check if user is a Pro subscriber
-async function isProUser(userId: number): Promise<boolean> {
-    const pool = await getPool();
-    if (!pool) return false;
-
-    const result = await pool.query(
-        "SELECT subscribed FROM users WHERE id = $1",
-        [userId]
-    );
-
-    return result.rows[0]?.subscribed === true;
-}
-
 // Get all integrations with their status
 export async function handleGetIntegrations(req: Request, res: Response): Promise<void> {
     try {
@@ -162,19 +149,6 @@ export async function handleGetIntegration(req: Request, res: Response): Promise
 
         const connection = connectionResult.rows[0];
 
-        // Get auto-sync settings if user is Pro
-        let autoSync = null;
-        if (await isProUser(userId)) {
-            const autoSyncResult = await pool.query(
-                `SELECT is_enabled, sync_frequency_minutes, sync_data_types, consecutive_failures,
-                        last_failure_at, last_failure_reason, disabled_due_to_failure
-                 FROM integration_auto_sync
-                 WHERE user_id = $1 AND provider = $2`,
-                [userId, provider]
-            );
-            autoSync = autoSyncResult.rows[0] || null;
-        }
-
         res.status(200).json({
             provider: config.providerKey,
             providerName: config.providerName,
@@ -192,15 +166,6 @@ export async function handleGetIntegration(req: Request, res: Response): Promise
                 scopes: connection.scopes,
                 lastError: connection.last_error,
                 connectedAt: connection.connected_at?.toISOString()
-            } : null,
-            autoSync: autoSync ? {
-                isEnabled: autoSync.is_enabled,
-                frequencyMinutes: autoSync.sync_frequency_minutes,
-                dataTypes: autoSync.sync_data_types,
-                consecutiveFailures: autoSync.consecutive_failures,
-                lastFailureAt: autoSync.last_failure_at?.toISOString(),
-                lastFailureReason: autoSync.last_failure_reason,
-                disabledDueToFailure: autoSync.disabled_due_to_failure
             } : null
         });
     } catch (error) {
@@ -524,12 +489,6 @@ export async function handleDisconnectIntegration(req: Request, res: Response): 
         // Delete connection
         await pool.query(
             "DELETE FROM integration_connections WHERE user_id = $1 AND provider = $2",
-            [userId, provider]
-        );
-
-        // Also delete auto-sync settings
-        await pool.query(
-            "DELETE FROM integration_auto_sync WHERE user_id = $1 AND provider = $2",
             [userId, provider]
         );
 

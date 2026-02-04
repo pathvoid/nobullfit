@@ -72,7 +72,7 @@ import { handleGetSubscription, handleCreatePortalSession, handleInitCheckout, h
 import { handlePaddleWebhook } from "./api/handlers/paddleWebhookHandler.js";
 import { handleGetFeatureFlags, handleGetEnabledFlags, handleGetIntegrationFlags, handleGetEnabledIntegrations } from "./api/handlers/featureFlagsHandler.js";
 import { handleGetIntegrations, handleGetIntegration, handleConnectIntegration, handleOAuthCallback, handleDisconnectIntegration } from "./api/handlers/integrationsHandler.js";
-import { handleTriggerSync, handleGetSyncHistory, handleGetAutoSyncSettings, handleUpdateAutoSyncSettings, handleEnableAutoSync, handleDisableAutoSync } from "./api/handlers/integrationSyncHandler.js";
+import { handleTriggerSync, handleGetSyncHistory } from "./api/handlers/integrationSyncHandler.js";
 import { handleWebhookValidation, handleWebhookEvent, handleCreateSubscription, handleViewSubscription, handleDeleteSubscription } from "./api/handlers/stravaWebhookHandler.js";
 
 // API router class - handles all /api routes
@@ -200,10 +200,6 @@ class App {
         // Integration sync endpoints
         this.router.post("/integrations/:provider/sync", handleTriggerSync);
         this.router.get("/integrations/:provider/sync-history", handleGetSyncHistory);
-        this.router.get("/integrations/:provider/auto-sync", handleGetAutoSyncSettings);
-        this.router.put("/integrations/:provider/auto-sync", handleUpdateAutoSyncSettings);
-        this.router.post("/integrations/:provider/auto-sync/enable", handleEnableAutoSync);
-        this.router.post("/integrations/:provider/auto-sync/disable", handleDisableAutoSync);
 
         // Strava webhook endpoints (public - Strava needs to reach these)
         this.router.get("/webhooks/strava", handleWebhookValidation);

@@ -2,11 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
 import {
     handleTriggerSync,
-    handleGetSyncHistory,
-    handleGetAutoSyncSettings,
-    handleUpdateAutoSyncSettings,
-    handleEnableAutoSync,
-    handleDisableAutoSync
+    handleGetSyncHistory
 } from "./integrationSyncHandler";
 
 // Mock dependencies
@@ -23,8 +19,7 @@ vi.mock("../utils/featureFlagService", () => ({
 }));
 
 vi.mock("../utils/integrationProviders/index", () => ({
-    isValidProvider: vi.fn(),
-    getProviderConfig: vi.fn()
+    isValidProvider: vi.fn()
 }));
 
 vi.mock("../utils/encryptionService", () => ({
@@ -35,7 +30,7 @@ vi.mock("../utils/encryptionService", () => ({
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
 import { isIntegrationEnabled } from "../utils/featureFlagService.js";
-import { isValidProvider, getProviderConfig } from "../utils/integrationProviders/index.js";
+import { isValidProvider } from "../utils/integrationProviders/index.js";
 
 describe("integrationSyncHandler", () => {
     let mockRequest: Partial<Request>;
@@ -243,249 +238,6 @@ describe("integrationSyncHandler", () => {
             expect(mockResponse.json).toHaveBeenCalledWith(
                 expect.objectContaining({ limit: 100 })
             );
-        });
-    });
-
-    describe("handleGetAutoSyncSettings", () => {
-        it("should return 401 if no token provided", async () => {
-            mockRequest.headers = {};
-            mockRequest.cookies = {};
-
-            await handleGetAutoSyncSettings(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.status).toHaveBeenCalledWith(401);
-            expect(mockResponse.json).toHaveBeenCalledWith({ error: "Unauthorized" });
-        });
-
-        it("should return 403 if user is not Pro", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
-            mockPool.query.mockResolvedValue({ rows: [{ subscribed: false }] });
-            mockRequest.headers = { authorization: "Bearer valid_token" };
-
-            await handleGetAutoSyncSettings(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.status).toHaveBeenCalledWith(403);
-            expect(mockResponse.json).toHaveBeenCalledWith({ error: "Auto-sync is a Pro feature" });
-        });
-
-        it("should return 400 for invalid provider", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
-            (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(false);
-            mockPool.query.mockResolvedValue({ rows: [{ subscribed: true }] });
-            mockRequest.headers = { authorization: "Bearer valid_token" };
-            mockRequest.params = { provider: "invalid" };
-
-            await handleGetAutoSyncSettings(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.status).toHaveBeenCalledWith(400);
-            expect(mockResponse.json).toHaveBeenCalledWith({ error: "Invalid provider" });
-        });
-
-        it("should return defaults if no settings exist", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
-            (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (getProviderConfig as ReturnType<typeof vi.fn>).mockReturnValue({
-                supportedDataTypes: ["workouts", "calories_burned"]
-            });
-
-            mockPool.query
-                .mockResolvedValueOnce({ rows: [{ subscribed: true }] })
-                .mockResolvedValueOnce({ rows: [] });
-
-            mockRequest.headers = { authorization: "Bearer valid_token" };
-            mockRequest.params = { provider: "strava" };
-
-            await handleGetAutoSyncSettings(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.status).toHaveBeenCalledWith(200);
-            expect(mockResponse.json).toHaveBeenCalledWith({
-                isEnabled: false,
-                frequencyMinutes: 60,
-                dataTypes: ["workouts", "calories_burned"],
-                consecutiveFailures: 0,
-                disabledDueToFailure: false
-            });
-        });
-
-        it("should return existing settings", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
-            (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-
-            const mockSettings = {
-                is_enabled: true,
-                sync_frequency_minutes: 30,
-                sync_data_types: ["workouts"],
-                consecutive_failures: 2,
-                last_failure_at: new Date("2024-01-01"),
-                last_failure_reason: "API error",
-                disabled_due_to_failure: false
-            };
-
-            mockPool.query
-                .mockResolvedValueOnce({ rows: [{ subscribed: true }] })
-                .mockResolvedValueOnce({ rows: [mockSettings] });
-
-            mockRequest.headers = { authorization: "Bearer valid_token" };
-            mockRequest.params = { provider: "strava" };
-
-            await handleGetAutoSyncSettings(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.status).toHaveBeenCalledWith(200);
-            expect(mockResponse.json).toHaveBeenCalledWith({
-                isEnabled: true,
-                frequencyMinutes: 30,
-                dataTypes: ["workouts"],
-                consecutiveFailures: 2,
-                lastFailureAt: "2024-01-01T00:00:00.000Z",
-                lastFailureReason: "API error",
-                disabledDueToFailure: false
-            });
-        });
-    });
-
-    describe("handleUpdateAutoSyncSettings", () => {
-        it("should return 401 if no token provided", async () => {
-            mockRequest.headers = {};
-            mockRequest.cookies = {};
-
-            await handleUpdateAutoSyncSettings(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.status).toHaveBeenCalledWith(401);
-            expect(mockResponse.json).toHaveBeenCalledWith({ error: "Unauthorized" });
-        });
-
-        it("should return 403 if user is not Pro", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
-            mockPool.query.mockResolvedValue({ rows: [{ subscribed: false }] });
-            mockRequest.headers = { authorization: "Bearer valid_token" };
-
-            await handleUpdateAutoSyncSettings(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.status).toHaveBeenCalledWith(403);
-            expect(mockResponse.json).toHaveBeenCalledWith({ error: "Auto-sync is a Pro feature" });
-        });
-
-        it("should return 400 if integration not connected", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
-            (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
-
-            mockPool.query
-                .mockResolvedValueOnce({ rows: [{ subscribed: true }] })
-                .mockResolvedValueOnce({ rows: [] });
-
-            mockRequest.headers = { authorization: "Bearer valid_token" };
-            mockRequest.params = { provider: "strava" };
-            mockRequest.body = { isEnabled: true };
-
-            await handleUpdateAutoSyncSettings(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.status).toHaveBeenCalledWith(400);
-            expect(mockResponse.json).toHaveBeenCalledWith({
-                error: "Integration not connected. Connect first before enabling auto-sync."
-            });
-        });
-
-        it("should update settings successfully", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
-            (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
-            (getProviderConfig as ReturnType<typeof vi.fn>).mockReturnValue({
-                supportedDataTypes: ["workouts", "calories_burned"]
-            });
-
-            mockPool.query
-                .mockResolvedValueOnce({ rows: [{ subscribed: true }] })
-                .mockResolvedValueOnce({ rows: [{ status: "active" }] })
-                .mockResolvedValueOnce({ rows: [] });
-
-            mockRequest.headers = { authorization: "Bearer valid_token" };
-            mockRequest.params = { provider: "strava" };
-            mockRequest.body = { isEnabled: true, frequencyMinutes: 30 };
-
-            await handleUpdateAutoSyncSettings(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.status).toHaveBeenCalledWith(200);
-            expect(mockResponse.json).toHaveBeenCalledWith({
-                success: true,
-                isEnabled: true,
-                frequencyMinutes: 30,
-                dataTypes: ["workouts", "calories_burned"]
-            });
-        });
-
-        it("should enforce minimum frequency of 15 minutes", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
-            (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
-            (getProviderConfig as ReturnType<typeof vi.fn>).mockReturnValue({
-                supportedDataTypes: ["workouts"]
-            });
-
-            mockPool.query
-                .mockResolvedValueOnce({ rows: [{ subscribed: true }] })
-                .mockResolvedValueOnce({ rows: [{ status: "active" }] })
-                .mockResolvedValueOnce({ rows: [] });
-
-            mockRequest.headers = { authorization: "Bearer valid_token" };
-            mockRequest.params = { provider: "strava" };
-            mockRequest.body = { isEnabled: true, frequencyMinutes: 5 };
-
-            await handleUpdateAutoSyncSettings(mockRequest as Request, mockResponse as Response);
-
-            expect(mockResponse.json).toHaveBeenCalledWith(
-                expect.objectContaining({ frequencyMinutes: 15 })
-            );
-        });
-    });
-
-    describe("handleEnableAutoSync", () => {
-        it("should set isEnabled to true and call update handler", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
-            (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
-            (getProviderConfig as ReturnType<typeof vi.fn>).mockReturnValue({
-                supportedDataTypes: ["workouts"]
-            });
-
-            mockPool.query
-                .mockResolvedValueOnce({ rows: [{ subscribed: true }] })
-                .mockResolvedValueOnce({ rows: [{ status: "active" }] })
-                .mockResolvedValueOnce({ rows: [] });
-
-            mockRequest.headers = { authorization: "Bearer valid_token" };
-            mockRequest.params = { provider: "strava" };
-            mockRequest.body = {};
-
-            await handleEnableAutoSync(mockRequest as Request, mockResponse as Response);
-
-            expect(mockRequest.body.isEnabled).toBe(true);
-            expect(mockResponse.status).toHaveBeenCalledWith(200);
-        });
-    });
-
-    describe("handleDisableAutoSync", () => {
-        it("should set isEnabled to false and call update handler", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1 });
-            (isValidProvider as ReturnType<typeof vi.fn>).mockReturnValue(true);
-            (isIntegrationEnabled as ReturnType<typeof vi.fn>).mockResolvedValue(true);
-            (getProviderConfig as ReturnType<typeof vi.fn>).mockReturnValue({
-                supportedDataTypes: ["workouts"]
-            });
-
-            mockPool.query
-                .mockResolvedValueOnce({ rows: [{ subscribed: true }] })
-                .mockResolvedValueOnce({ rows: [{ status: "active" }] })
-                .mockResolvedValueOnce({ rows: [] });
-
-            mockRequest.headers = { authorization: "Bearer valid_token" };
-            mockRequest.params = { provider: "strava" };
-            mockRequest.body = {};
-
-            await handleDisableAutoSync(mockRequest as Request, mockResponse as Response);
-
-            expect(mockRequest.body.isEnabled).toBe(false);
-            expect(mockResponse.status).toHaveBeenCalledWith(200);
         });
     });
 });

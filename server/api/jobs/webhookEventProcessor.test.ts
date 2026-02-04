@@ -77,12 +77,11 @@ describe("webhookEventProcessor", () => {
                 retry_count: 0
             };
 
-            // First call: get events, Second call: find connection, Third & Fourth: update connection and auto-sync
+            // First call: get events, Second call: find connection, Third: update connection, Fourth: mark processed
             mockPool.query
                 .mockResolvedValueOnce({ rows: [mockEvent] }) // Get events
                 .mockResolvedValueOnce({ rows: [{ user_id: 1 }] }) // Find connection
                 .mockResolvedValueOnce({ rows: [] }) // Update connection
-                .mockResolvedValueOnce({ rows: [] }) // Update auto-sync
                 .mockResolvedValueOnce({ rows: [] }); // Mark as processed
 
             await runWebhookEventProcessor();

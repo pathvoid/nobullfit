@@ -329,29 +329,6 @@ CREATE INDEX IF NOT EXISTS idx_integration_connections_provider ON integration_c
 CREATE INDEX IF NOT EXISTS idx_integration_connections_status ON integration_connections(status);
 CREATE INDEX IF NOT EXISTS idx_integration_connections_user_provider ON integration_connections(user_id, provider);
 
--- Auto-sync settings table - stores auto-sync configuration for Pro users
-CREATE TABLE IF NOT EXISTS integration_auto_sync (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    provider VARCHAR(50) NOT NULL,
-    is_enabled BOOLEAN NOT NULL DEFAULT false,
-    sync_frequency_minutes INTEGER NOT NULL DEFAULT 60,
-    sync_data_types JSONB DEFAULT '["calories_burned", "workouts", "weight"]',
-    consecutive_failures INTEGER NOT NULL DEFAULT 0,
-    last_failure_at TIMESTAMP,
-    last_failure_reason TEXT,
-    disabled_due_to_failure BOOLEAN NOT NULL DEFAULT false,
-    failure_notification_sent BOOLEAN NOT NULL DEFAULT false,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, provider)
-);
-
--- Indexes for auto-sync settings
-CREATE INDEX IF NOT EXISTS idx_integration_auto_sync_user ON integration_auto_sync(user_id);
-CREATE INDEX IF NOT EXISTS idx_integration_auto_sync_enabled ON integration_auto_sync(is_enabled);
-CREATE INDEX IF NOT EXISTS idx_integration_auto_sync_provider ON integration_auto_sync(provider);
-
 -- Integration sync history table - stores sync operation history for auditing
 CREATE TABLE IF NOT EXISTS integration_sync_history (
     id SERIAL PRIMARY KEY,

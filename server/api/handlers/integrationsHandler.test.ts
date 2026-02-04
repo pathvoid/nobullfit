@@ -202,8 +202,7 @@ describe("integrationsHandler", () => {
 
             mockPool.query
                 .mockResolvedValueOnce({ rows: [mockConnection] }) // Get connection
-                .mockResolvedValueOnce({ rowCount: 1 }) // Delete connection
-                .mockResolvedValueOnce({ rowCount: 0 }); // Delete auto-sync settings
+                .mockResolvedValueOnce({ rowCount: 1 }); // Delete connection
 
             mockFetch.mockResolvedValue({ ok: true, status: 200 });
 
@@ -248,8 +247,7 @@ describe("integrationsHandler", () => {
 
             mockPool.query
                 .mockResolvedValueOnce({ rows: [mockConnection] }) // Get connection
-                .mockResolvedValueOnce({ rowCount: 1 }) // Delete connection
-                .mockResolvedValueOnce({ rowCount: 0 }); // Delete auto-sync
+                .mockResolvedValueOnce({ rowCount: 1 }); // Delete connection
 
             mockFetch.mockResolvedValue({ ok: true, status: 200 });
 
@@ -284,8 +282,7 @@ describe("integrationsHandler", () => {
 
             mockPool.query
                 .mockResolvedValueOnce({ rows: [mockConnection] }) // Get connection
-                .mockResolvedValueOnce({ rowCount: 1 }) // Delete connection
-                .mockResolvedValueOnce({ rowCount: 0 }); // Delete auto-sync
+                .mockResolvedValueOnce({ rowCount: 1 }); // Delete connection
 
             // Deauthorization fails
             mockFetch.mockRejectedValue(new Error("Network error"));

@@ -101,23 +101,6 @@ export interface IntegrationConnection {
     updated_at: Date;
 }
 
-// Auto-sync settings from database
-export interface AutoSyncSettings {
-    id: number;
-    user_id: number;
-    provider: string;
-    is_enabled: boolean;
-    sync_frequency_minutes: number;
-    sync_data_types: string[];
-    consecutive_failures: number;
-    last_failure_at?: Date;
-    last_failure_reason?: string;
-    disabled_due_to_failure: boolean;
-    failure_notification_sent: boolean;
-    created_at: Date;
-    updated_at: Date;
-}
-
 // Sync history entry from database
 export interface SyncHistoryEntry {
     id: number;
