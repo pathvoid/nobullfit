@@ -4,6 +4,7 @@ import { Sidebar, SidebarBody, SidebarFooter, SidebarHeader, SidebarItem, Sideba
 import { StackedLayout } from "@components/stacked-layout";
 import { Link } from "@components/link";
 import { Button } from "@components/button";
+import { ButtonSkeleton } from "@components/skeleton";
 import { useAuth } from "@core/contexts/AuthContext";
 import Footer from "./Footer";
 import ScrollToTop from "./ScrollToTop";
@@ -36,11 +37,13 @@ const Layout: React.FC = () => {
                     </NavbarSection>
                     <NavbarSpacer />
                     <NavbarSection>
-                        {!isLoading && user ? (
+                        {isLoading ? (
+                            <ButtonSkeleton className="max-lg:hidden" />
+                        ) : user ? (
                             <Button href="/dashboard" className="max-lg:hidden">
                                 Dashboard
                             </Button>
-                        ) : !isLoading ? (
+                        ) : (
                             <>
                                 <Button href="/sign-in" outline className="max-lg:hidden">
                                     Sign In
@@ -49,7 +52,7 @@ const Layout: React.FC = () => {
                                     Sign Up
                                 </Button>
                             </>
-                        ) : null}
+                        )}
                     </NavbarSection>
                 </Navbar>
             }
@@ -74,11 +77,15 @@ const Layout: React.FC = () => {
                     <SidebarBody />
                     <SidebarFooter>
                         <SidebarSection>
-                            {!isLoading && user ? (
+                            {isLoading ? (
+                                <div className="px-2">
+                                    <ButtonSkeleton className="w-full" />
+                                </div>
+                            ) : user ? (
                                 <SidebarItem href="/dashboard">
                                     <SidebarLabel>Dashboard</SidebarLabel>
                                 </SidebarItem>
-                            ) : !isLoading ? (
+                            ) : (
                                 <>
                                     <SidebarItem href="/sign-in">
                                         <SidebarLabel>Sign In</SidebarLabel>
@@ -87,7 +94,7 @@ const Layout: React.FC = () => {
                                         <SidebarLabel>Sign Up</SidebarLabel>
                                     </SidebarItem>
                                 </>
-                            ) : null}
+                            )}
                         </SidebarSection>
                     </SidebarFooter>
                 </Sidebar>

@@ -6,6 +6,7 @@ import { NavbarItem } from "@components/navbar";
 import { useAuth } from "@core/contexts/AuthContext";
 import { CollapsibleSidebarSection } from "@components/collapsible-sidebar-section";
 import { Settings, ShieldCheck, Lightbulb, LogOut, ChevronUp, CreditCard } from "lucide-react";
+import { Skeleton } from "@components/skeleton";
 
 // Get user initials for avatar
 const getUserInitials = (user: { full_name?: string } | null) => {
@@ -70,7 +71,7 @@ export function UserDropdown() {
 // Sidebar footer dropdown component
 export function SidebarFooterDropdown() {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, isLoading } = useAuth();
 
     const handleLogout = () => {
         // Clear tokens first (but don't update user state yet to prevent flicker)
@@ -88,14 +89,27 @@ export function SidebarFooterDropdown() {
         <Dropdown>
             <DropdownButton as={SidebarItem}>
                 <span className="flex min-w-0 items-center gap-3">
-                    <Avatar initials={getUserInitials(user)} className="size-10" square alt="" />
+                    {isLoading ? (
+                        <Skeleton variant="rectangular" className="size-10 rounded-md" />
+                    ) : (
+                        <Avatar initials={getUserInitials(user)} className="size-10" square alt="" />
+                    )}
                     <span className="min-w-0">
-                        <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
-                            {user?.full_name || "User"}
-                        </span>
-                        <span className="block truncate text-xs/5 font-normal text-zinc-500 dark:text-zinc-400">
-                            {user?.email || ""}
-                        </span>
+                        {isLoading ? (
+                            <>
+                                <Skeleton variant="text" className="h-4 w-24 mb-1" />
+                                <Skeleton variant="text" className="h-3 w-32" />
+                            </>
+                        ) : (
+                            <>
+                                <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
+                                    {user?.full_name || "User"}
+                                </span>
+                                <span className="block truncate text-xs/5 font-normal text-zinc-500 dark:text-zinc-400">
+                                    {user?.email || ""}
+                                </span>
+                            </>
+                        )}
                     </span>
                 </span>
                 <ChevronUp className="size-4" />
