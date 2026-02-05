@@ -1,7 +1,7 @@
 import useHelmet from "@hooks/useHelmet";
 import usePWAInstallPrompt from "@hooks/usePWAInstallPrompt";
 import { useLoaderData, useNavigate } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useState, useCallback, useRef } from "react";
 import { SidebarLayout } from "@components/sidebar-layout";
 import { Navbar, NavbarSection, NavbarSpacer } from "@components/navbar";
 import { Logo } from "@components/logo";
@@ -30,6 +30,7 @@ import { TrendingUp, TrendingDown, Activity, UtensilsCrossed, Flame, FileDown, C
 import { Checkbox, CheckboxField, CheckboxGroup } from "@components/checkbox";
 import { Fieldset, Legend as FieldsetLegend, Description, Label } from "@components/fieldset";
 import { Dialog, DialogActions, DialogBody, DialogDescription, DialogTitle } from "@components/dialog";
+import { Skeleton } from "@components/skeleton";
 
 interface DashboardStats {
     today: {
@@ -153,11 +154,13 @@ const Dashboard: React.FC = () => {
     const [stats, setStats] = useState<DashboardStats | null>(loaderData.stats || null);
     const [period, setPeriod] = useState<"week" | "month" | "all">("week");
     const [isLoadingStats, setIsLoadingStats] = useState(false);
+    // Track previous period to only fetch when it actually changes
+    const prevPeriodRef = useRef<"week" | "month" | "all" | null>(loaderData.stats ? "week" : null);
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
-    // Pro feature: Goal insights
+    // Pro feature: Goal insights - start loading immediately for Pro users
     const [goalInsights, setGoalInsights] = useState<GoalInsightsResponse | null>(null);
-    const [isLoadingGoalInsights, setIsLoadingGoalInsights] = useState(false);
+    const [isLoadingGoalInsights, setIsLoadingGoalInsights] = useState(isProUser);
 
     // Pro feature: Report customization dialog
     const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
@@ -243,6 +246,17 @@ const Dashboard: React.FC = () => {
         }
     }, [user, isLoading, navigate]);
 
+    // Scroll to top on initial load to prevent scroll jump during hydration
+    useLayoutEffect(() => {
+        if (typeof window !== "undefined") {
+            // Disable browser scroll restoration
+            if ("scrollRestoration" in history) {
+                history.scrollRestoration = "manual";
+            }
+            window.scrollTo(0, 0);
+        }
+    }, []);
+
     // Fetch stats when period changes
     const fetchStats = useCallback(async (periodValue: "week" | "month" | "all") => {
         setIsLoadingStats(true);
@@ -264,6 +278,13 @@ const Dashboard: React.FC = () => {
     }, []);
 
     useEffect(() => {
+        // Only fetch if period actually changed from previous value
+        if (prevPeriodRef.current === period) {
+            return;
+        }
+        // Update previous period ref
+        prevPeriodRef.current = period;
+        // Fetch new stats
         fetchStats(period);
     }, [period, fetchStats]);
 
@@ -352,33 +373,66 @@ const Dashboard: React.FC = () => {
                     <div>
                         <Heading level={1}>Dashboard</Heading>
                         <Text className="mt-2 text-zinc-600 dark:text-zinc-400">
-                            Welcome back, {user?.full_name || "User"}!
+                            Welcome back, {isLoading ? (
+                                <Skeleton variant="text" className="inline-block h-5 w-40 align-middle" />
+                            ) : (
+                                <>{user?.full_name || "User"}!</>
+                            )}
                         </Text>
                     </div>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <div className="w-full sm:w-auto sm:min-w-[140px]">
-                            <Select
-                                value={period}
-                                onChange={(e) => setPeriod(e.target.value as "week" | "month" | "all")}
-                            >
-                                <option value="week">Last 7 Days</option>
-                                <option value="month">Last 30 Days</option>
-                                <option value="all">All Time</option>
-                            </Select>
-                        </div>
-                        <Button
-                            onClick={handleGenerateReport}
-                            disabled={isGeneratingReport}
-                            outline
-                            className="w-full sm:w-auto"
-                        >
-                            <FileDown className="h-4 w-4" data-slot="icon" />
-                            {isGeneratingReport ? "Generating..." : "Generate Report"}
-                        </Button>
+                        {isLoading ? (
+                            <>
+                                <Skeleton variant="rectangular" className="h-10 w-full sm:w-[140px] rounded-lg" />
+                                <Skeleton variant="button" className="h-10 w-full sm:w-[150px]" />
+                            </>
+                        ) : (
+                            <>
+                                <div className="w-full sm:w-auto sm:min-w-[140px]">
+                                    <Select
+                                        value={period}
+                                        onChange={(e) => setPeriod(e.target.value as "week" | "month" | "all")}
+                                    >
+                                        <option value="week">Last 7 Days</option>
+                                        <option value="month">Last 30 Days</option>
+                                        <option value="all">All Time</option>
+                                    </Select>
+                                </div>
+                                <Button
+                                    onClick={handleGenerateReport}
+                                    disabled={isGeneratingReport}
+                                    outline
+                                    className="w-full sm:w-auto"
+                                >
+                                    <FileDown className="h-4 w-4" data-slot="icon" />
+                                    {isGeneratingReport ? "Generating..." : "Generate Report"}
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
 
-                {stats?.tdee && (
+                {isLoading && stats?.tdee && (
+                    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900">
+                        <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                                <Skeleton variant="text" className="h-6 w-32 mb-4" />
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <Skeleton variant="text" className="h-4 w-36 mb-2" />
+                                        <Skeleton variant="text" className="h-7 w-40" />
+                                    </div>
+                                    <div>
+                                        <Skeleton variant="text" className="h-4 w-48 mb-2" />
+                                        <Skeleton variant="text" className="h-7 w-40" />
+                                    </div>
+                                </div>
+                            </div>
+                            <Skeleton variant="button" className="h-9 w-28 ml-4" />
+                        </div>
+                    </div>
+                )}
+                {!isLoading && stats?.tdee && (
                     <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900">
                         <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -411,7 +465,32 @@ const Dashboard: React.FC = () => {
                 )}
 
                 {/* Pro Feature: Goal Insights */}
-                {isProUser && goalInsights?.hasGoal && goalInsights.insights && (
+                {isProUser && isLoadingGoalInsights && (
+                    <div className="rounded-lg border border-zinc-950/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-800/50">
+                        <Skeleton variant="text" className="h-6 w-48 mb-4" />
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                            <div className="space-y-4">
+                                <div>
+                                    <Skeleton variant="text" className="h-4 w-40 mb-2" />
+                                    <Skeleton variant="text" className="h-8 w-32" />
+                                </div>
+                                <div>
+                                    <Skeleton variant="text" className="h-4 w-36 mb-2" />
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <Skeleton variant="rectangular" className="h-20 rounded-lg" />
+                                        <Skeleton variant="rectangular" className="h-20 rounded-lg" />
+                                        <Skeleton variant="rectangular" className="h-20 rounded-lg" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <Skeleton variant="text" className="h-4 w-24 mb-2" />
+                                <Skeleton variant="rectangular" className="h-32 rounded-lg" />
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {isProUser && !isLoadingGoalInsights && goalInsights?.hasGoal && goalInsights.insights && (
                     <div className="rounded-lg border border-zinc-950/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-800/50">
                         <Heading level={2} className="mb-4 text-lg font-semibold">
                             Goal: {goalInsights.insights.weightGoal === "lose" ? "Lose Weight" : goalInsights.insights.weightGoal === "gain" ? "Gain Weight" : "Maintain Weight"}
@@ -529,10 +608,28 @@ const Dashboard: React.FC = () => {
                     </div>
                 )}
 
-                {isLoadingStats ? (
-                    <div className="flex items-center justify-center py-12">
-                        <Text className="text-zinc-600 dark:text-zinc-400">Loading stats...</Text>
-                    </div>
+                {isLoadingStats || isLoading ? (
+                    <>
+                        {/* Stats Cards Skeleton */}
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="rounded-lg border border-zinc-950/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-800/50">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-2">
+                                            <Skeleton variant="text" className="h-4 w-28" />
+                                            <Skeleton variant="text" className="h-8 w-16" />
+                                        </div>
+                                        <Skeleton variant="rectangular" className="h-8 w-8 rounded" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {/* Chart Skeleton */}
+                        <div className="rounded-lg border border-zinc-950/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-800/50">
+                            <Skeleton variant="text" className="h-6 w-56 mb-4" />
+                            <Skeleton variant="rectangular" className="h-[300px] w-full rounded" />
+                        </div>
+                    </>
                 ) : !hasData ? (
                     // Empty state - encourage user to start tracking
                     <div className="rounded-lg border border-zinc-950/10 bg-zinc-50 p-12 text-center dark:border-white/10 dark:bg-zinc-800/50">
