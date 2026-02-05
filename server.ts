@@ -10,6 +10,7 @@ import api from "./server/app.js";
 import cookieParser from "cookie-parser";
 import { startWebhookEventScheduler, stopWebhookEventScheduler } from "./server/api/jobs/webhookEventProcessor.js";
 import { ensureWebhookSubscription } from "./server/api/handlers/stravaWebhookHandler.js";
+import { handleShortLinkRedirect } from "./server/api/handlers/shortLinkHandler.js";
 
 dotenv.config();
 // Get directory name for ES modules (needed because __dirname doesn't exist in ES modules)
@@ -49,6 +50,9 @@ const createServer = async () => {
     // Mount API routes BEFORE Vite middleware so API requests are handled by Express
     // This is critical for webhooks (like Paddle) that won't have allowed host headers
     app.use("/api", api.router);
+
+    // Short link redirect handler (for SMS and other scenarios)
+    app.get("/p/:code", handleShortLinkRedirect);
 
     let vite: ViteDevServer | undefined;
 
