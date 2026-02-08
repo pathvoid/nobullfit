@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Force dark mode via selector instead of prefers-color-scheme */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Enforce dark color scheme for native browser elements */
+html {
+    color-scheme: dark;
+}
+
 /* Sonner toast positioning - top on mobile, bottom-right on desktop */
 @media (max-width: 639px) {
     [data-sonner-toaster] {
