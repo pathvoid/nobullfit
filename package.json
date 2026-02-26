@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon --watch server --watch server.ts --exec tsx server.ts",
+    "dev:app": "npm start --prefix app",
+    "dev:all": "concurrently -n server,app -c blue,green \"npm run dev\" \"npm run dev:app\"",
     "build": "npm run clean && npm run build:client && npm run build:server",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives",
     "test": "vitest",
@@ -64,6 +66,7 @@
     "@vitejs/plugin-react": "^5.0.2",
     "@vitest/ui": "^3.2.4",
     "compression": "^1.7.5",
+    "concurrently": "^9.2.1",
     "cross-env": "^10.0.0",
     "eslint": "^8.57.1",
     "eslint-plugin-react-hooks": "^4.6.2",

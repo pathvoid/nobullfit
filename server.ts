@@ -47,6 +47,21 @@ const createServer = async () => {
     // Parse cookies
     app.use(cookieParser());
 
+    // Allow cross-origin requests from Expo dev server in development
+    if (!isProd) {
+        app.use("/api", (req, res, next) => {
+            res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+            res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+            res.header("Access-Control-Allow-Credentials", "true");
+            if (req.method === "OPTIONS") {
+                res.sendStatus(204);
+                return;
+            }
+            next();
+        });
+    }
+
     // Mount API routes BEFORE Vite middleware so API requests are handled by Express
     // This is critical for webhooks (like Paddle) that won't have allowed host headers
     app.use("/api", api.router);

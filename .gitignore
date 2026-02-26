@@ -35,3 +35,26 @@ docs/
 temp/
 
 .env
+
+# Expo / React Native (app/)
+app/.expo/
+app/dist/
+app/web-build/
+app/expo-env.d.ts
+app/app-example/
+
+# Native build artifacts
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro bundler
+.metro-health-check*
+
+# Additional
+*.pem
+*.tsbuildinfo
