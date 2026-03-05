@@ -4,7 +4,8 @@
 import type { Request, Response } from "express";
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
-import { sendSMS, validateE164 } from "../utils/twilioService.js";
+import { sendSMS } from "../utils/twilioService.js";
+import { validatePhoneNumber } from "../utils/phoneValidation.js";
 
 // Helper function to get user ID from request
 async function getUserIdFromRequest(req: Request): Promise<number | null> {
@@ -54,9 +55,10 @@ export async function handleSendVerificationCode(req: Request, res: Response): P
             return;
         }
 
-        // Validate E.164 format
-        if (!validateE164(phoneNumber)) {
-            res.status(400).json({ error: "Invalid phone number. Please use international format (e.g., +12025551234)" });
+        // Validate phone number (format, type, and safety checks)
+        const validation = validatePhoneNumber(phoneNumber);
+        if (!validation.valid) {
+            res.status(400).json({ error: validation.error });
             return;
         }
 

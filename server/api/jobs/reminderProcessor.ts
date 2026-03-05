@@ -1,6 +1,3 @@
-// Reminder Processor
-// Processes due reminders on a 60-second interval and sends email/SMS notifications
-
 import getPool from "../../db/connection.js";
 import { sendEmail } from "../utils/emailService.js";
 import { buildReminderEmailHtml, buildReminderEmailText } from "../utils/reminderEmailTemplates.js";
@@ -291,7 +288,7 @@ async function sendSmsReminder(pool: Awaited<ReturnType<typeof getPool>>, remind
     // Shorten URLs in the message
     smsBody = await shortenUrlsInMessage(smsBody);
 
-    // Add unsubscribe note (Twilio handles STOP automatically at messaging service level)
+    // STOP replies are handled by the Twilio incoming webhook (twilioWebhookHandler.ts)
     smsBody += "\n\nReply STOP to unsubscribe";
 
     await sendSMS(reminder.phone_number, smsBody);

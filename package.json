@@ -31,6 +31,7 @@
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "libphonenumber-js": "^1.12.38",
     "lucide-react": "^0.562.0",
     "motion": "^12.23.26",
     "multer": "^1.4.5-lts.1",

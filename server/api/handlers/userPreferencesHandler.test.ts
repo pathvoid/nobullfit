@@ -79,21 +79,25 @@ describe("userPreferencesHandler", () => {
                 target_weight_unit: null,
                 communication_email: true,
                 communication_sms: false,
-                communication_push: false
+                communication_push: false,
+                phone_number: null,
+                phone_verified: false
             });
         });
 
         it("should return user settings when they exist", async () => {
-            mockPool.query.mockResolvedValueOnce({ 
-                rows: [{ 
+            mockPool.query.mockResolvedValueOnce({
+                rows: [{
                     quick_add_days: 60,
                     weight_goal: null,
                     target_weight: null,
                     target_weight_unit: null,
                     communication_email: true,
                     communication_sms: false,
-                    communication_push: false
-                }] 
+                    communication_push: false,
+                    phone_number: null,
+                    phone_verified: false
+                }]
             });
 
             await handleGetUserPreferences(mockRequest as Request, mockResponse as Response);
@@ -106,7 +110,9 @@ describe("userPreferencesHandler", () => {
                 target_weight_unit: null,
                 communication_email: true,
                 communication_sms: false,
-                communication_push: false
+                communication_push: false,
+                phone_number: null,
+                phone_verified: false
             });
         });
 

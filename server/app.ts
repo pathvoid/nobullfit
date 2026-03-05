@@ -77,6 +77,7 @@ import { handleWebhookValidation, handleWebhookEvent, handleCreateSubscription, 
 import { handleGetReminders, handleCreateReminder, handleUpdateReminder, handleDeleteReminder, handleToggleReminder } from "./api/handlers/remindersHandler.js";
 import { handleSendVerificationCode, handleVerifyCode, handleRemovePhone } from "./api/handlers/phoneVerificationHandler.js";
 import { handleUnsubscribeReminders } from "./api/handlers/reminderUnsubscribeHandler.js";
+import { handleTwilioIncoming } from "./api/handlers/twilioWebhookHandler.js";
 
 // API router class - handles all /api routes
 class App {
@@ -228,6 +229,9 @@ class App {
 
         // Reminder unsubscribe (public endpoint - no auth required)
         this.router.get("/reminders/unsubscribe/:token", handleUnsubscribeReminders);
+
+        // Twilio incoming SMS webhook (public endpoint - called by Twilio)
+        this.router.post("/webhooks/twilio/incoming", express.urlencoded({ extended: false }), handleTwilioIncoming);
     }
 }
 

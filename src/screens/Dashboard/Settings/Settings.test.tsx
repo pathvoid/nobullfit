@@ -338,7 +338,7 @@ describe("Settings", () => {
 
             await waitFor(() => {
                 expect(screen.getByRole("heading", { name: /Phone Number/i })).toBeInTheDocument();
-                expect(screen.getByText(/Add and verify your phone number to enable SMS reminders/i)).toBeInTheDocument();
+                expect(screen.getByText(/Add and verify your phone number to enable SMS features/i)).toBeInTheDocument();
             });
         });
 
@@ -626,7 +626,9 @@ describe("Settings", () => {
                                 quick_add_days: 30,
                                 communication_email: true,
                                 communication_sms: false,
-                                communication_push: false
+                                communication_push: false,
+                                phone_number: null,
+                                phone_verified: false
                             })
                         });
                     } else {

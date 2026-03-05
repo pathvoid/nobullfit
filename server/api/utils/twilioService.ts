@@ -1,5 +1,3 @@
-// Twilio SMS service for sending verification codes and reminder notifications
-
 import twilio from "twilio";
 import dotenv from "dotenv";
 
@@ -38,7 +36,9 @@ export async function sendSMS(to: string, body: string): Promise<void> {
     });
 }
 
-// Validate phone number is in E.164 format (e.g., +12025551234)
-export function validateE164(phoneNumber: string): boolean {
-    return /^\+[1-9]\d{1,14}$/.test(phoneNumber);
+// Validate that an incoming request is genuinely from Twilio
+export function validateTwilioSignature(signature: string, url: string, params: Record<string, string>): boolean {
+    const authToken = process.env.TWILIO_AUTH_TOKEN || "";
+    if (!authToken) return false;
+    return twilio.validateRequest(authToken, signature, url, params);
 }
