@@ -40,8 +40,11 @@ Create and manage multiple grocery lists. Add items from the food database or re
 ### Favorites
 Save your frequently used foods and recipes for quick access. Quickly add favorited items to your food tracking or grocery lists.
 
+### Reminders
+Set custom email and SMS reminders to stay on track with your fitness goals. Schedule one-time or recurring reminders with flexible recurrence patterns (daily, specific days of the week). Free users can create up to 5 reminders, while Pro users get unlimited reminders. SMS reminders require phone number verification for security.
+
 ### Data Management
-Export all your data in JSON format, including recipes, favorites, grocery lists, food tracking entries, and progress tracking data. Delete specific data by time period (7 days, 30 days, or all time) with granular control over what to remove.
+Export all your data in JSON format, including recipes, favorites, grocery lists, food tracking entries, progress tracking data, and reminders. Delete specific data by time period (7 days, 30 days, or all time) with granular control over what to remove.
 
 ## Pro Features ($10/month)
 
@@ -71,6 +74,12 @@ Pro users can set personalized weight goals with intelligent insights:
 - **Weekly Target Adjustments**: Track your weekly progress with recommended weight change targets.
 - **Progress Tracking**: See your actual weekly weight change compared to your target, with visual feedback on whether you're on track.
 - **Goal Timeline Projection**: If a target weight is set, see a projected date for reaching your goal based on your current progress.
+
+### Unlimited Reminders
+Pro users get enhanced reminder capabilities:
+
+- **Unlimited Reminders**: Create as many email and SMS reminders as you need (free users are limited to 5).
+- **Up to 20 Daily Notifications**: Receive up to 20 reminder notifications per day across email and SMS.
 
 ### Customizable PDF Reports
 Pro users can personalize their health reports:
