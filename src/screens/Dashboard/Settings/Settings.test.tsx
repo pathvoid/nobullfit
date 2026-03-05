@@ -300,6 +300,132 @@ describe("Settings", () => {
         global.URL.revokeObjectURL = originalRevokeObjectURL;
     });
 
+    describe("Phone Number", () => {
+        it("should display phone number section", async () => {
+            (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url: string) => {
+                if (url === "/api/settings/preferences") {
+                    return Promise.resolve({
+                        ok: true,
+                        json: async () => ({
+                            quick_add_days: 30,
+                            communication_email: true,
+                            communication_sms: false,
+                            communication_push: false,
+                            phone_number: null,
+                            phone_verified: false
+                        })
+                    });
+                }
+                return Promise.resolve({ ok: true, json: async () => ({}) });
+            });
+
+            const router = createMemoryRouter([
+                {
+                    path: "/dashboard/settings",
+                    element: <Settings />,
+                    loader: async () => ({
+                        title: "Settings - NoBullFit",
+                        meta: [],
+                        user: { email: "test@example.com" }
+                    }),
+                    HydrateFallback: () => null
+                }
+            ], {
+                initialEntries: ["/dashboard/settings"]
+            });
+
+            render(<RouterProvider router={router} />);
+
+            await waitFor(() => {
+                expect(screen.getByRole("heading", { name: /Phone Number/i })).toBeInTheDocument();
+                expect(screen.getByText(/Add and verify your phone number to enable SMS reminders/i)).toBeInTheDocument();
+            });
+        });
+
+        it("should show phone input and send code button when not verified", async () => {
+            (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url: string) => {
+                if (url === "/api/settings/preferences") {
+                    return Promise.resolve({
+                        ok: true,
+                        json: async () => ({
+                            quick_add_days: 30,
+                            communication_email: true,
+                            communication_sms: false,
+                            communication_push: false,
+                            phone_number: null,
+                            phone_verified: false
+                        })
+                    });
+                }
+                return Promise.resolve({ ok: true, json: async () => ({}) });
+            });
+
+            const router = createMemoryRouter([
+                {
+                    path: "/dashboard/settings",
+                    element: <Settings />,
+                    loader: async () => ({
+                        title: "Settings - NoBullFit",
+                        meta: [],
+                        user: { email: "test@example.com" }
+                    }),
+                    HydrateFallback: () => null
+                }
+            ], {
+                initialEntries: ["/dashboard/settings"]
+            });
+
+            render(<RouterProvider router={router} />);
+
+            await waitFor(() => {
+                expect(screen.getByPlaceholderText("+12025551234")).toBeInTheDocument();
+                expect(screen.getByRole("button", { name: /Send Verification Code/i })).toBeInTheDocument();
+            });
+        });
+
+        it("should show verified state with change and remove buttons", async () => {
+            (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url: string) => {
+                if (url === "/api/settings/preferences") {
+                    return Promise.resolve({
+                        ok: true,
+                        json: async () => ({
+                            quick_add_days: 30,
+                            communication_email: true,
+                            communication_sms: false,
+                            communication_push: false,
+                            phone_number: "+1202***1234",
+                            phone_verified: true
+                        })
+                    });
+                }
+                return Promise.resolve({ ok: true, json: async () => ({}) });
+            });
+
+            const router = createMemoryRouter([
+                {
+                    path: "/dashboard/settings",
+                    element: <Settings />,
+                    loader: async () => ({
+                        title: "Settings - NoBullFit",
+                        meta: [],
+                        user: { email: "test@example.com" }
+                    }),
+                    HydrateFallback: () => null
+                }
+            ], {
+                initialEntries: ["/dashboard/settings"]
+            });
+
+            render(<RouterProvider router={router} />);
+
+            await waitFor(() => {
+                expect(screen.getByText(/is verified/i)).toBeInTheDocument();
+                expect(screen.getByRole("button", { name: /Change Phone Number/i })).toBeInTheDocument();
+                expect(screen.getByRole("button", { name: /Remove Phone Number/i })).toBeInTheDocument();
+            });
+        });
+    });
+
     describe("Communication Preferences", () => {
         beforeEach(() => {
             // Mock preferences API response

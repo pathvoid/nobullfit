@@ -58,7 +58,7 @@ export async function handleGetUserPreferences(req: Request, res: Response): Pro
 
         // Get user settings, or return defaults if not set
         const result = await pool.query(
-            "SELECT quick_add_days, weight_goal, target_weight, target_weight_unit, communication_email, communication_sms, communication_push FROM user_settings WHERE user_id = $1",
+            "SELECT quick_add_days, weight_goal, target_weight, target_weight_unit, communication_email, communication_sms, communication_push, phone_number, phone_verified FROM user_settings WHERE user_id = $1",
             [userId]
         );
 
@@ -71,7 +71,9 @@ export async function handleGetUserPreferences(req: Request, res: Response): Pro
                 target_weight_unit: null,
                 communication_email: true,
                 communication_sms: false,
-                communication_push: false
+                communication_push: false,
+                phone_number: null,
+                phone_verified: false
             });
             return;
         }
@@ -83,7 +85,9 @@ export async function handleGetUserPreferences(req: Request, res: Response): Pro
             target_weight_unit: result.rows[0].target_weight_unit,
             communication_email: result.rows[0].communication_email ?? true,
             communication_sms: result.rows[0].communication_sms ?? false,
-            communication_push: result.rows[0].communication_push ?? false
+            communication_push: result.rows[0].communication_push ?? false,
+            phone_number: result.rows[0].phone_number || null,
+            phone_verified: result.rows[0].phone_verified || false
         });
     } catch (error) {
         console.error("Error fetching user preferences:", error);

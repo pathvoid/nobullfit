@@ -36,7 +36,7 @@ function getSESClient(): SESClient {
 }
 
 // Send email using SES
-async function sendEmail(to: string, subject: string, htmlBody: string, textBody: string): Promise<void> {
+export async function sendEmail(to: string, subject: string, htmlBody: string, textBody: string): Promise<void> {
     const client = getSESClient();
     
     const command = new SendEmailCommand({

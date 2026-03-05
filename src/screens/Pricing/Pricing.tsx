@@ -66,6 +66,7 @@ const Pricing: React.FC = () => {
                                 <FeatureItem>Dashboard analytics with charts</FeatureItem>
                                 <FeatureItem>PDF health reports</FeatureItem>
                                 <FeatureItem>Full data export (JSON)</FeatureItem>
+                                <FeatureItem>Up to 5 email and SMS reminders</FeatureItem>
                                 <FeatureItem>No ads, ever</FeatureItem>
                             </ul>
                         </div>
@@ -105,6 +106,7 @@ const Pricing: React.FC = () => {
                                     <FeatureItem>Goal timeline projections</FeatureItem>
                                     <FeatureItem>Weekly progress insights</FeatureItem>
                                     <FeatureItem>Customizable PDF report sections</FeatureItem>
+                                    <FeatureItem>Unlimited email and SMS reminders</FeatureItem>
                                     <FeatureItem>Keyboard shortcuts for power users (desktop)</FeatureItem>
                                     <li className="flex items-start gap-3">
                                         <Sparkles className="size-5 text-blue-500 shrink-0 mt-0.5" />

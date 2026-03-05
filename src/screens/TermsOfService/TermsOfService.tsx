@@ -94,6 +94,12 @@ const TermsOfService: React.FC = () => {
                                     Pro features such as future meal planning and activity planning are only available during an active subscription. When your subscription ends, any future-dated entries beyond the current day will be removed from your account.
                                 </Text>
                             </div>
+                            <div>
+                                <Subheading>SMS Reminders</Subheading>
+                                <Text>
+                                    NoBullFit allows you to set up reminders delivered via email or SMS. Providing your mobile phone number is entirely optional and is used solely for sending reminders you configure. You can remove your phone number at any time from your account settings, which will immediately deactivate all SMS reminders. Standard messaging rates from your carrier may apply.
+                                </Text>
+                            </div>
                         </div>
                     </div>
                     <div className="mt-10 space-y-4">

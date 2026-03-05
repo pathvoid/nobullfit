@@ -9,6 +9,7 @@ import { ViteDevServer } from "vite";
 import api from "./server/app.js";
 import cookieParser from "cookie-parser";
 import { startWebhookEventScheduler, stopWebhookEventScheduler } from "./server/api/jobs/webhookEventProcessor.js";
+import { startReminderScheduler, stopReminderScheduler } from "./server/api/jobs/reminderProcessor.js";
 import { ensureWebhookSubscription } from "./server/api/handlers/stravaWebhookHandler.js";
 import { handleShortLinkRedirect } from "./server/api/handlers/shortLinkHandler.js";
 
@@ -232,9 +233,13 @@ if (!isTest) {
         // Start webhook event processor (runs every 30 seconds)
         const webhookProcessorId = startWebhookEventScheduler(30);
 
+        // Start reminder processor (runs every 60 seconds)
+        const reminderProcessorId = startReminderScheduler(60);
+
         const server = app.listen(process.env.PORT || 3000, async () => {
             console.log(`Server running on http://localhost:${process.env.PORT || 3000}`);
             console.log("[WebhookProcessor] Scheduler started (interval: 30 seconds)");
+            console.log("[ReminderProcessor] Scheduler started (interval: 60 seconds)");
 
             // Auto-setup Strava webhook subscription in production
             // Must run AFTER server is listening so Strava's validation callback can reach us
@@ -250,6 +255,7 @@ if (!isTest) {
         process.on("SIGTERM", () => {
             console.log("SIGTERM received, shutting down gracefully...");
             stopWebhookEventScheduler(webhookProcessorId);
+            stopReminderScheduler(reminderProcessorId);
             server.close(() => {
                 console.log("Server closed");
                 process.exit(0);

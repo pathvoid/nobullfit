@@ -200,6 +200,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ currentPath: propCu
                     <SidebarItem href="/dashboard/grocery-lists" current={currentPath === "/dashboard/grocery-lists"}>
                         <SidebarLabel>Grocery Lists</SidebarLabel>
                     </SidebarItem>
+                    <SidebarItem href="/dashboard/reminders" current={currentPath === "/dashboard/reminders"}>
+                        <SidebarLabel>Reminders</SidebarLabel>
+                    </SidebarItem>
                     <SidebarItem href="/dashboard/favorites" current={currentPath === "/dashboard/favorites"}>
                         <SidebarLabel>Favorites</SidebarLabel>
                     </SidebarItem>

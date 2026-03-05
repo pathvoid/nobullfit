@@ -17,6 +17,18 @@ import { useAuth } from "@core/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+// Get auth headers for API requests
+function getAuthHeaders(extra?: Record<string, string>): Record<string, string> {
+    const token = typeof window !== "undefined"
+        ? localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
+        : null;
+    const headers: Record<string, string> = { ...extra };
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+    return headers;
+}
+
 const Settings: React.FC = () => {
     const loaderData = useLoaderData() as { title?: string; meta?: unknown[]; user?: { email: string } } | undefined;
     const helmet = useHelmet();
@@ -56,6 +68,17 @@ const Settings: React.FC = () => {
     const [communicationPush, setCommunicationPush] = useState<boolean>(false);
     const [isSavingCommunication, setIsSavingCommunication] = useState(false);
 
+    // Phone verification state
+    const [phoneInput, setPhoneInput] = useState("");
+    const [maskedPhone, setMaskedPhone] = useState<string | null>(null);
+    const [phoneVerified, setPhoneVerified] = useState(false);
+    const [verificationCode, setVerificationCode] = useState("");
+    const [codeSent, setCodeSent] = useState(false);
+    const [isSendingCode, setIsSendingCode] = useState(false);
+    const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+    const [isRemovingPhone, setIsRemovingPhone] = useState(false);
+    const [isChangingPhone, setIsChangingPhone] = useState(false);
+
     // Set helmet values
     if (loaderData?.title) {
         helmet.setTitle(loaderData.title);
@@ -68,6 +91,7 @@ const Settings: React.FC = () => {
     const fetchPreferences = useCallback(async () => {
         try {
             const response = await fetch("/api/settings/preferences", {
+                headers: getAuthHeaders(),
                 credentials: "include"
             });
             if (response.ok) {
@@ -76,6 +100,13 @@ const Settings: React.FC = () => {
                 setCommunicationEmail(data.communication_email ?? true);
                 setCommunicationSms(data.communication_sms ?? false);
                 setCommunicationPush(data.communication_push ?? false);
+                // Phone data
+                setPhoneVerified(data.phone_verified ?? false);
+                if (data.phone_number) {
+                    setMaskedPhone(data.phone_number.replace(/.(?=.{4})/g, "*"));
+                } else {
+                    setMaskedPhone(null);
+                }
             }
         } catch (error) {
             console.error("Error fetching preferences:", error);
@@ -149,6 +180,95 @@ const Settings: React.FC = () => {
             setIsSavingCommunication(false);
         }
     };
+
+    // Phone verification: send code
+    const handleSendPhoneCode = useCallback(async () => {
+        if (!phoneInput.trim()) {
+            toast.error("Please enter a phone number");
+            return;
+        }
+        setIsSendingCode(true);
+        try {
+            const response = await fetch("/api/phone/send-code", {
+                method: "POST",
+                headers: getAuthHeaders({ "Content-Type": "application/json" }),
+                credentials: "include",
+                body: JSON.stringify({ phoneNumber: phoneInput.trim() })
+            });
+            if (response.ok) {
+                setCodeSent(true);
+                toast.success("Verification code sent!");
+            } else {
+                const data = await response.json();
+                toast.error(data.error || "Failed to send code");
+            }
+        } catch {
+            toast.error("Failed to send verification code.");
+        } finally {
+            setIsSendingCode(false);
+        }
+    }, [phoneInput]);
+
+    // Phone verification: verify code
+    const handleVerifyPhoneCode = useCallback(async () => {
+        if (!verificationCode.trim()) {
+            toast.error("Please enter the verification code");
+            return;
+        }
+        setIsVerifyingCode(true);
+        try {
+            const response = await fetch("/api/phone/verify", {
+                method: "POST",
+                headers: getAuthHeaders({ "Content-Type": "application/json" }),
+                credentials: "include",
+                body: JSON.stringify({ phoneNumber: phoneInput.trim(), code: verificationCode.trim() })
+            });
+            if (response.ok) {
+                setPhoneVerified(true);
+                setMaskedPhone(phoneInput.trim().replace(/.(?=.{4})/g, "*"));
+                setCodeSent(false);
+                setVerificationCode("");
+                setPhoneInput("");
+                setIsChangingPhone(false);
+                toast.success("Phone number verified!");
+            } else {
+                const data = await response.json();
+                toast.error(data.error || "Verification failed");
+            }
+        } catch {
+            toast.error("Verification failed.");
+        } finally {
+            setIsVerifyingCode(false);
+        }
+    }, [phoneInput, verificationCode]);
+
+    // Phone: remove number
+    const handleRemovePhoneNumber = useCallback(async () => {
+        setIsRemovingPhone(true);
+        try {
+            const response = await fetch("/api/phone", {
+                method: "DELETE",
+                headers: getAuthHeaders(),
+                credentials: "include"
+            });
+            if (response.ok) {
+                setPhoneVerified(false);
+                setMaskedPhone(null);
+                setPhoneInput("");
+                setCodeSent(false);
+                setVerificationCode("");
+                setIsChangingPhone(false);
+                toast.success("Phone number removed and SMS reminders deactivated.");
+            } else {
+                const data = await response.json();
+                toast.error(data.error || "Failed to remove phone number");
+            }
+        } catch {
+            toast.error("Failed to remove phone number.");
+        } finally {
+            setIsRemovingPhone(false);
+        }
+    }, []);
 
     const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -489,11 +609,13 @@ const Settings: React.FC = () => {
                                 <Checkbox
                                     checked={communicationSms}
                                     onChange={(checked) => setCommunicationSms(checked)}
-                                    disabled
+                                    disabled={!phoneVerified}
                                 />
                                 <Label>SMS</Label>
                                 <Description>
-                                    Receive notifications via text message (coming soon)
+                                    {phoneVerified
+                                        ? "Receive notifications via text message"
+                                        : "Verify your phone number below to enable SMS notifications"}
                                 </Description>
                             </CheckboxField>
 
@@ -515,6 +637,99 @@ const Settings: React.FC = () => {
                                 {isSavingCommunication ? "Saving..." : "Save Communication Preferences"}
                             </Button>
                         </div>
+                    </div>
+                </div>
+
+                <div className="border-t border-zinc-950/10 dark:border-white/10 pt-8">
+                    <div className="space-y-6">
+                        <div>
+                            <Heading level={2} className="text-lg font-semibold">
+                                Phone Number
+                            </Heading>
+                            <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                                Add and verify your phone number to enable SMS features.
+                            </Text>
+                        </div>
+
+                        {phoneVerified && maskedPhone && !isChangingPhone ? (
+                            <div className="space-y-4">
+                                <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+                                    <Text className="text-green-700 dark:text-green-400">
+                                        Your phone number ({maskedPhone}) is verified.
+                                    </Text>
+                                </div>
+                                <div className="flex gap-3">
+                                    <Button outline onClick={() => setIsChangingPhone(true)}>
+                                        Change Phone Number
+                                    </Button>
+                                    <Button
+                                        color="red"
+                                        onClick={handleRemovePhoneNumber}
+                                        disabled={isRemovingPhone}
+                                    >
+                                        {isRemovingPhone ? "Removing..." : "Remove Phone Number"}
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {isChangingPhone && (
+                                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                                        <Text className="text-amber-700 dark:text-amber-400">
+                                            Enter your new phone number below. Your current number will remain active until you verify the new one.
+                                        </Text>
+                                    </div>
+                                )}
+                                <Field>
+                                    <Label>Phone Number</Label>
+                                    <Input
+                                        type="tel"
+                                        placeholder="+12025551234"
+                                        value={phoneInput}
+                                        onChange={e => setPhoneInput(e.target.value)}
+                                    />
+                                    <Description>
+                                        Enter in international format (e.g., +1 for US)
+                                    </Description>
+                                </Field>
+                                <div className="flex gap-3">
+                                    <Button onClick={handleSendPhoneCode} disabled={isSendingCode}>
+                                        {isSendingCode ? "Sending..." : "Send Verification Code"}
+                                    </Button>
+                                    {isChangingPhone && (
+                                        <Button
+                                            outline
+                                            onClick={() => {
+                                                setIsChangingPhone(false);
+                                                setPhoneInput("");
+                                                setCodeSent(false);
+                                                setVerificationCode("");
+                                            }}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    )}
+                                </div>
+
+                                {codeSent && (
+                                    <>
+                                        <Field>
+                                            <Label>Verification Code</Label>
+                                            <Input
+                                                type="text"
+                                                maxLength={6}
+                                                placeholder="123456"
+                                                value={verificationCode}
+                                                onChange={e => setVerificationCode(e.target.value)}
+                                            />
+                                        </Field>
+                                        <Button onClick={handleVerifyPhoneCode} disabled={isVerifyingCode}>
+                                            {isVerifyingCode ? "Verifying..." : "Verify Code"}
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -569,8 +784,6 @@ const Settings: React.FC = () => {
                                 setCurrentPassword("");
                                 setNewPassword("");
                                 setConfirmPassword("");
-                                setPasswordError(null);
-                                setPasswordSuccess(null);
                             }}>
                                 Reset
                             </Button>
