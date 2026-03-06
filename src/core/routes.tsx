@@ -78,6 +78,8 @@ import AdminUsers from "@client/admin/AdminUsers";
 import adminUsersLoader from "@loaders/adminUsersLoader";
 import AdminEmails from "@client/admin/AdminEmails";
 import adminEmailsLoader from "@loaders/adminEmailsLoader";
+import AdminLogs from "@client/admin/AdminLogs";
+import adminLogsLoader from "@loaders/adminLogsLoader";
 import Error from "@screens/Error/Error";
 import NotFound from "@screens/NotFound/NotFound";
 
@@ -310,6 +312,12 @@ const routes: RouteObject[] = [
         path: "admin/emails",
         element: <AdminEmails />,
         loader: adminEmailsLoader,
+        errorElement: <Error />
+    },
+    {
+        path: "admin/logs",
+        element: <AdminLogs />,
+        loader: adminLogsLoader,
         errorElement: <Error />
     },
     {

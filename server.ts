@@ -8,6 +8,7 @@ import { ViteDevServer } from "vite";
 
 import api from "./server/app.js";
 import cookieParser from "cookie-parser";
+import { loggingMiddleware } from "./server/api/middleware/loggingMiddleware.js";
 import { startWebhookEventScheduler, stopWebhookEventScheduler } from "./server/api/jobs/webhookEventProcessor.js";
 import { startReminderScheduler, stopReminderScheduler } from "./server/api/jobs/reminderProcessor.js";
 import { ensureWebhookSubscription } from "./server/api/handlers/stravaWebhookHandler.js";
@@ -62,6 +63,9 @@ const createServer = async () => {
             next();
         });
     }
+
+    // Log all API requests to the database
+    app.use("/api", loggingMiddleware);
 
     // Mount API routes BEFORE Vite middleware so API requests are handled by Express
     // This is critical for webhooks (like Paddle) that won't have allowed host headers

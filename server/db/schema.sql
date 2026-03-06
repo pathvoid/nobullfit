@@ -463,3 +463,27 @@ CREATE INDEX IF NOT EXISTS idx_phone_verifications_expires ON phone_verification
 ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS phone_number VARCHAR(20);
 ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT false;
 
+-- System logs table - stores API request/response logs, user actions, and errors
+CREATE TABLE IF NOT EXISTS system_logs (
+    id SERIAL PRIMARY KEY,
+    level VARCHAR(10) NOT NULL CHECK (level IN ('info', 'warn', 'error')),
+    action VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    user_id INTEGER,
+    user_email VARCHAR(255),
+    method VARCHAR(10),
+    endpoint VARCHAR(500),
+    status_code INTEGER,
+    duration_ms INTEGER,
+    error_stack TEXT,
+    metadata JSONB,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for system logs
+CREATE INDEX IF NOT EXISTS idx_system_logs_user_id ON system_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_system_logs_level ON system_logs(level);
+CREATE INDEX IF NOT EXISTS idx_system_logs_created_at ON system_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_system_logs_action ON system_logs(action);
+

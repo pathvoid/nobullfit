@@ -81,6 +81,7 @@ import { handleTwilioIncoming } from "./api/handlers/twilioWebhookHandler.js";
 import { handleGetAdminStats } from "./api/handlers/adminStatsHandler.js";
 import { handleGetAdminUsers, handleUpdateAdminUser } from "./api/handlers/adminUsersHandler.js";
 import { handleSendAdminEmail, handleGetEligibleCount, handlePreviewAdminEmail } from "./api/handlers/adminEmailHandler.js";
+import { handleGetAdminLogs } from "./api/handlers/adminLogsHandler.js";
 
 // API router class - handles all /api routes
 class App {
@@ -243,6 +244,9 @@ class App {
         this.router.post("/admin/emails/send", handleSendAdminEmail);
         this.router.get("/admin/emails/eligible-count", handleGetEligibleCount);
         this.router.post("/admin/emails/preview", handlePreviewAdminEmail);
+
+        // Admin logs
+        this.router.get("/admin/logs", handleGetAdminLogs);
     }
 }
 
