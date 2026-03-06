@@ -82,6 +82,7 @@ import { handleGetAdminStats } from "./api/handlers/adminStatsHandler.js";
 import { handleGetAdminUsers, handleUpdateAdminUser } from "./api/handlers/adminUsersHandler.js";
 import { handleSendAdminEmail, handleGetEligibleCount, handlePreviewAdminEmail } from "./api/handlers/adminEmailHandler.js";
 import { handleGetAdminLogs } from "./api/handlers/adminLogsHandler.js";
+import { handleGetAdminAnalytics } from "./api/handlers/adminAnalyticsHandler.js";
 
 // API router class - handles all /api routes
 class App {
@@ -247,6 +248,9 @@ class App {
 
         // Admin logs
         this.router.get("/admin/logs", handleGetAdminLogs);
+
+        // Admin analytics
+        this.router.get("/admin/analytics", handleGetAdminAnalytics);
     }
 }
 

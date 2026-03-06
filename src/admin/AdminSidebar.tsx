@@ -14,14 +14,17 @@ const AdminSidebar: React.FC = () => {
                     <SidebarItem href="/admin" current={currentPath === "/admin"}>
                         <SidebarLabel>Overview</SidebarLabel>
                     </SidebarItem>
-                    <SidebarItem href="/admin/users" current={currentPath === "/admin/users"}>
-                        <SidebarLabel>Users</SidebarLabel>
+                    <SidebarItem href="/admin/analytics" current={currentPath === "/admin/analytics"}>
+                        <SidebarLabel>Analytics</SidebarLabel>
                     </SidebarItem>
                     <SidebarItem href="/admin/emails" current={currentPath === "/admin/emails"}>
                         <SidebarLabel>Emails</SidebarLabel>
                     </SidebarItem>
                     <SidebarItem href="/admin/logs" current={currentPath === "/admin/logs"}>
                         <SidebarLabel>Logs</SidebarLabel>
+                    </SidebarItem>
+                    <SidebarItem href="/admin/users" current={currentPath === "/admin/users"}>
+                        <SidebarLabel>Users</SidebarLabel>
                     </SidebarItem>
                 </SidebarSection>
             </SidebarHeader>
