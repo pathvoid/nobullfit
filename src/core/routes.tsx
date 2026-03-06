@@ -72,6 +72,12 @@ import Billing from "@screens/Dashboard/Billing/Billing";
 import billingLoader from "@loaders/billingLoader";
 import Integrations from "@screens/Dashboard/Integrations/Integrations";
 import integrationsLoader from "@loaders/integrationsLoader";
+import AdminPanel from "@client/admin/AdminPanel";
+import adminLoader from "@loaders/adminLoader";
+import AdminUsers from "@client/admin/AdminUsers";
+import adminUsersLoader from "@loaders/adminUsersLoader";
+import AdminEmails from "@client/admin/AdminEmails";
+import adminEmailsLoader from "@loaders/adminEmailsLoader";
 import Error from "@screens/Error/Error";
 import NotFound from "@screens/NotFound/NotFound";
 
@@ -286,6 +292,24 @@ const routes: RouteObject[] = [
         path: "dashboard/integrations",
         element: <Integrations />,
         loader: integrationsLoader,
+        errorElement: <Error />
+    },
+    {
+        path: "admin",
+        element: <AdminPanel />,
+        loader: adminLoader,
+        errorElement: <Error />
+    },
+    {
+        path: "admin/users",
+        element: <AdminUsers />,
+        loader: adminUsersLoader,
+        errorElement: <Error />
+    },
+    {
+        path: "admin/emails",
+        element: <AdminEmails />,
+        loader: adminEmailsLoader,
         errorElement: <Error />
     },
     {

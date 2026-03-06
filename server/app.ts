@@ -78,6 +78,9 @@ import { handleGetReminders, handleCreateReminder, handleUpdateReminder, handleD
 import { handleSendVerificationCode, handleVerifyCode, handleRemovePhone } from "./api/handlers/phoneVerificationHandler.js";
 import { handleUnsubscribeReminders } from "./api/handlers/reminderUnsubscribeHandler.js";
 import { handleTwilioIncoming } from "./api/handlers/twilioWebhookHandler.js";
+import { handleGetAdminStats } from "./api/handlers/adminStatsHandler.js";
+import { handleGetAdminUsers, handleUpdateAdminUser } from "./api/handlers/adminUsersHandler.js";
+import { handleSendAdminEmail, handleGetEligibleCount, handlePreviewAdminEmail } from "./api/handlers/adminEmailHandler.js";
 
 // API router class - handles all /api routes
 class App {
@@ -232,6 +235,14 @@ class App {
 
         // Twilio incoming SMS webhook (public endpoint - called by Twilio)
         this.router.post("/webhooks/twilio/incoming", express.urlencoded({ extended: false }), handleTwilioIncoming);
+
+        // Admin endpoints (dev-only, guards are inside the handlers)
+        this.router.get("/admin/stats", handleGetAdminStats);
+        this.router.get("/admin/users", handleGetAdminUsers);
+        this.router.put("/admin/users/:id", handleUpdateAdminUser);
+        this.router.post("/admin/emails/send", handleSendAdminEmail);
+        this.router.get("/admin/emails/eligible-count", handleGetEligibleCount);
+        this.router.post("/admin/emails/preview", handlePreviewAdminEmail);
     }
 }
 

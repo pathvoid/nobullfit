@@ -531,9 +531,11 @@ describe("RecipeDatabase", () => {
 
         await screen.findByRole("heading", { name: /recipe database/i });
 
-        // Verify the search input has the stored value
+        // Verify the search input has the stored value (async state sync)
         const searchInput = screen.getByPlaceholderText(/search recipes/i);
-        expect(searchInput).toHaveValue("chicken");
+        await waitFor(() => {
+            expect(searchInput).toHaveValue("chicken");
+        });
 
         // Filters panel should NOT be visible by default (stays closed)
         expect(screen.queryByRole("heading", { name: /filters/i })).not.toBeInTheDocument();

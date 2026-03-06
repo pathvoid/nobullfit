@@ -221,21 +221,25 @@ const Billing: React.FC = () => {
 
     // Sync and fetch subscription data
     useEffect(() => {
+        let cancelled = false;
+
         const syncAndFetchSubscription = async () => {
             try {
                 const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
-                
+
                 // Check if we just came from checkout success
                 const urlParams = new URLSearchParams(window.location.search);
                 const justSubscribed = urlParams.get("subscribed") === "true";
-                
+
                 if (justSubscribed) {
                     // Add a small delay to give Paddle time to process the subscription
                     await new Promise(resolve => setTimeout(resolve, 1500));
-                    
+                    if (cancelled) return;
+
                     // Sync subscription status with Paddle with retry
                     let syncSuccess = false;
                     for (let attempt = 0; attempt < 3 && !syncSuccess; attempt++) {
+                        if (cancelled) return;
                         try {
                             const syncResponse = await fetch("/api/billing/sync", {
                                 method: "POST",
@@ -243,11 +247,11 @@ const Billing: React.FC = () => {
                                     Authorization: `Bearer ${token}`
                                 }
                             });
-                            
+
                             if (syncResponse.ok) {
                                 const syncData = await syncResponse.json();
                                 if (syncData.synced && syncData.hasActiveSubscription) {
-                                    toast.success("Welcome to NoBullFit Pro!");
+                                    if (!cancelled) toast.success("Welcome to NoBullFit Pro!");
                                     syncSuccess = true;
                                 } else if (attempt < 2) {
                                     // Subscription not found yet, wait and retry
@@ -261,11 +265,13 @@ const Billing: React.FC = () => {
                             }
                         }
                     }
-                    
+
+                    if (cancelled) return;
                     // Clean up URL
                     window.history.replaceState({}, "", window.location.pathname);
                 }
-                
+
+                if (cancelled) return;
                 // Fetch current subscription status
                 const response = await fetch("/api/billing/subscription", {
                     headers: {
@@ -278,16 +284,20 @@ const Billing: React.FC = () => {
                 }
 
                 const data = await response.json();
-                setSubscription(data);
+                if (!cancelled) setSubscription(data);
             } catch (err) {
                 console.error("Error fetching subscription:", err);
-                toast.error("Failed to load subscription details");
+                if (!cancelled) toast.error("Failed to load subscription details");
             } finally {
-                setIsLoading(false);
+                if (!cancelled) setIsLoading(false);
             }
         };
 
         syncAndFetchSubscription();
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     // Open customer portal

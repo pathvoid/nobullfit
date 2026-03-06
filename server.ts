@@ -70,6 +70,13 @@ const createServer = async () => {
     // Short link redirect handler (for SMS and other scenarios)
     app.get("/p/:code", handleShortLinkRedirect);
 
+    // Block admin panel routes in production
+    if (isProd) {
+        app.use("/admin", (_req, res) => {
+            res.status(404).send("Not found");
+        });
+    }
+
     let vite: ViteDevServer | undefined;
 
     // Initialize Vite dev server in development mode
