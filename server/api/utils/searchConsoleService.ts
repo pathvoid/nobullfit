@@ -1,14 +1,5 @@
 import { google } from "googleapis";
 
-// Search Console row shape from the API
-interface SearchAnalyticsRow {
-    keys: string[];
-    clicks: number;
-    impressions: number;
-    ctr: number;
-    position: number;
-}
-
 interface QueryResult {
     query: string;
     clicks: number;
@@ -74,12 +65,12 @@ export async function getTopQueries(startDate: string, endDate: string, limit: n
             },
         });
 
-        return (response.data.rows || []).map((row: SearchAnalyticsRow) => ({
-            query: row.keys[0],
-            clicks: row.clicks,
-            impressions: row.impressions,
-            ctr: row.ctr,
-            position: row.position,
+        return (response.data.rows || []).map((row) => ({
+            query: row.keys?.[0] || "",
+            clicks: row.clicks || 0,
+            impressions: row.impressions || 0,
+            ctr: row.ctr || 0,
+            position: row.position || 0,
         }));
     } catch (error) {
         console.error("[SearchConsole] Failed to fetch top queries:", error);
@@ -103,12 +94,12 @@ export async function getTopPages(startDate: string, endDate: string, limit: num
             },
         });
 
-        return (response.data.rows || []).map((row: SearchAnalyticsRow) => ({
-            page: row.keys[0],
-            clicks: row.clicks,
-            impressions: row.impressions,
-            ctr: row.ctr,
-            position: row.position,
+        return (response.data.rows || []).map((row) => ({
+            page: row.keys?.[0] || "",
+            clicks: row.clicks || 0,
+            impressions: row.impressions || 0,
+            ctr: row.ctr || 0,
+            position: row.position || 0,
         }));
     } catch (error) {
         console.error("[SearchConsole] Failed to fetch top pages:", error);
@@ -136,12 +127,12 @@ export async function getOverallPerformance(startDate: string, endDate: string):
         }
 
         // Without dimensions, the API returns a single aggregated row
-        const row = rows[0] as SearchAnalyticsRow;
+        const row = rows[0];
         return {
-            clicks: row.clicks,
-            impressions: row.impressions,
-            ctr: row.ctr,
-            position: row.position,
+            clicks: row.clicks || 0,
+            impressions: row.impressions || 0,
+            ctr: row.ctr || 0,
+            position: row.position || 0,
         };
     } catch (error) {
         console.error("[SearchConsole] Failed to fetch overall performance:", error);
@@ -164,10 +155,10 @@ export async function getDeviceBreakdown(startDate: string, endDate: string): Pr
             },
         });
 
-        return (response.data.rows || []).map((row: SearchAnalyticsRow) => ({
-            device: row.keys[0],
-            clicks: row.clicks,
-            impressions: row.impressions,
+        return (response.data.rows || []).map((row) => ({
+            device: row.keys?.[0] || "",
+            clicks: row.clicks || 0,
+            impressions: row.impressions || 0,
         }));
     } catch (error) {
         console.error("[SearchConsole] Failed to fetch device breakdown:", error);
