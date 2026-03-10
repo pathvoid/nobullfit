@@ -487,3 +487,14 @@ CREATE INDEX IF NOT EXISTS idx_system_logs_level ON system_logs(level);
 CREATE INDEX IF NOT EXISTS idx_system_logs_created_at ON system_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_system_logs_action ON system_logs(action);
 
+-- Retention emails table - tracks retention/re-engagement emails sent to inactive users
+CREATE TABLE IF NOT EXISTS retention_emails (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    email_type VARCHAR(50) NOT NULL DEFAULT 'inactive_nudge',
+    sent_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for retention emails
+CREATE INDEX IF NOT EXISTS idx_retention_emails_user_sent ON retention_emails(user_id, sent_at);
+

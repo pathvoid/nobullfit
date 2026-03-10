@@ -11,6 +11,7 @@ import cookieParser from "cookie-parser";
 import { loggingMiddleware } from "./server/api/middleware/loggingMiddleware.js";
 import { startWebhookEventScheduler, stopWebhookEventScheduler } from "./server/api/jobs/webhookEventProcessor.js";
 import { startReminderScheduler, stopReminderScheduler } from "./server/api/jobs/reminderProcessor.js";
+import { startRetentionEmailScheduler, stopRetentionEmailScheduler } from "./server/api/jobs/retentionEmailProcessor.js";
 import { ensureWebhookSubscription } from "./server/api/handlers/stravaWebhookHandler.js";
 import { handleShortLinkRedirect } from "./server/api/handlers/shortLinkHandler.js";
 
@@ -247,10 +248,14 @@ if (!isTest) {
         // Start reminder processor (runs every 60 seconds)
         const reminderProcessorId = startReminderScheduler(60);
 
+        // Start retention email processor (runs every 24 hours)
+        const retentionProcessorId = startRetentionEmailScheduler(86400);
+
         const server = app.listen(process.env.PORT || 3000, async () => {
             console.log(`Server running on http://localhost:${process.env.PORT || 3000}`);
             console.log("[WebhookProcessor] Scheduler started (interval: 30 seconds)");
             console.log("[ReminderProcessor] Scheduler started (interval: 60 seconds)");
+            console.log("[RetentionEmailProcessor] Scheduler started (interval: 24 hours)");
 
             // Auto-setup Strava webhook subscription in production
             // Must run AFTER server is listening so Strava's validation callback can reach us
@@ -267,6 +272,7 @@ if (!isTest) {
             console.log("SIGTERM received, shutting down gracefully...");
             stopWebhookEventScheduler(webhookProcessorId);
             stopReminderScheduler(reminderProcessorId);
+            stopRetentionEmailScheduler(retentionProcessorId);
             server.close(() => {
                 console.log("Server closed");
                 process.exit(0);
