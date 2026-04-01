@@ -62,7 +62,8 @@ describe("signInHandler", () => {
             email: "test@example.com",
             full_name: "Test User",
             password_hash: "hashed_password",
-            plan: "free"
+            plan: "free",
+            token_version: 0
         };
 
         mockPool.query.mockResolvedValue({ rows: [mockUser] });
@@ -72,7 +73,7 @@ describe("signInHandler", () => {
         await handleSignIn(mockRequest as Request, mockResponse as Response);
 
         expect(bcrypt.compare).toHaveBeenCalledWith("password123", "hashed_password");
-        expect(generateToken).toHaveBeenCalledWith(1, "test@example.com", true);
+        expect(generateToken).toHaveBeenCalledWith(1, "test@example.com", true, 0);
         expect(mockResponse.cookie).toHaveBeenCalled();
         expect(mockResponse.status).toHaveBeenCalledWith(200);
         expect(mockResponse.json).toHaveBeenCalledWith({
@@ -100,7 +101,8 @@ describe("signInHandler", () => {
             email: "test@example.com",
             full_name: "Test User",
             password_hash: "hashed_password",
-            plan: null
+            plan: null,
+            token_version: 0
         };
 
         mockPool.query.mockResolvedValue({ rows: [mockUser] });
