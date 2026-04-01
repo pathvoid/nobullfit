@@ -77,13 +77,15 @@ const SignUp: React.FC = () => {
                 return;
             }
 
-            // Success - show toast and redirect to sign-in
-            toast.success("Account created successfully! Please sign in.");
-            if (result.redirect) {
-                navigate(result.redirect);
-            } else {
-                navigate("/sign-in");
-            }
+            // Success - show toast and delay redirect so user can read it
+            toast.success("You're all set! Please sign in.");
+            setTimeout(() => {
+                if (result.redirect) {
+                    navigate(result.redirect);
+                } else {
+                    navigate("/sign-in");
+                }
+            }, 2500);
         } catch (err) {
             console.error("Sign up error:", err);
             toast.error("An error occurred while creating your account. Please try again later.");

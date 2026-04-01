@@ -2,6 +2,7 @@ import type { RouteObject } from "react-router-dom";
 import loadable from "@loadable/component";
 
 import Layout from "@core/components/Layout/Layout";
+import AuthGuard from "@core/components/AuthGuard";
 import Home from "@screens/Home/Home";
 import homeLoader from "@loaders/homeLoader";
 import About from "@screens/About/About";
@@ -203,93 +204,85 @@ const routes: RouteObject[] = [
     },
     {
         path: "dashboard",
-        element: <Dashboard />,
-        loader: dashboardLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/favorites",
-        element: <Favorites />,
-        loader: favoritesLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/food-database",
-        element: <FoodDatabase />,
-        loader: foodDatabaseLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/food-database/:foodId",
-        element: <FoodDetails />,
-        loader: foodDetailsLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/food-tracking",
-        element: <FoodTracking />,
-        loader: foodTrackingLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/grocery-lists",
-        element: <GroceryLists />,
-        loader: groceryListsLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/progress-tracking",
-        element: <ProgressTracking />,
-        loader: progressTrackingLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/tdee",
-        element: <TDEE />,
-        loader: tdeeLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/recipe-database",
-        element: <RecipeDatabase />,
-        loader: recipeDatabaseLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/recipe-database/create",
-        element: <CreateRecipe />,
-        loader: createRecipeLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/recipe-database/:recipeId/edit",
-        element: <CreateRecipe />,
-        loader: editRecipeLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/recipe-database/:recipeId",
-        element: <RecipeDetails />,
-        loader: recipeDetailsLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/settings",
-        element: <Settings />,
-        loader: settingsLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/billing",
-        element: <Billing />,
-        loader: billingLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/integrations",
-        element: <Integrations />,
-        loader: integrationsLoader,
-        errorElement: <Error />
+        element: <AuthGuard />,
+        errorElement: <Error />,
+        children: [
+            {
+                index: true,
+                element: <Dashboard />,
+                loader: dashboardLoader
+            },
+            {
+                path: "favorites",
+                element: <Favorites />,
+                loader: favoritesLoader
+            },
+            {
+                path: "food-database",
+                element: <FoodDatabase />,
+                loader: foodDatabaseLoader
+            },
+            {
+                path: "food-database/:foodId",
+                element: <FoodDetails />,
+                loader: foodDetailsLoader
+            },
+            {
+                path: "food-tracking",
+                element: <FoodTracking />,
+                loader: foodTrackingLoader
+            },
+            {
+                path: "grocery-lists",
+                element: <GroceryLists />,
+                loader: groceryListsLoader
+            },
+            {
+                path: "progress-tracking",
+                element: <ProgressTracking />,
+                loader: progressTrackingLoader
+            },
+            {
+                path: "tdee",
+                element: <TDEE />,
+                loader: tdeeLoader
+            },
+            {
+                path: "recipe-database",
+                element: <RecipeDatabase />,
+                loader: recipeDatabaseLoader
+            },
+            {
+                path: "recipe-database/create",
+                element: <CreateRecipe />,
+                loader: createRecipeLoader
+            },
+            {
+                path: "recipe-database/:recipeId/edit",
+                element: <CreateRecipe />,
+                loader: editRecipeLoader
+            },
+            {
+                path: "recipe-database/:recipeId",
+                element: <RecipeDetails />,
+                loader: recipeDetailsLoader
+            },
+            {
+                path: "settings",
+                element: <Settings />,
+                loader: settingsLoader
+            },
+            {
+                path: "billing",
+                element: <Billing />,
+                loader: billingLoader
+            },
+            {
+                path: "integrations",
+                element: <Integrations />,
+                loader: integrationsLoader
+            }
+        ]
     },
     {
         path: "admin",

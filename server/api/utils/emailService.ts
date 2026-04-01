@@ -8,6 +8,16 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const FROM_EMAIL = "support@nobull.fit";
+
+// Escape HTML special characters to prevent injection in email templates
+function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 const APP_URL = process.env.APP_URL || "http://localhost:3000";
 
 // Lazy initialize SES client to ensure environment variables are loaded
@@ -67,6 +77,7 @@ export async function sendEmail(to: string, subject: string, htmlBody: string, t
 
 // Send welcome email after successful registration
 export async function sendWelcomeEmail(email: string, name: string): Promise<void> {
+    name = escapeHtml(name);
     const subject = "Welcome to NoBullFit!";
     
     const htmlBody = `
@@ -143,6 +154,7 @@ This email was sent to ${email}. If you didn't create an account, please ignore 
 
 // Send password reset email
 export async function sendPasswordResetEmail(email: string, name: string, resetToken: string): Promise<void> {
+    name = escapeHtml(name);
     const resetLink = `${APP_URL}/reset-password?token=${resetToken}`;
     const subject = "Reset Your NoBullFit Password";
     
@@ -323,6 +335,7 @@ If you didn't request this email change, please contact our support team immedia
 
 // Send password change notification email
 export async function sendPasswordChangeNotificationEmail(email: string, name: string): Promise<void> {
+    name = escapeHtml(name);
     const subject = "Your NoBullFit Password Has Been Changed";
     
     const htmlBody = `
@@ -399,6 +412,7 @@ This email was sent to ${email}.
 
 // Send account deletion confirmation email
 export async function sendAccountDeletionConfirmationEmail(email: string, name: string): Promise<void> {
+    name = escapeHtml(name);
     const subject = "Your NoBullFit Account Has Been Deleted";
     
     const htmlBody = `
@@ -480,6 +494,7 @@ This email was sent to ${email}.
 
 // Send subscription activated email (when user subscribes to Pro)
 export async function sendSubscriptionActivatedEmail(email: string, name: string): Promise<void> {
+    name = escapeHtml(name);
     const subject = "Welcome to NoBullFit Pro!";
     
     const htmlBody = `
@@ -579,6 +594,7 @@ This email was sent to ${email}.
 
 // Send subscription canceled email
 export async function sendSubscriptionCanceledEmail(email: string, name: string, endDate?: string): Promise<void> {
+    name = escapeHtml(name);
     const subject = "Your NoBullFit Pro Subscription Has Been Canceled";
     const endDateText = endDate ? `Your Pro access will remain active until ${endDate}.` : "Your Pro access has ended.";
     
@@ -665,6 +681,7 @@ This email was sent to ${email}.
 
 // Send subscription paused email
 export async function sendSubscriptionPausedEmail(email: string, name: string, resumeDate?: string): Promise<void> {
+    name = escapeHtml(name);
     const subject = "Your NoBullFit Pro Subscription Has Been Paused";
     const resumeText = resumeDate ? `Your subscription will automatically resume on ${resumeDate}.` : "You can resume your subscription anytime from the Billing page.";
     
@@ -747,6 +764,7 @@ This email was sent to ${email}.
 
 // Send subscription resumed email
 export async function sendSubscriptionResumedEmail(email: string, name: string): Promise<void> {
+    name = escapeHtml(name);
     const subject = "Welcome Back! Your NoBullFit Pro Is Active Again";
     
     const htmlBody = `
@@ -821,6 +839,7 @@ This email was sent to ${email}.
 
 // Send payment failed email
 export async function sendPaymentFailedEmail(email: string, name: string): Promise<void> {
+    name = escapeHtml(name);
     const subject = "Action Required: Payment Failed for NoBullFit Pro";
     
     const htmlBody = `
@@ -902,6 +921,7 @@ This email was sent to ${email}.
 
 // Send scheduled cancellation email (when user schedules cancellation at end of billing cycle)
 export async function sendSubscriptionScheduledCancellationEmail(email: string, name: string, endDate: string): Promise<void> {
+    name = escapeHtml(name);
     const subject = "Your NoBullFit Pro Cancellation Is Scheduled";
     
     const htmlBody = `
@@ -988,6 +1008,7 @@ This email was sent to ${email}.
 
 // Send cancellation removed email (when user removes scheduled cancellation)
 export async function sendSubscriptionCancellationRemovedEmail(email: string, name: string): Promise<void> {
+    name = escapeHtml(name);
     const subject = "Your NoBullFit Pro Subscription Will Continue";
     
     const htmlBody = `
@@ -1072,6 +1093,7 @@ export async function sendGroceryListEmail(
         unit?: string | null;
     }>
 ): Promise<void> {
+    name = escapeHtml(name);
     const subject = `Your Grocery List: ${listName} - NoBullFit`;
 
     // Build items HTML

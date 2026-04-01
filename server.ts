@@ -33,6 +33,9 @@ const indexProd: string = isProd
 const createServer = async () => {
     const app = express();
 
+    // Hide Express from response headers to reduce fingerprinting
+    app.disable("x-powered-by");
+
     // Trust proxy headers when behind nginx/reverse proxy (required for secure cookies)
     if (isProd) {
         app.set("trust proxy", 1);
@@ -49,6 +52,18 @@ const createServer = async () => {
     app.use(express.json());
     // Parse cookies
     app.use(cookieParser());
+
+    // Security headers to prevent clickjacking, MIME sniffing, and enforce HTTPS
+    app.use((_req, res, next) => {
+        res.setHeader("X-Frame-Options", "DENY");
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+        res.setHeader("X-XSS-Protection", "0");
+        if (isProd) {
+            res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+        }
+        next();
+    });
 
     // Allow cross-origin requests from Expo dev server in development
     if (!isProd) {
@@ -209,7 +224,13 @@ const createServer = async () => {
             // Inject scripts before closing body tag
             html = html.replace("<!--app-scripts-->", helmet.script.toString());
 
-            res.status(200).set({ "Content-Type": "text/html" }).end(html);
+            // Prevent browser from caching authenticated pages so back-button after logout shows nothing
+            const headers: Record<string, string> = { "Content-Type": "text/html" };
+            if (req.path.startsWith("/dashboard") || req.path.startsWith("/admin")) {
+                headers["Cache-Control"] = "no-store";
+            }
+
+            res.status(200).set(headers).end(html);
 
         } catch (e) {
             // Handle redirects from React Router loaders/actions

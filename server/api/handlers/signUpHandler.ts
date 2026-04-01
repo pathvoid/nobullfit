@@ -27,6 +27,15 @@ export async function handleSignUp(req: Request, res: Response): Promise<void> {
             return;
         }
 
+        // Validate name format - only allow letters, spaces, hyphens, apostrophes, and accented characters
+        const nameRegex = /^[\p{L}\s'\-\.]+$/u;
+        if (!nameRegex.test(name) || name.length > 100) {
+            res.status(400).json({
+                error: "Name can only contain letters, spaces, hyphens, and apostrophes."
+            });
+            return;
+        }
+
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
@@ -60,9 +69,11 @@ export async function handleSignUp(req: Request, res: Response): Promise<void> {
             [email]
         );
 
+        // If user already exists, return the same response as success to prevent email enumeration
         if (existingUser.rows.length > 0) {
-            res.status(409).json({
-                error: "An account with this email already exists."
+            res.status(200).json({
+                success: true,
+                redirect: "/sign-in"
             });
             return;
         }

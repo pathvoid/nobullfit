@@ -116,41 +116,62 @@ type Color = keyof typeof colors
 export function Checkbox({
   color = "dark/zinc",
   className,
+  required,
+  name,
   ...props
 }: {
   color?: Color
   className?: string
+  required?: boolean
+  name?: string
 } & Omit<Headless.CheckboxProps, "as" | "className">) {
   return (
     <Headless.Checkbox
       data-slot="control"
+      name={name}
       {...props}
       className={clsx(className, "group inline-flex focus:outline-hidden")}
     >
-      <span className={clsx([base, colors[color]])}>
-        <svg
-          className="size-4 stroke-(--checkbox-check) opacity-0 group-data-checked:opacity-100 sm:h-3.5 sm:w-3.5"
-          viewBox="0 0 14 14"
-          fill="none"
-        >
-          {/* Checkmark icon */}
-          <path
-            className="opacity-100 group-data-indeterminate:opacity-0"
-            d="M3 8L6 11L11 3.5"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Indeterminate icon */}
-          <path
-            className="opacity-0 group-data-indeterminate:opacity-100"
-            d="M3 7H11"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
+      {({ checked }) => (
+        <>
+          <span className={clsx([base, colors[color]])}>
+            <svg
+              className="size-4 stroke-(--checkbox-check) opacity-0 group-data-checked:opacity-100 sm:h-3.5 sm:w-3.5"
+              viewBox="0 0 14 14"
+              fill="none"
+            >
+              {/* Checkmark icon */}
+              <path
+                className="opacity-100 group-data-indeterminate:opacity-0"
+                d="M3 8L6 11L11 3.5"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* Indeterminate icon */}
+              <path
+                className="opacity-0 group-data-indeterminate:opacity-100"
+                d="M3 7H11"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          {required && (
+            <input
+              type="checkbox"
+              name={name}
+              checked={checked}
+              required
+              readOnly
+              aria-hidden="true"
+              tabIndex={-1}
+              className="sr-only"
+            />
+          )}
+        </>
+      )}
     </Headless.Checkbox>
   );
 }

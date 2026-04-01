@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     subscription_status VARCHAR(20) CHECK (subscription_status IN ('active', 'paused', 'past_due', 'canceled', 'trialing')),
     subscription_ends_at TIMESTAMP,
     subscription_canceled_at TIMESTAMP,
+    token_version INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

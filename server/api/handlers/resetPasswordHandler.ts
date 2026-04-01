@@ -84,9 +84,9 @@ export async function handleResetPassword(req: Request, res: Response): Promise<
         const saltRounds = 10;
         const passwordHash = await bcrypt.hash(password, saltRounds);
 
-        // Update user password
+        // Update user password and increment token_version to invalidate all existing sessions
         await pool.query(
-            "UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+            "UPDATE users SET password_hash = $1, token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
             [passwordHash, reset.user_id]
         );
 

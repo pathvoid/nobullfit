@@ -39,7 +39,7 @@ export async function handleGetMe(req: Request, res: Response): Promise<void> {
 
         // Get user data from database
         const userResult = await pool.query(
-            "SELECT id, email, full_name, plan, subscribed FROM users WHERE id = $1 AND email = $2",
+            "SELECT id, email, full_name, plan, subscribed, token_version FROM users WHERE id = $1 AND email = $2",
             [decoded.userId, decoded.email]
         );
 
@@ -48,8 +48,16 @@ export async function handleGetMe(req: Request, res: Response): Promise<void> {
             return;
         }
 
+        const user = userResult.rows[0];
+
+        // Check if token version matches (invalidates old tokens after password reset/change)
+        if (decoded.tokenVersion !== undefined && user.token_version !== decoded.tokenVersion) {
+            res.status(401).json({ error: "Session expired. Please sign in again." });
+            return;
+        }
+
         res.status(200).json({
-            user: userResult.rows[0]
+            user: { id: user.id, email: user.email, full_name: user.full_name, plan: user.plan, subscribed: user.subscribed }
         });
     } catch (error) {
         console.error("Auth check error:", error);

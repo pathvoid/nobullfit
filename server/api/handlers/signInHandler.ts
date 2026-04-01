@@ -37,7 +37,7 @@ export async function handleSignIn(req: Request, res: Response): Promise<void> {
 
         // Find user by email (case-insensitive)
         const userResult = await pool.query(
-            "SELECT id, email, full_name, password_hash, plan FROM users WHERE LOWER(email) = LOWER($1)",
+            "SELECT id, email, full_name, password_hash, plan, token_version FROM users WHERE LOWER(email) = LOWER($1)",
             [email]
         );
 
@@ -62,7 +62,7 @@ export async function handleSignIn(req: Request, res: Response): Promise<void> {
         }
 
         // Generate JWT token with appropriate expiration
-        const token = generateToken(user.id, user.email, remember);
+        const token = generateToken(user.id, user.email, remember, user.token_version);
 
         // Set HTTP-only cookie for server-side authentication checks
         // Cookie expires based on remember flag (30 days if remember, session if not)

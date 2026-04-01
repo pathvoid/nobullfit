@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+
     const checkAuth = async () => {
         try {
             // Guard localStorage/sessionStorage access for SSR

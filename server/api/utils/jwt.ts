@@ -6,10 +6,11 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 const JWT_REMEMBER_EXPIRES_IN = process.env.JWT_REMEMBER_EXPIRES_IN || "30d";
 
 // Generate JWT token for user authentication
-export function generateToken(userId: number, email: string, remember: boolean = false): string {
+export function generateToken(userId: number, email: string, remember: boolean = false, tokenVersion: number = 0): string {
     const payload = {
         userId,
         email,
+        tokenVersion,
         iat: Math.floor(Date.now() / 1000)
     };
 
@@ -26,9 +27,9 @@ export function generateStateToken(payload: Record<string, unknown>, expiresIn: 
 }
 
 // Verify JWT token and return decoded payload (for auth tokens)
-export function verifyToken(token: string): { userId: number; email: string } | null {
+export function verifyToken(token: string): { userId: number; email: string; tokenVersion?: number } | null {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; email: string };
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; email: string; tokenVersion?: number };
         return decoded;
     } catch (error) {
         // Token invalid or expired

@@ -153,6 +153,74 @@ describe("signUpHandler", () => {
         });
     });
 
+    it("should return 400 if name contains a URL", async () => {
+        mockRequest.body = {
+            email: "test@example.com",
+            name: "https://www.google.com",
+            password: "password123",
+            terms: true,
+            captcha: "5",
+            captchaAnswer: "5"
+        };
+
+        await handleSignUp(mockRequest as Request, mockResponse as Response);
+
+        expect(mockResponse.status).toHaveBeenCalledWith(400);
+        expect(mockResponse.json).toHaveBeenCalledWith({
+            error: "Name can only contain letters, spaces, hyphens, and apostrophes."
+        });
+    });
+
+    it("should return 400 if name contains HTML tags", async () => {
+        mockRequest.body = {
+            email: "test@example.com",
+            name: '<a href="https://evil.com">Click</a>',
+            password: "password123",
+            terms: true,
+            captcha: "5",
+            captchaAnswer: "5"
+        };
+
+        await handleSignUp(mockRequest as Request, mockResponse as Response);
+
+        expect(mockResponse.status).toHaveBeenCalledWith(400);
+        expect(mockResponse.json).toHaveBeenCalledWith({
+            error: "Name can only contain letters, spaces, hyphens, and apostrophes."
+        });
+    });
+
+    it("should accept names with accented characters", async () => {
+        mockRequest.body = {
+            email: "test@example.com",
+            name: "José O'Brien-García",
+            password: "password123",
+            country: "US",
+            terms: true,
+            captcha: "5",
+            captchaAnswer: "5"
+        };
+
+        // User doesn't exist
+        mockPool.query.mockResolvedValueOnce({ rows: [] });
+        // Insert user
+        mockPool.query.mockResolvedValueOnce({
+            rows: [{ id: 1, email: "test@example.com", full_name: "José O'Brien-García", created_at: new Date() }]
+        });
+        // Create default user settings
+        mockPool.query.mockResolvedValueOnce({ rows: [] });
+
+        (bcrypt.hash as ReturnType<typeof vi.fn>).mockResolvedValue("hashed_password");
+        (sendWelcomeEmail as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+
+        await handleSignUp(mockRequest as Request, mockResponse as Response);
+
+        expect(mockResponse.status).toHaveBeenCalledWith(200);
+        expect(mockResponse.json).toHaveBeenCalledWith({
+            success: true,
+            redirect: "/sign-in"
+        });
+    });
+
     it("should return 400 if password is too short", async () => {
         mockRequest.body = {
             email: "test@example.com",
@@ -171,7 +239,7 @@ describe("signUpHandler", () => {
         });
     });
 
-    it("should return 409 if user already exists", async () => {
+    it("should return same success response if user already exists to prevent email enumeration", async () => {
         mockRequest.body = {
             email: "existing@example.com",
             name: "Test User",
@@ -186,9 +254,10 @@ describe("signUpHandler", () => {
 
         await handleSignUp(mockRequest as Request, mockResponse as Response);
 
-        expect(mockResponse.status).toHaveBeenCalledWith(409);
+        expect(mockResponse.status).toHaveBeenCalledWith(200);
         expect(mockResponse.json).toHaveBeenCalledWith({
-            error: "An account with this email already exists."
+            success: true,
+            redirect: "/sign-in"
         });
     });
 
