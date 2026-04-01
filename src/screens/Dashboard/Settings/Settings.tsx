@@ -258,7 +258,7 @@ const Settings: React.FC = () => {
                 setCodeSent(false);
                 setVerificationCode("");
                 setIsChangingPhone(false);
-                toast.success("Phone number removed and SMS reminders deactivated.");
+                toast.success("Phone number removed.");
             } else {
                 const data = await response.json();
                 toast.error(data.error || "Failed to remove phone number");

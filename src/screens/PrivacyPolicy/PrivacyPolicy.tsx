@@ -52,7 +52,7 @@ const PrivacyPolicy: React.FC = () => {
                             <div>
                                 <Subheading>Data Collection</Subheading>
                                 <Text>
-                                    We only collect essential information such as your email address, username, progress tracking data (e.g., weight, sleep, activity), and preferences. You may optionally provide your phone number to enable SMS reminders. We'll always be transparent about why we need it.
+                                    We only collect essential information such as your email address, username, progress tracking data (e.g., weight, sleep, activity), and preferences. We'll always be transparent about why we need it.
                                 </Text>
                             </div>
                             <div>
@@ -98,7 +98,7 @@ const PrivacyPolicy: React.FC = () => {
                         <div className="ml-4 space-y-2">
                             <Text>- <Strong>Paddle</Strong>: Payment processing for Pro subscriptions.</Text>
                             <Text>- <Strong>Amazon SES</Strong>: Email delivery for account notifications.</Text>
-                            <Text>- <Strong>Twilio</Strong>: SMS delivery for optional reminder notifications.</Text>
+
                             <Text>- <Strong>Cloudflare R2</Strong>: Secure storage for recipe images.</Text>
                             <Text>- <Strong>Cloudflare Web Analytics</Strong>: Privacy-friendly website analytics that does not use cookies or track individuals.</Text>
                             <Text>- <Strong>Open Food Facts</Strong>: Food nutrition database (no user data shared).</Text>
@@ -132,13 +132,11 @@ const PrivacyPolicy: React.FC = () => {
                     <div className="mt-10 space-y-4">
                         <Heading level={2}>SMS &amp; Phone Number</Heading>
                         <Text>
-                            NoBullFit offers optional SMS reminders. Providing your phone number is entirely voluntary and not required to use the platform.
+                            Providing your phone number is entirely voluntary and not required to use the platform.
                         </Text>
                         <div className="ml-4 space-y-2">
-                            <Text>- Your phone number is used solely to deliver reminder notifications you configure.</Text>
-                            <Text>- SMS messages are transmitted via <Strong>Twilio</Strong>. Your phone number is shared with Twilio only for the purpose of delivering messages.</Text>
-                            <Text>- Your phone number is not shared with any other third party or used for marketing.</Text>
-                            <Text>- You can remove your phone number at any time from your account settings, which will immediately stop all SMS delivery.</Text>
+                            <Text>- Your phone number is not shared with any third party or used for marketing.</Text>
+                            <Text>- You can remove your phone number at any time from your account settings.</Text>
                         </div>
                     </div>
                     <div className="mt-10 space-y-4">

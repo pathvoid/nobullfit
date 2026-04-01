@@ -135,14 +135,6 @@ export async function handleExportData(req: Request, res: Response) {
             tdee: parseFloat(String(tdeeResult.rows[0].tdee))
         } : null;
 
-        // Get reminders
-        const remindersResult = await pool.query(
-            "SELECT id, title, message, delivery_type, schedule_type, scheduled_at, recurrence_pattern, recurrence_days, recurrence_time, timezone, is_active, next_fire_at, last_fired_at, created_at, updated_at FROM reminders WHERE user_id = $1 ORDER BY created_at DESC",
-            [userId]
-        );
-
-        const reminders = remindersResult.rows;
-
         // Get user settings
         const settingsResult = await pool.query(
             "SELECT quick_add_days, weight_goal, target_weight, target_weight_unit, communication_email, communication_sms, communication_push, phone_number, phone_verified, created_at, updated_at FROM user_settings WHERE user_id = $1",
@@ -198,7 +190,7 @@ export async function handleExportData(req: Request, res: Response) {
             progress_tracking: progressTracking,
             weight_tracking: weightTracking,
             tdee: tdee,
-            reminders: reminders,
+
             summary: {
                 total_recipes: recipes.length,
                 total_favorites: favorites.length,
@@ -208,7 +200,7 @@ export async function handleExportData(req: Request, res: Response) {
                 total_progress_tracking_entries: progressTracking.length,
                 total_weight_tracking_entries: weightTracking.length,
                 has_tdee_data: tdee !== null,
-                total_reminders: reminders.length
+
             }
         };
 

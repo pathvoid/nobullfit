@@ -43,14 +43,6 @@ export async function handleGetAdminStats(req: Request, res: Response): Promise<
             FROM progress_tracking
         `);
 
-        // Total reminders
-        const remindersResult = await pool.query(`
-            SELECT
-                COUNT(*) as total_reminders,
-                COUNT(*) FILTER (WHERE is_active = true) as active_reminders
-            FROM reminders
-        `);
-
         // Total integrations connected
         const integrationsResult = await pool.query(`
             SELECT COUNT(*) as total_integrations
@@ -95,10 +87,7 @@ export async function handleGetAdminStats(req: Request, res: Response): Promise<
             progress_tracking: {
                 total_entries: parseInt(String(progressResult.rows[0]?.total_entries)) || 0
             },
-            reminders: {
-                total: parseInt(String(remindersResult.rows[0]?.total_reminders)) || 0,
-                active: parseInt(String(remindersResult.rows[0]?.active_reminders)) || 0
-            },
+
             integrations: {
                 total: parseInt(String(integrationsResult.rows[0]?.total_integrations)) || 0
             },

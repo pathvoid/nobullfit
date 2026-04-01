@@ -393,55 +393,6 @@ CREATE INDEX IF NOT EXISTS idx_short_links_code ON short_links(code);
 CREATE INDEX IF NOT EXISTS idx_short_links_normalized_url ON short_links(normalized_url);
 CREATE INDEX IF NOT EXISTS idx_short_links_created_at ON short_links(created_at);
 
--- Add reminder unsubscribe field to users table
-ALTER TABLE users ADD COLUMN IF NOT EXISTS reminder_unsubscribe_token VARCHAR(255) UNIQUE;
-CREATE INDEX IF NOT EXISTS idx_users_reminder_unsubscribe_token ON users(reminder_unsubscribe_token) WHERE reminder_unsubscribe_token IS NOT NULL;
-
--- Reminders table - stores user-defined reminder definitions
--- Uses TIMESTAMPTZ so node-postgres preserves UTC correctly
-CREATE TABLE IF NOT EXISTS reminders (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    delivery_type VARCHAR(10) NOT NULL CHECK (delivery_type IN ('email', 'sms')),
-    schedule_type VARCHAR(10) NOT NULL CHECK (schedule_type IN ('once', 'recurring')),
-    scheduled_at TIMESTAMPTZ,
-    recurrence_pattern VARCHAR(20) CHECK (recurrence_pattern IN ('daily', 'weekly', 'weekdays', 'weekends', 'custom')),
-    recurrence_days INTEGER[],
-    recurrence_time TIME NOT NULL,
-    timezone VARCHAR(100) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    next_fire_at TIMESTAMPTZ,
-    last_fired_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Indexes for reminders
-CREATE INDEX IF NOT EXISTS idx_reminders_user_id ON reminders(user_id);
-CREATE INDEX IF NOT EXISTS idx_reminders_next_fire ON reminders(next_fire_at) WHERE is_active = true;
-CREATE INDEX IF NOT EXISTS idx_reminders_active ON reminders(is_active);
-CREATE INDEX IF NOT EXISTS idx_reminders_user_active ON reminders(user_id, is_active);
-
--- Reminder logs table - tracks sent reminders for audit and daily limit enforcement
-CREATE TABLE IF NOT EXISTS reminder_logs (
-    id SERIAL PRIMARY KEY,
-    reminder_id INTEGER NOT NULL REFERENCES reminders(id) ON DELETE CASCADE,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    delivery_type VARCHAR(10) NOT NULL CHECK (delivery_type IN ('email', 'sms')),
-    status VARCHAR(20) NOT NULL CHECK (status IN ('sent', 'failed', 'skipped')),
-    error_message TEXT,
-    sent_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Indexes for reminder logs
-CREATE INDEX IF NOT EXISTS idx_reminder_logs_user_id ON reminder_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_reminder_logs_reminder_id ON reminder_logs(reminder_id);
-CREATE INDEX IF NOT EXISTS idx_reminder_logs_sent_at ON reminder_logs(sent_at);
-CREATE INDEX IF NOT EXISTS idx_reminder_logs_user_date ON reminder_logs(user_id, sent_at);
-
 -- Phone verifications table - stores OTP codes for phone number verification
 CREATE TABLE IF NOT EXISTS phone_verifications (
     id SERIAL PRIMARY KEY,

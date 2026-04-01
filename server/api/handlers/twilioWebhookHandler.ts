@@ -50,14 +50,9 @@ export async function handleTwilioIncoming(req: Request, res: Response): Promise
 
         const userId = userResult.rows[0].user_id;
 
-        // Clear phone number and deactivate all SMS reminders
+        // Clear phone number
         await pool.query(
             "UPDATE user_settings SET phone_number = NULL, phone_verified = false, communication_sms = false, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1",
-            [userId]
-        );
-
-        await pool.query(
-            "UPDATE reminders SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND delivery_type = 'sms'",
             [userId]
         );
 

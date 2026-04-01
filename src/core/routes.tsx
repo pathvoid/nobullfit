@@ -53,8 +53,7 @@ import FoodTracking from "@screens/Dashboard/FoodTracking/FoodTracking";
 import foodTrackingLoader from "@loaders/foodTrackingLoader";
 import GroceryLists from "@screens/Dashboard/GroceryLists/GroceryLists";
 import groceryListsLoader from "@loaders/groceryListsLoader";
-import Reminders from "@screens/Dashboard/Reminders/Reminders";
-import remindersLoader from "@loaders/remindersLoader";
+
 import ProgressTracking from "@screens/Dashboard/ProgressTracking/ProgressTracking";
 import progressTrackingLoader from "@loaders/progressTrackingLoader";
 import TDEE from "@screens/Dashboard/TDEE/TDEE";
@@ -236,12 +235,6 @@ const routes: RouteObject[] = [
         path: "dashboard/grocery-lists",
         element: <GroceryLists />,
         loader: groceryListsLoader,
-        errorElement: <Error />
-    },
-    {
-        path: "dashboard/reminders",
-        element: <Reminders />,
-        loader: remindersLoader,
         errorElement: <Error />
     },
     {

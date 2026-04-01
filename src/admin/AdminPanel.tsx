@@ -22,7 +22,7 @@ interface AdminStats {
     food_tracking: { total_entries: number };
     recipes: { total: number };
     progress_tracking: { total_entries: number };
-    reminders: { total: number; active: number };
+
     integrations: { total: number };
     grocery_lists: { total: number };
     favorites: { total: number };
@@ -114,8 +114,7 @@ const AdminPanel: React.FC = () => {
                             <DescriptionTerm>Activities Logged</DescriptionTerm>
                             <DescriptionDetails>{stats.progress_tracking.total_entries.toLocaleString()}</DescriptionDetails>
 
-                            <DescriptionTerm>Reminders</DescriptionTerm>
-                            <DescriptionDetails>{stats.reminders.total.toLocaleString()} <span className="text-zinc-500">({stats.reminders.active} active)</span></DescriptionDetails>
+
                         </DescriptionList>
 
                         <Subheading className="mt-8">Features</Subheading>

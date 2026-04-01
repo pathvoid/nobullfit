@@ -74,9 +74,7 @@ import { handleGetFeatureFlags, handleGetEnabledFlags, handleGetIntegrationFlags
 import { handleGetIntegrations, handleGetIntegration, handleConnectIntegration, handleOAuthCallback, handleDisconnectIntegration } from "./api/handlers/integrationsHandler.js";
 import { handleTriggerSync, handleGetSyncHistory } from "./api/handlers/integrationSyncHandler.js";
 import { handleWebhookValidation, handleWebhookEvent, handleCreateSubscription, handleViewSubscription, handleDeleteSubscription } from "./api/handlers/stravaWebhookHandler.js";
-import { handleGetReminders, handleCreateReminder, handleUpdateReminder, handleDeleteReminder, handleToggleReminder } from "./api/handlers/remindersHandler.js";
 import { handleSendVerificationCode, handleVerifyCode, handleRemovePhone } from "./api/handlers/phoneVerificationHandler.js";
-import { handleUnsubscribeReminders } from "./api/handlers/reminderUnsubscribeHandler.js";
 import { handleTwilioIncoming } from "./api/handlers/twilioWebhookHandler.js";
 import { handleGetAdminStats } from "./api/handlers/adminStatsHandler.js";
 import { handleGetAdminUsers, handleUpdateAdminUser } from "./api/handlers/adminUsersHandler.js";
@@ -220,20 +218,10 @@ class App {
         this.router.delete("/admin/webhooks/strava/subscription", handleDeleteSubscription);
         this.router.delete("/admin/webhooks/strava/subscription/:id", handleDeleteSubscription);
 
-        // Reminders endpoints
-        this.router.get("/reminders", handleGetReminders);
-        this.router.post("/reminders", handleCreateReminder);
-        this.router.put("/reminders/:id", handleUpdateReminder);
-        this.router.delete("/reminders/:id", handleDeleteReminder);
-        this.router.patch("/reminders/:id/toggle", handleToggleReminder);
-
         // Phone verification endpoints
         this.router.post("/phone/send-code", handleSendVerificationCode);
         this.router.post("/phone/verify", handleVerifyCode);
         this.router.delete("/phone", handleRemovePhone);
-
-        // Reminder unsubscribe (public endpoint - no auth required)
-        this.router.get("/reminders/unsubscribe/:token", handleUnsubscribeReminders);
 
         // Twilio incoming SMS webhook (public endpoint - called by Twilio)
         this.router.post("/webhooks/twilio/incoming", express.urlencoded({ extended: false }), handleTwilioIncoming);

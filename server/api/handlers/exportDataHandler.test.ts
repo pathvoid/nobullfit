@@ -112,7 +112,7 @@ describe("exportDataHandler", () => {
 
         // Mock all required queries in order:
         // 1. User, 2. Recipes, 3. Favorites, 4. Grocery Lists, 5. Grocery List Items (for each list)
-        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking, 9. TDEE, 10. Reminders, 11. User Settings
+        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking, 9. TDEE, 10. User Settings
         mockPool.query
             .mockResolvedValueOnce({ rows: [mockUser] })
             .mockResolvedValueOnce({ rows: mockRecipes })
@@ -123,7 +123,6 @@ describe("exportDataHandler", () => {
             .mockResolvedValueOnce({ rows: [] }) // progress_tracking
             .mockResolvedValueOnce({ rows: [] }) // weight_tracking
             .mockResolvedValueOnce({ rows: [] }) // tdee
-            .mockResolvedValueOnce({ rows: [] }) // reminders
             .mockResolvedValueOnce({ rows: [{ quick_add_days: 30, weight_goal: "lose", target_weight: "75.00", target_weight_unit: "kg", communication_email: true, communication_sms: false, communication_push: false }] }); // user_settings
 
         await handleExportData(mockRequest as Request, mockResponse as Response);
@@ -153,7 +152,7 @@ describe("exportDataHandler", () => {
                 food_tracking: expect.any(Array),
                 progress_tracking: expect.any(Array),
                 weight_tracking: expect.any(Array),
-                reminders: expect.any(Array),
+
                 summary: expect.objectContaining({
                     total_recipes: expect.any(Number),
                     total_favorites: expect.any(Number),
@@ -162,7 +161,7 @@ describe("exportDataHandler", () => {
                     total_food_tracking_entries: expect.any(Number),
                     total_progress_tracking_entries: expect.any(Number),
                     total_weight_tracking_entries: expect.any(Number),
-                    total_reminders: expect.any(Number),
+
                     has_tdee_data: expect.any(Boolean)
                 })
             })
@@ -236,7 +235,7 @@ describe("exportDataHandler", () => {
 
         // Mock all required queries in order:
         // 1. User, 2. Recipes, 3. Favorites, 4. Grocery Lists, 5. Grocery List Items (for each list)
-        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking, 9. TDEE, 10. Reminders, 11. User Settings
+        // 6. Food Tracking, 7. Progress Tracking, 8. Weight Tracking, 9. TDEE, 10. User Settings
         mockPool.query
             .mockResolvedValueOnce({ rows: [mockUser] })
             .mockResolvedValueOnce({ rows: [] }) // recipes
@@ -247,7 +246,6 @@ describe("exportDataHandler", () => {
             .mockResolvedValueOnce({ rows: [] }) // progress_tracking
             .mockResolvedValueOnce({ rows: [] }) // weight_tracking
             .mockResolvedValueOnce({ rows: [] }) // tdee
-            .mockResolvedValueOnce({ rows: [] }) // reminders
             .mockResolvedValueOnce({ rows: [{ quick_add_days: 30, weight_goal: null, target_weight: null, target_weight_unit: null, communication_email: true, communication_sms: false, communication_push: false }] }); // user_settings
 
         await handleExportData(mockRequest as Request, mockResponse as Response);

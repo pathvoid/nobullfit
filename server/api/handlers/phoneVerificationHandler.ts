@@ -1,4 +1,4 @@
-// Phone verification handler - OTP flow for SMS reminder delivery
+// Phone verification handler - OTP flow for SMS delivery
 // Handles sending verification codes, verifying them, and removing phone numbers
 
 import type { Request, Response } from "express";
@@ -177,7 +177,7 @@ export async function handleVerifyCode(req: Request, res: Response): Promise<voi
     }
 }
 
-// Remove verified phone number and deactivate SMS reminders
+// Remove verified phone number
 export async function handleRemovePhone(req: Request, res: Response): Promise<void> {
     try {
         const userId = await getUserIdFromRequest(req);
@@ -198,13 +198,7 @@ export async function handleRemovePhone(req: Request, res: Response): Promise<vo
             [userId]
         );
 
-        // Deactivate all SMS reminders for this user
-        await pool.query(
-            "UPDATE reminders SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND delivery_type = 'sms'",
-            [userId]
-        );
-
-        res.status(200).json({ success: true, message: "Phone number removed and SMS reminders deactivated" });
+        res.status(200).json({ success: true, message: "Phone number removed" });
     } catch (error) {
         console.error("Error removing phone:", error);
         res.status(500).json({ error: "Failed to remove phone number" });

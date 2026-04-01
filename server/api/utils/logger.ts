@@ -88,11 +88,7 @@ const ACTION_MAP: Array<{ pattern: RegExp; method: string; action: string }> = [
     { pattern: /^\/grocery-lists\/\d+\/items$/, method: "POST", action: "GROCERY_ITEMS_ADDED" },
     { pattern: /^\/grocery-lists\/\d+\/send-email$/, method: "POST", action: "GROCERY_LIST_EMAILED" },
     { pattern: /^\/grocery-lists\/\d+\/add-recipe$/, method: "POST", action: "GROCERY_RECIPE_ADDED" },
-    // Reminders
-    { pattern: /^\/reminders$/, method: "POST", action: "REMINDER_CREATED" },
-    { pattern: /^\/reminders\/\d+$/, method: "PUT", action: "REMINDER_UPDATED" },
-    { pattern: /^\/reminders\/\d+$/, method: "DELETE", action: "REMINDER_DELETED" },
-    { pattern: /^\/reminders\/\d+\/toggle$/, method: "PATCH", action: "REMINDER_TOGGLED" },
+
     // Integrations
     { pattern: /^\/integrations\/\w+\/connect$/, method: "POST", action: "INTEGRATION_CONNECTED" },
     { pattern: /^\/integrations\/\w+$/, method: "DELETE", action: "INTEGRATION_DISCONNECTED" },
