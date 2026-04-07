@@ -235,7 +235,7 @@ describe("signUpHandler", () => {
 
         expect(mockResponse.status).toHaveBeenCalledWith(400);
         expect(mockResponse.json).toHaveBeenCalledWith({
-            error: "Password must be at least 8 characters long."
+            error: "Password must be between 8 and 72 characters long."
         });
     });
 

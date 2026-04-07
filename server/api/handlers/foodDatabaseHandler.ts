@@ -31,9 +31,8 @@ export async function handleFoodDatabaseSearch(req: Request, res: Response): Pro
         res.json(data);
     } catch (error) {
         console.error("Error in food database search:", error);
-        res.status(500).json({ 
-            error: "Internal server error",
-            message: error instanceof Error ? error.message : "Unknown error"
+        res.status(500).json({
+            error: "Internal server error"
         });
     }
 }

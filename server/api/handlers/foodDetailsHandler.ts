@@ -25,9 +25,8 @@ export async function handleFoodDetails(req: Request, res: Response): Promise<vo
         res.json({ food });
     } catch (error) {
         console.error("Error in food details handler:", error);
-        res.status(500).json({ 
-            error: "Internal server error",
-            message: error instanceof Error ? error.message : "Unknown error"
+        res.status(500).json({
+            error: "Internal server error"
         });
     }
 }

@@ -465,7 +465,7 @@ describe("foodTrackingHandler", () => {
 
             // Verify main query includes date filter (30 days default)
             const mainQuery = mockPool.query.mock.calls[1][0];
-            expect(mainQuery).toContain("INTERVAL '30 days'");
+            expect(mainQuery).toContain("make_interval(days => 30)");
         });
 
         it("should use user's quick_add_days setting when available", async () => {
@@ -481,7 +481,7 @@ describe("foodTrackingHandler", () => {
 
             // Verify main query uses 60 days filter
             const mainQuery = mockPool.query.mock.calls[1][0];
-            expect(mainQuery).toContain("INTERVAL '60 days'");
+            expect(mainQuery).toContain("make_interval(days => 60)");
         });
 
         it("should use 90 days filter when user setting is 90", async () => {
@@ -495,7 +495,7 @@ describe("foodTrackingHandler", () => {
             await handleGetRecentFoods(mockRequest as Request, mockResponse as Response);
 
             const mainQuery = mockPool.query.mock.calls[1][0];
-            expect(mainQuery).toContain("INTERVAL '90 days'");
+            expect(mainQuery).toContain("make_interval(days => 90)");
         });
 
         it("should use 120 days filter when user setting is 120", async () => {
@@ -509,7 +509,7 @@ describe("foodTrackingHandler", () => {
             await handleGetRecentFoods(mockRequest as Request, mockResponse as Response);
 
             const mainQuery = mockPool.query.mock.calls[1][0];
-            expect(mainQuery).toContain("INTERVAL '120 days'");
+            expect(mainQuery).toContain("make_interval(days => 120)");
         });
 
         it("should not apply date filter when quick_add_days is 0 (All Time)", async () => {

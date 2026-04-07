@@ -101,8 +101,7 @@ describe("foodDetailsHandler", () => {
 
             expect(mockResponse.status).toHaveBeenCalledWith(500);
             expect(mockResponse.json).toHaveBeenCalledWith({
-                error: "Internal server error",
-                message: "Database error"
+                error: "Internal server error"
             });
         });
     });

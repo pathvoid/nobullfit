@@ -27,7 +27,20 @@ export async function handleShortLinkRedirect(req: Request, res: Response): Prom
             return;
         }
 
-        // Redirect to the original URL
+        // Validate redirect URL to prevent open redirect attacks
+        try {
+            const parsed = new URL(originalUrl);
+            const allowedHosts = ["nobull.fit", "www.nobull.fit"];
+            if (!allowedHosts.includes(parsed.hostname)) {
+                res.status(400).json({ error: "Invalid redirect URL" });
+                return;
+            }
+        } catch {
+            res.status(400).json({ error: "Invalid redirect URL" });
+            return;
+        }
+
+        // Redirect to the validated URL
         res.redirect(302, originalUrl);
     } catch (error) {
         console.error("Error handling short link redirect:", error);

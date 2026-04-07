@@ -96,6 +96,19 @@ export async function handleLogFood(req: Request, res: Response): Promise<void> 
             return;
         }
 
+        // Validate quantity range to prevent invalid or abusive values
+        const parsedQuantity = parseFloat(quantity);
+        if (isNaN(parsedQuantity) || parsedQuantity <= 0 || parsedQuantity > 10000) {
+            res.status(400).json({ error: "Quantity must be a positive number (max 10,000)" });
+            return;
+        }
+
+        // Validate date format
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            res.status(400).json({ error: "Date must be in YYYY-MM-DD format" });
+            return;
+        }
+
         if (itemType === "recipe" && !recipeData) {
             res.status(400).json({ error: "Recipe data is required for recipe items" });
             return;
@@ -528,12 +541,12 @@ export async function handleGetRecentFoods(req: Request, res: Response): Promise
 
         // Build the date filter condition based on user preference
         // 0 = All Time (no date filter)
-        // Inner filter is for the subquery (no alias), outer filter is for the main query (ft alias)
-        const innerDateFilter = quickAddDays > 0 
-            ? `AND created_at >= CURRENT_TIMESTAMP - INTERVAL '${quickAddDays} days'`
+        // Use parameterized interval via make_interval to prevent SQL injection
+        const innerDateFilter = quickAddDays > 0
+            ? `AND created_at >= CURRENT_TIMESTAMP - make_interval(days => ${parseInt(String(quickAddDays), 10)})`
             : "";
-        const outerDateFilter = quickAddDays > 0 
-            ? `AND ft.created_at >= CURRENT_TIMESTAMP - INTERVAL '${quickAddDays} days'`
+        const outerDateFilter = quickAddDays > 0
+            ? `AND ft.created_at >= CURRENT_TIMESTAMP - make_interval(days => ${parseInt(String(quickAddDays), 10)})`
             : "";
 
         // Get unique food items and recipes with their most recent data

@@ -8,6 +8,7 @@ import { ViteDevServer } from "vite";
 
 import api from "./server/app.js";
 import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
 import { loggingMiddleware } from "./server/api/middleware/loggingMiddleware.js";
 import { startWebhookEventScheduler, stopWebhookEventScheduler } from "./server/api/jobs/webhookEventProcessor.js";
 
@@ -41,15 +42,16 @@ const createServer = async () => {
         app.set("trust proxy", 1);
     }
 
-    // Parse request bodies for form submissions
-    app.use(express.urlencoded({ extended: true }));
+    // Parse request bodies for form submissions with size limits to prevent DoS
+    app.use(express.urlencoded({ extended: true, limit: "1mb" }));
     // Paddle webhook needs raw body for signature verification
     app.use("/api/paddle/webhook", express.json({
+        limit: "1mb",
         verify: (req: Request, res, buf) => {
             (req as Request & { rawBody?: string }).rawBody = buf.toString();
         }
     }));
-    app.use(express.json());
+    app.use(express.json({ limit: "1mb" }));
     // Parse cookies
     app.use(cookieParser());
 
@@ -59,6 +61,11 @@ const createServer = async () => {
         res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
         res.setHeader("X-XSS-Protection", "0");
+        // CSP provides defense-in-depth against XSS attacks
+        // Development needs unsafe-inline/eval for Vite HMR and React refresh
+        if (isProd) {
+            res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' https://cdn.paddle.com https://static.cloudflareinsights.com https://*.stripe.network https://*.localizecdn.com; style-src 'self' 'unsafe-inline' https://cdn.paddle.com https://fonts.googleapis.com; img-src 'self' https://cdn.nobull.fit https://cdn.paddle.com data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.paddle.com https://checkout-analytics.paddle.com https://checkout-service.paddle.com https://*.stripe.com https://*.stripe.network https://*.localizecdn.com https://*.ingest.sentry.io https://cloudflareinsights.com; frame-src https://buy.paddle.com https://sandbox-buy.paddle.com https://*.stripe.com https://*.stripe.network;");
+        }
         if (isProd) {
             res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
         }
@@ -79,6 +86,19 @@ const createServer = async () => {
             next();
         });
     }
+
+    // Rate limiting for auth endpoints to prevent brute-force attacks
+    const authRateLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 10, // 10 attempts per window
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { error: "Too many attempts. Please try again later." }
+    });
+    app.use("/api/sign-in", authRateLimiter);
+    app.use("/api/sign-up", authRateLimiter);
+    app.use("/api/forgot-password", authRateLimiter);
+    app.use("/api/reset-password", authRateLimiter);
 
     // Log all API requests to the database
     app.use("/api", loggingMiddleware);
@@ -248,11 +268,12 @@ const createServer = async () => {
             if (e instanceof Error) {
                 // Fix stack traces in development (Vite needs to map source locations)
                 !isProd && vite && vite.ssrFixStacktrace(e);
-                console.log(e.stack);
-                res.status(500).end(e.stack);
+                console.error(e.stack);
+                // Never expose stack traces to clients in production
+                res.status(500).end(isProd ? "Internal Server Error" : e.stack);
             } else {
-                console.log(e);
-                res.status(500).end("Unknown error");
+                console.error(e);
+                res.status(500).end("Internal Server Error");
             }
         }
     });

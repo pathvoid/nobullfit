@@ -273,6 +273,12 @@ export async function handleAddGroceryListItems(req: Request, res: Response): Pr
             return;
         }
 
+        // Limit array size to prevent DoS via bulk inserts
+        if (items.length > 200) {
+            res.status(400).json({ error: "Cannot add more than 200 items at once" });
+            return;
+        }
+
         const pool = await getPool();
         if (!pool) {
             res.status(500).json({ error: "Database connection not available" });

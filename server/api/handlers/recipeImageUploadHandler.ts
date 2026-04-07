@@ -68,8 +68,8 @@ export const uploadRecipeImageHandler = [
             });
         } catch (error) {
             console.error("Error uploading recipe image:", error);
-            res.status(500).json({ 
-                error: error instanceof Error ? error.message : "Internal server error" 
+            res.status(500).json({
+                error: "Internal server error"
             });
         }
     }

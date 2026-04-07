@@ -128,7 +128,7 @@ describe("recipeImageUploadHandler", () => {
 
         expect(mockResponse.status).toHaveBeenCalledWith(500);
         expect(mockResponse.json).toHaveBeenCalledWith({
-            error: "Upload failed"
+            error: "Internal server error"
         });
     });
 });

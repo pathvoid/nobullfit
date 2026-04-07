@@ -141,6 +141,13 @@ export function verifyWebhookSignature(
         const timestamp = tsMatch.replace("ts=", "");
         const providedSignature = h1Match.replace("h1=", "");
 
+        // Reject webhooks older than 5 minutes to prevent replay attacks
+        const webhookAge = Math.abs(Date.now() / 1000 - parseInt(timestamp, 10));
+        if (webhookAge > 300) {
+            console.error("Webhook timestamp too old:", webhookAge, "seconds");
+            return false;
+        }
+
         // Build the signed payload
         const signedPayload = `${timestamp}:${rawBody}`;
 

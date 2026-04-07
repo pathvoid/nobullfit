@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import crypto from "crypto";
 import getPool from "../../db/connection.js";
 import bcrypt from "bcryptjs";
 
@@ -15,10 +16,10 @@ export async function handleResetPassword(req: Request, res: Response): Promise<
             return;
         }
 
-        // Validate password length
-        if (password.length < 8) {
+        // Validate password length (minimum 8, maximum 72 characters for bcrypt safety)
+        if (password.length < 8 || password.length > 72) {
             res.status(400).json({
-                error: "Password must be at least 8 characters long."
+                error: "Password must be between 8 and 72 characters long."
             });
             return;
         }
@@ -33,10 +34,13 @@ export async function handleResetPassword(req: Request, res: Response): Promise<
             return;
         }
 
+        // Hash the incoming token to compare against stored hash
+        const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
         // First check if token exists at all (even if expired)
         const tokenCheckResult = await pool.query(
             "SELECT token, expires_at, user_id FROM password_resets WHERE token = $1",
-            [token]
+            [tokenHash]
         );
 
         if (tokenCheckResult.rows.length === 0) {
@@ -93,7 +97,7 @@ export async function handleResetPassword(req: Request, res: Response): Promise<
         // Delete used reset token
         await pool.query(
             "DELETE FROM password_resets WHERE token = $1",
-            [token]
+            [tokenHash]
         );
 
         res.status(200).json({

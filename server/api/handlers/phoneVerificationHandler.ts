@@ -2,6 +2,7 @@
 // Handles sending verification codes, verifying them, and removing phone numbers
 
 import type { Request, Response } from "express";
+import crypto from "crypto";
 import getPool from "../../db/connection.js";
 import { verifyToken } from "../utils/jwt.js";
 import { sendSMS } from "../utils/twilioService.js";
@@ -28,9 +29,9 @@ async function getUserIdFromRequest(req: Request): Promise<number | null> {
     return decoded ? decoded.userId : null;
 }
 
-// Generate a 6-digit verification code
+// Generate a cryptographically secure 6-digit verification code
 function generateOTP(): string {
-    return String(Math.floor(100000 + Math.random() * 900000));
+    return String(crypto.randomInt(100000, 999999));
 }
 
 // Send a verification code to the user's phone number
@@ -74,14 +75,15 @@ export async function handleSendVerificationCode(req: Request, res: Response): P
             return;
         }
 
-        // Generate OTP and store
+        // Generate OTP and store hash (never store plaintext codes)
         const code = generateOTP();
+        const codeHash = crypto.createHash("sha256").update(code).digest("hex");
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
         await pool.query(
             `INSERT INTO phone_verifications (user_id, phone_number, code, expires_at)
              VALUES ($1, $2, $3, $4)`,
-            [userId, phoneNumber, code, expiresAt.toISOString()]
+            [userId, phoneNumber, codeHash, expiresAt.toISOString()]
         );
 
         // Send SMS with verification code
@@ -146,8 +148,9 @@ export async function handleVerifyCode(req: Request, res: Response): Promise<voi
             [verification.id]
         );
 
-        // Check code
-        if (verification.code !== code) {
+        // Check code by comparing hashes
+        const inputHash = crypto.createHash("sha256").update(code).digest("hex");
+        if (verification.code !== inputHash) {
             const remaining = 4 - verification.attempts;
             res.status(400).json({
                 error: `Invalid verification code. ${remaining} attempt${remaining !== 1 ? "s" : ""} remaining.`

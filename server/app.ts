@@ -212,11 +212,20 @@ class App {
         this.router.get("/webhooks/strava", handleWebhookValidation);
         this.router.post("/webhooks/strava", handleWebhookEvent);
 
-        // Strava webhook subscription management (admin endpoints)
-        this.router.post("/admin/webhooks/strava/subscription", handleCreateSubscription);
-        this.router.get("/admin/webhooks/strava/subscription", handleViewSubscription);
-        this.router.delete("/admin/webhooks/strava/subscription", handleDeleteSubscription);
-        this.router.delete("/admin/webhooks/strava/subscription/:id", handleDeleteSubscription);
+        // Admin route guard middleware - blocks all admin API routes in production
+        const adminGuard = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+            if (process.env.NODE_ENV === "production") {
+                res.status(404).json({ error: "Not found" });
+                return;
+            }
+            next();
+        };
+
+        // Strava webhook subscription management (admin endpoints, dev-only)
+        this.router.post("/admin/webhooks/strava/subscription", adminGuard, handleCreateSubscription);
+        this.router.get("/admin/webhooks/strava/subscription", adminGuard, handleViewSubscription);
+        this.router.delete("/admin/webhooks/strava/subscription", adminGuard, handleDeleteSubscription);
+        this.router.delete("/admin/webhooks/strava/subscription/:id", adminGuard, handleDeleteSubscription);
 
         // Phone verification endpoints
         this.router.post("/phone/send-code", handleSendVerificationCode);
@@ -226,19 +235,19 @@ class App {
         // Twilio incoming SMS webhook (public endpoint - called by Twilio)
         this.router.post("/webhooks/twilio/incoming", express.urlencoded({ extended: false }), handleTwilioIncoming);
 
-        // Admin endpoints (dev-only, guards are inside the handlers)
-        this.router.get("/admin/stats", handleGetAdminStats);
-        this.router.get("/admin/users", handleGetAdminUsers);
-        this.router.put("/admin/users/:id", handleUpdateAdminUser);
-        this.router.post("/admin/emails/send", handleSendAdminEmail);
-        this.router.get("/admin/emails/eligible-count", handleGetEligibleCount);
-        this.router.post("/admin/emails/preview", handlePreviewAdminEmail);
+        // Admin endpoints (dev-only, protected by middleware + handler-level guards)
+        this.router.get("/admin/stats", adminGuard, handleGetAdminStats);
+        this.router.get("/admin/users", adminGuard, handleGetAdminUsers);
+        this.router.put("/admin/users/:id", adminGuard, handleUpdateAdminUser);
+        this.router.post("/admin/emails/send", adminGuard, handleSendAdminEmail);
+        this.router.get("/admin/emails/eligible-count", adminGuard, handleGetEligibleCount);
+        this.router.post("/admin/emails/preview", adminGuard, handlePreviewAdminEmail);
 
         // Admin logs
-        this.router.get("/admin/logs", handleGetAdminLogs);
+        this.router.get("/admin/logs", adminGuard, handleGetAdminLogs);
 
         // Admin analytics
-        this.router.get("/admin/analytics", handleGetAdminAnalytics);
+        this.router.get("/admin/analytics", adminGuard, handleGetAdminAnalytics);
     }
 }
 

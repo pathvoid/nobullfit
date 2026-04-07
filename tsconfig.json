@@ -4,6 +4,7 @@
     "alwaysStrict": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "checkJs": true,
     "declaration": true,
     "declarationMap": true,

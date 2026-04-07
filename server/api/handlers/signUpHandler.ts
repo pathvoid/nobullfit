@@ -45,10 +45,10 @@ export async function handleSignUp(req: Request, res: Response): Promise<void> {
             return;
         }
 
-        // Validate password length (minimum 8 characters)
-        if (password.length < 8) {
+        // Validate password length (minimum 8, maximum 72 characters for bcrypt safety)
+        if (password.length < 8 || password.length > 72) {
             res.status(400).json({
-                error: "Password must be at least 8 characters long."
+                error: "Password must be between 8 and 72 characters long."
             });
             return;
         }

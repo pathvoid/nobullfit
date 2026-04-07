@@ -153,10 +153,12 @@ export async function handleForgotPassword(req: Request, res: Response): Promise
 
         // Generate secure reset token
         const resetToken = crypto.randomBytes(32).toString("hex");
+        // Store a SHA-256 hash of the token (never store plaintext reset tokens)
+        const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 1); // Token expires in 1 hour
 
-        // Store reset token in database
+        // Store hashed reset token in database
         await pool.query(
             `INSERT INTO password_resets (user_id, token, expires_at)
              VALUES ($1, $2, $3)
@@ -164,7 +166,7 @@ export async function handleForgotPassword(req: Request, res: Response): Promise
                  token = EXCLUDED.token,
                  expires_at = EXCLUDED.expires_at,
                  created_at = CURRENT_TIMESTAMP`,
-            [user.id, resetToken, expiresAt]
+            [user.id, tokenHash, expiresAt]
         );
 
         // Send password reset email (don't wait for it to complete)

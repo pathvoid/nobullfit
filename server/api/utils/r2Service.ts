@@ -15,12 +15,17 @@ const r2Client = new S3Client({
 const BUCKET_NAME = process.env.R2_BUCKET_NAME || "nobullfit-cdn";
 const RECIPES_DIR = "recipes";
 
+// Allowed image file extensions to prevent malicious file uploads (e.g., SVG with embedded JS)
+const ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "gif", "avif"]);
+
 // Generate a random filename to avoid duplicates
 function generateRandomFilename(originalFilename: string): string {
-    const ext = originalFilename.split(".").pop() || "jpg";
+    const ext = (originalFilename.split(".").pop() || "jpg").toLowerCase();
+    // Validate extension against allowlist to prevent SVG XSS and other attacks
+    const safeExt = ALLOWED_EXTENSIONS.has(ext) ? ext : "jpg";
     const randomString = randomBytes(16).toString("hex");
     const timestamp = Date.now();
-    return `${timestamp}-${randomString}.${ext}`;
+    return `${timestamp}-${randomString}.${safeExt}`;
 }
 
 // Upload image to R2

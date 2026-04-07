@@ -13,6 +13,16 @@ vi.mock("bcryptjs", () => ({
     }
 }));
 
+vi.mock("crypto", () => ({
+    default: {
+        createHash: vi.fn().mockReturnValue({
+            update: vi.fn().mockReturnValue({
+                digest: vi.fn().mockReturnValue("hashed_token")
+            })
+        })
+    }
+}));
+
 import getPool from "../../db/connection.js";
 import bcrypt from "bcryptjs";
 
@@ -112,7 +122,7 @@ describe("resetPasswordHandler", () => {
 
         expect(mockResponse.status).toHaveBeenCalledWith(400);
         expect(mockResponse.json).toHaveBeenCalledWith({
-            error: "Password must be at least 8 characters long."
+            error: "Password must be between 8 and 72 characters long."
         });
     });
 

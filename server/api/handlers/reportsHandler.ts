@@ -24,6 +24,16 @@ async function getUserIdFromRequest(req: Request): Promise<number | null> {
     return decoded ? decoded.userId : null;
 }
 
+// Escape HTML to prevent XSS in server-rendered PDF content
+function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 // Format date for display
 function formatDate(date: Date): string {
     return date.toLocaleDateString("en-US", {
@@ -296,7 +306,7 @@ function generateReportHTML(data: {
             dayLog.entries.forEach(entry => {
                 currentPageContent += `
                     <tr>
-                        <td class="food-name">${entry.food_label}</td>
+                        <td class="food-name">${escapeHtml(entry.food_label)}</td>
                         <td>${entry.category}</td>
                         <td class="text-right">${entry.quantity}</td>
                         <td class="text-right">${Math.round(entry.calories)}</td>
@@ -403,8 +413,8 @@ function generateReportHTML(data: {
             dayLog.entries.forEach(entry => {
                 currentPageContent += `
                     <tr>
-                        <td>${capitalizeFirst(entry.activity_type)}</td>
-                        <td>${entry.activity_name}</td>
+                        <td>${escapeHtml(capitalizeFirst(entry.activity_type))}</td>
+                        <td>${escapeHtml(entry.activity_name)}</td>
                         <td class="text-right">${entry.duration_minutes} min</td>
                         <td class="text-right">${Math.round(entry.calories_burned)}</td>
                     </tr>
@@ -825,7 +835,7 @@ function generateReportHTML(data: {
         <div class="motto">Track. Improve. Repeat.</div>
         <div class="report-title">Health &amp; Nutrition Report</div>
         <div class="report-period">${dateRangeLabel}</div>
-        <div class="user-name">Prepared for ${userName}</div>
+        <div class="user-name">Prepared for ${escapeHtml(userName)}</div>
         <div class="generated-date">Generated on ${formatDate(generatedAt)}</div>
         <div class="website-url">nobull.fit</div>
     </div>

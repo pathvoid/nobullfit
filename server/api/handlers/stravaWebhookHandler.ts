@@ -17,6 +17,9 @@ function getStravaClientSecret(): string {
     return process.env.STRAVA_CLIENT_SECRET || "";
 }
 
+// Known subscription ID - set automatically on startup by ensureWebhookSubscription
+let knownSubscriptionId: number | null = null;
+
 // Strava webhook event interface
 interface StravaWebhookEvent {
     object_type: "activity" | "athlete";
@@ -65,6 +68,18 @@ export async function handleWebhookValidation(req: Request, res: Response): Prom
     }
 }
 
+// Verify that a webhook event is from a legitimate Strava subscription
+function verifyWebhookSubscription(event: StravaWebhookEvent): boolean {
+    // Strava doesn't provide HMAC signatures for webhook events, but we can verify
+    // the subscription_id matches our known subscription to reject forged events
+    const expectedSubId = knownSubscriptionId ?? (process.env.STRAVA_WEBHOOK_SUBSCRIPTION_ID ? parseInt(process.env.STRAVA_WEBHOOK_SUBSCRIPTION_ID, 10) : null);
+    if (expectedSubId !== null && event.subscription_id !== expectedSubId) {
+        console.error("[Strava Webhook] Subscription ID mismatch:", event.subscription_id, "expected:", expectedSubId);
+        return false;
+    }
+    return true;
+}
+
 // Handle incoming webhook events (POST request from Strava)
 export async function handleWebhookEvent(req: Request, res: Response): Promise<void> {
     // Respond immediately with 200 OK (Strava requires response within 2 seconds)
@@ -81,9 +96,15 @@ export async function handleWebhookEvent(req: Request, res: Response): Promise<v
             subscriptionId: event.subscription_id
         });
 
-        // Validate event
+        // Validate event format
         if (!event.object_type || !event.object_id || !event.aspect_type || !event.owner_id) {
             console.error("[Strava Webhook] Invalid event format:", event);
+            return;
+        }
+
+        // Verify the event comes from our known Strava subscription
+        if (!verifyWebhookSubscription(event)) {
+            console.error("[Strava Webhook] Rejected event from unknown subscription");
             return;
         }
 
@@ -241,7 +262,8 @@ export async function ensureWebhookSubscription(): Promise<void> {
         const subscriptions = await checkResponse.json();
 
         if (Array.isArray(subscriptions) && subscriptions.length > 0) {
-            console.log("[Strava Webhook] Subscription already exists:", subscriptions[0].id);
+            knownSubscriptionId = subscriptions[0].id;
+            console.log("[Strava Webhook] Subscription already exists:", knownSubscriptionId);
             return;
         }
 
@@ -267,7 +289,8 @@ export async function ensureWebhookSubscription(): Promise<void> {
         }
 
         const data = await createResponse.json();
-        console.log("[Strava Webhook] Subscription created successfully:", data.id);
+        knownSubscriptionId = data.id;
+        console.log("[Strava Webhook] Subscription created successfully:", knownSubscriptionId);
     } catch (error) {
         console.error("[Strava Webhook] Auto-setup error:", error);
     }

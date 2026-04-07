@@ -38,6 +38,16 @@ export function getRetentionSubject(activityType: LastActivityType): string {
     }
 }
 
+// Escape HTML special characters to prevent XSS in email templates
+function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 // Build HTML email for retention/re-engagement
 export function buildRetentionEmailHtml(
     userName: string,
@@ -45,7 +55,7 @@ export function buildRetentionEmailHtml(
     activityType: LastActivityType,
     daysInactive: number
 ): string {
-    const firstName = userName.split(" ")[0];
+    const firstName = escapeHtml(userName.split(" ")[0]);
     const message = getPersonalizedMessage(activityType, daysInactive);
 
     return `

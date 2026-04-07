@@ -141,6 +141,21 @@ export async function handleLogActivity(req: Request, res: Response): Promise<vo
             return;
         }
 
+        // Validate caloriesBurned if provided
+        if (caloriesBurned !== undefined && caloriesBurned !== null) {
+            const parsedCals = parseFloat(caloriesBurned);
+            if (isNaN(parsedCals) || parsedCals < 0 || parsedCals > 50000) {
+                res.status(400).json({ error: "Calories burned must be between 0 and 50,000" });
+                return;
+            }
+        }
+
+        // Validate date format
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            res.status(400).json({ error: "Date must be in YYYY-MM-DD format" });
+            return;
+        }
+
         const pool = await getPool();
         if (!pool) {
             res.status(500).json({ error: "Database connection not available" });
