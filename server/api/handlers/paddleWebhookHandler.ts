@@ -75,12 +75,13 @@ export async function handlePaddleWebhook(req: Request, res: Response): Promise<
                 // Unhandled event type - ignore silently
         }
 
-        // Always respond with 200 to acknowledge receipt
+        // Respond 200 only when the event was fully processed. Paddle reserves
+        // 2xx to mean "don't retry"; transient DB/network failures should return
+        // 5xx so the event is redelivered.
         res.status(200).json({ received: true });
     } catch (error) {
         console.error("Paddle webhook error:", error);
-        // Still respond with 200 to prevent Paddle from retrying
-        res.status(200).json({ received: true, error: "Processing error" });
+        res.status(500).json({ received: false, error: "Processing error" });
     }
 }
 
@@ -465,7 +466,10 @@ async function updateUserSubscription(
     try {
         const result = await pool.query(query, values);
         if (result.rowCount === 0) {
-            console.warn(`No user found with paddle_customer_id: ${paddleCustomerId}`);
+            // No matching user — likely an ordering issue where the Paddle event
+            // arrived before the user row was persisted. Throw so the outer
+            // webhook handler returns 5xx and Paddle retries.
+            throw new Error(`No user found with paddle_customer_id: ${paddleCustomerId}`);
         }
     } catch (error) {
         console.error("Error updating user subscription:", error);

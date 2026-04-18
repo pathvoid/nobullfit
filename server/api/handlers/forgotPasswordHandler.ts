@@ -118,10 +118,14 @@ export async function handleForgotPassword(req: Request, res: Response): Promise
             return;
         }
 
-        // Check if user exists
+        // Normalize email to lowercase for case-insensitive lookups and
+        // consistent rate-limit keying
+        const normalizedEmail = email.toLowerCase();
+
+        // Check if user exists (case-insensitive)
         const userResult = await pool.query(
-            "SELECT id, email, full_name FROM users WHERE email = $1",
-            [email]
+            "SELECT id, email, full_name FROM users WHERE LOWER(email) = LOWER($1)",
+            [normalizedEmail]
         );
 
         // Always return success to prevent email enumeration
@@ -137,13 +141,13 @@ export async function handleForgotPassword(req: Request, res: Response): Promise
 
         const user = userResult.rows[0];
 
-        // Check rate limiting
-        const rateLimitCheck = await checkRateLimit(pool, email);
+        // Check rate limiting (keyed on normalized email so casings don't split buckets)
+        const rateLimitCheck = await checkRateLimit(pool, normalizedEmail);
 
         if (!rateLimitCheck.allowed) {
             // Return success message even if rate limited (don't expose rate limiting)
             // But log it for monitoring
-            console.warn(`Password reset rate limit exceeded for ${email}`);
+            console.warn(`Password reset rate limit exceeded for ${normalizedEmail}`);
             res.status(200).json({
                 success: true,
                 message: "If an account with that email exists, a password reset link has been sent."
@@ -169,14 +173,11 @@ export async function handleForgotPassword(req: Request, res: Response): Promise
             [user.id, tokenHash, expiresAt]
         );
 
-        // Send password reset email (don't wait for it to complete)
+        // Send password reset email (don't wait for it to complete). On failure we
+        // deliberately do NOT log the reset link — even in dev, plaintext tokens in
+        // stdout can end up in log aggregators and persist past the 1-hour expiry.
         sendPasswordResetEmail(user.email, user.full_name, resetToken).catch((error) => {
-            console.error("Failed to send password reset email:", error);
-            // Log the reset link as fallback if email fails (for development/debugging)
-            if (process.env.NODE_ENV !== "production") {
-                const resetLink = `${process.env.APP_URL || "http://localhost:3000"}/reset-password?token=${resetToken}`;
-                console.log("Password reset link (fallback):", resetLink);
-            }
+            console.error(`Failed to send password reset email for user ${user.id}:`, error);
         });
 
         // Return success (don't expose whether user exists)

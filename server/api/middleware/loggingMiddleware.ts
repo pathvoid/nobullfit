@@ -1,6 +1,18 @@
 import type { Request, Response, NextFunction } from "express";
 import { logToDb, categorizeAction, extractUserFromRequest } from "../utils/logger.js";
 
+// Query string keys whose values must be redacted before persistence
+const SENSITIVE_QUERY_KEY = /^(token|code|secret|password|access_token|refresh_token|key|signature|api_key)$/i;
+
+// Return a shallow copy of the query object with sensitive values masked
+function redactQuery(query: Request["query"]): Record<string, unknown> {
+    const redacted: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(query)) {
+        redacted[key] = SENSITIVE_QUERY_KEY.test(key) ? "[REDACTED]" : value;
+    }
+    return redacted;
+}
+
 // Logging middleware - intercepts all API requests and logs them to the database
 export function loggingMiddleware(req: Request, res: Response, next: NextFunction): void {
     const startTime = Date.now();
@@ -39,7 +51,7 @@ export function loggingMiddleware(req: Request, res: Response, next: NextFunctio
             durationMs: duration,
             ipAddress,
             metadata: {
-                query: Object.keys(req.query).length > 0 ? req.query : undefined,
+                query: Object.keys(req.query).length > 0 ? redactQuery(req.query) : undefined,
                 userAgent: req.headers["user-agent"],
             },
         });

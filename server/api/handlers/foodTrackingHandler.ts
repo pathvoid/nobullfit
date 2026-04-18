@@ -46,14 +46,22 @@ export async function handleGetFoodTracking(req: Request, res: Response): Promis
             return;
         }
 
-        // Query foods for the specified date
+        // Query foods for the specified date. Order categories by meal timeline
+        // (Breakfast → Lunch → Dinner → Snack → Other) rather than alphabet.
         const result = await pool.query(
-            `SELECT id, item_type, food_id, food_label, food_data, recipe_data, quantity, 
-                    measure_uri, measure_label, category, date, timezone, nutrients, 
+            `SELECT id, item_type, food_id, food_label, food_data, recipe_data, quantity,
+                    measure_uri, measure_label, category, date, timezone, nutrients,
                     created_at, updated_at
-             FROM food_tracking 
-             WHERE user_id = $1 AND date = $2 
-             ORDER BY category, created_at ASC`,
+             FROM food_tracking
+             WHERE user_id = $1 AND date = $2
+             ORDER BY CASE category
+                 WHEN 'Breakfast' THEN 1
+                 WHEN 'Lunch' THEN 2
+                 WHEN 'Dinner' THEN 3
+                 WHEN 'Snack' THEN 4
+                 WHEN 'Other' THEN 5
+                 ELSE 6
+             END, created_at ASC`,
             [userId, date]
         );
 

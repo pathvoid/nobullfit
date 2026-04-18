@@ -232,8 +232,9 @@ class App {
         this.router.post("/phone/verify", handleVerifyCode);
         this.router.delete("/phone", handleRemovePhone);
 
-        // Twilio incoming SMS webhook (public endpoint - called by Twilio)
-        this.router.post("/webhooks/twilio/incoming", express.urlencoded({ extended: false }), handleTwilioIncoming);
+        // Twilio incoming SMS webhook (public endpoint - called by Twilio).
+        // Explicit 32kb body cap — legitimate Twilio payloads are well under 1kb.
+        this.router.post("/webhooks/twilio/incoming", express.urlencoded({ extended: false, limit: "32kb" }), handleTwilioIncoming);
 
         // Admin endpoints (dev-only, protected by middleware + handler-level guards)
         this.router.get("/admin/stats", adminGuard, handleGetAdminStats);

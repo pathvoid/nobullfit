@@ -61,15 +61,18 @@ export async function handleChangeEmailRequest(req: Request, res: Response) {
         // Check for existing pending request for this user
         await pool.query("DELETE FROM email_change_requests WHERE user_id = $1", [userId]);
 
-        // Generate secure token for email change confirmation
+        // Generate secure token for email change confirmation.
+        // The plaintext token is sent in the email; only its SHA-256 hash is
+        // persisted so that a DB read does not disclose working confirmation links.
         const emailChangeToken = crypto.randomBytes(32).toString("hex");
+        const emailChangeTokenHash = crypto.createHash("sha256").update(emailChangeToken).digest("hex");
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours expiration
 
-        // Store email change request
+        // Store email change request (token stored as hash)
         await pool.query(
             "INSERT INTO email_change_requests (user_id, new_email, token, expires_at) VALUES ($1, $2, $3, $4)",
-            [userId, newEmail.toLowerCase(), emailChangeToken, expiresAt]
+            [userId, newEmail.toLowerCase(), emailChangeTokenHash, expiresAt]
         );
 
         // Send confirmation email
@@ -105,10 +108,13 @@ export async function handleConfirmEmailChange(req: Request, res: Response) {
         // Trim whitespace from token
         token = token.trim();
 
+        // Tokens are stored as SHA-256 hashes; hash the incoming token before lookup
+        const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
         // Find email change request
         const requestResult = await pool.query(
             "SELECT user_id, new_email, expires_at FROM email_change_requests WHERE token = $1",
-            [token]
+            [tokenHash]
         );
 
         if (requestResult.rows.length === 0) {
@@ -123,7 +129,7 @@ export async function handleConfirmEmailChange(req: Request, res: Response) {
 
         // Check if expired
         if (new Date(expires_at) < new Date()) {
-            await pool.query("DELETE FROM email_change_requests WHERE token = $1", [token]);
+            await pool.query("DELETE FROM email_change_requests WHERE token = $1", [tokenHash]);
             return res.status(400).json({ error: "Confirmation token has expired. Please request a new email change." });
         }
 
@@ -134,13 +140,13 @@ export async function handleConfirmEmailChange(req: Request, res: Response) {
             const existingUserId = existingUserResult.rows[0].id;
             if (existingUserId === user_id) {
                 // Email was already changed - token was already used
-                await pool.query("DELETE FROM email_change_requests WHERE token = $1", [token]);
-                return res.status(200).json({ 
-                    message: "Email address has been successfully updated." 
+                await pool.query("DELETE FROM email_change_requests WHERE token = $1", [tokenHash]);
+                return res.status(200).json({
+                    message: "Email address has been successfully updated."
                 });
             }
             // Different user has this email
-            await pool.query("DELETE FROM email_change_requests WHERE token = $1", [token]);
+            await pool.query("DELETE FROM email_change_requests WHERE token = $1", [tokenHash]);
             return res.status(400).json({ error: "This email address is already in use." });
         }
 
@@ -163,7 +169,7 @@ export async function handleConfirmEmailChange(req: Request, res: Response) {
         }
 
         // Delete the used token
-        await pool.query("DELETE FROM email_change_requests WHERE token = $1", [token]);
+        await pool.query("DELETE FROM email_change_requests WHERE token = $1", [tokenHash]);
 
         return res.status(200).json({ 
             message: "Email address has been successfully updated." 

@@ -39,9 +39,32 @@ async function initializePool(): Promise<Pool | null> {
         // dotenv is already loaded in server.ts, but ensure it's loaded here too
         const dotenvModule = await import("dotenv");
         dotenvModule.default.config();
-        
+
         const { Pool } = pgModule.default;
-        
+
+        // Fail fast in production when DB credentials are missing instead of silently
+        // attempting a connection with well-known defaults (postgres / empty password).
+        if (process.env.NODE_ENV === "production") {
+            if (!process.env.DB_USER) {
+                throw new Error("FATAL: DB_USER environment variable is not set.");
+            }
+            if (!process.env.DB_PASSWORD) {
+                throw new Error("FATAL: DB_PASSWORD environment variable is not set.");
+            }
+        }
+
+        // Build SSL config: when DB_SSL_CA is provided, validate the server cert against it.
+        // Otherwise fall back to the existing opportunistic TLS behavior.
+        let sslConfig: false | { rejectUnauthorized: boolean; ca?: string } = false;
+        if (process.env.DB_SSL === "true") {
+            if (process.env.DB_SSL_CA) {
+                sslConfig = { rejectUnauthorized: true, ca: process.env.DB_SSL_CA };
+            } else {
+                console.warn("[DB] DB_SSL=true without DB_SSL_CA — connecting with rejectUnauthorized=false. Set DB_SSL_CA to validate the server certificate.");
+                sslConfig = { rejectUnauthorized: false };
+            }
+        }
+
         pool = new Pool({
             host: process.env.DB_HOST || "localhost",
             port: parseInt(process.env.DB_PORT || "5432", 10),
@@ -52,19 +75,16 @@ async function initializePool(): Promise<Pool | null> {
             max: 20, // Maximum number of clients in the pool
             idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
             connectionTimeoutMillis: 5000, // Increased to 5 seconds for debugging
-            // SSL configuration for production (use environment variable)
-            ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
+            ssl: sslConfig
         });
 
-        // Handle pool errors
+        // Handle pool errors by logging only. A transient idle-client error
+        // (network blip, server restart, etc.) should not take down the whole
+        // process — the pool itself recovers by establishing new clients on demand.
         if (pool) {
             pool.on("error", (err: Error) => {
                 console.error("Unexpected error on idle client", err);
-                if (typeof process !== "undefined") {
-                    process.exit(-1);
-                }
             });
-            
         }
     } catch (error) {
         // Log the full error for debugging

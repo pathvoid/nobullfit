@@ -23,6 +23,12 @@ const isTest = process.env.VITEST;
 const isProd = process.env.NODE_ENV === "production";
 const root: string = process.cwd();
 
+// Fail fast if APP_URL is missing in production. Without it, links emitted in
+// password-reset / email-change emails would fall back to http://localhost:3000.
+if (isProd && !process.env.APP_URL) {
+    throw new Error("FATAL: APP_URL environment variable is not set in production.");
+}
+
 // Helper to resolve paths relative to server directory
 const resolve = (_path: string) => path.resolve(__dirname, _path);
 
@@ -61,10 +67,14 @@ const createServer = async () => {
         res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
         res.setHeader("X-XSS-Protection", "0");
+        // Cross-origin isolation defenses (COEP deliberately omitted — would break
+        // allowlisted third-party images like cdn.paddle.com / openfoodfacts.org).
+        res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+        res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
         // CSP provides defense-in-depth against XSS attacks
         // Development needs unsafe-inline/eval for Vite HMR and React refresh
         if (isProd) {
-            res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.paddle.com https://static.cloudflareinsights.com https://*.stripe.network https://*.localizecdn.com; style-src 'self' 'unsafe-inline' https://cdn.paddle.com https://fonts.googleapis.com; img-src 'self' https://cdn.nobull.fit https://cdn.paddle.com https://images.openfoodfacts.org data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.paddle.com https://checkout-analytics.paddle.com https://checkout-service.paddle.com https://*.stripe.com https://*.stripe.network https://*.localizecdn.com https://*.ingest.sentry.io https://cloudflareinsights.com; frame-src https://buy.paddle.com https://sandbox-buy.paddle.com https://*.stripe.com https://*.stripe.network;");
+            res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.paddle.com https://static.cloudflareinsights.com https://*.stripe.network https://*.localizecdn.com; style-src 'self' 'unsafe-inline' https://cdn.paddle.com https://fonts.googleapis.com; img-src 'self' https://cdn.nobull.fit https://cdn.paddle.com https://images.openfoodfacts.org data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.paddle.com https://checkout-analytics.paddle.com https://checkout-service.paddle.com https://*.stripe.com https://*.stripe.network https://*.localizecdn.com https://*.ingest.sentry.io https://cloudflareinsights.com; frame-src https://buy.paddle.com https://sandbox-buy.paddle.com https://*.stripe.com https://*.stripe.network; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self';");
         }
         if (isProd) {
             res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
@@ -72,13 +82,20 @@ const createServer = async () => {
         next();
     });
 
-    // Allow cross-origin requests from Expo dev server in development
+    // Allow cross-origin requests from local dev servers (Vite, Expo) in development.
+    // Only reflect the Origin header back when it matches the localhost allowlist —
+    // never echo arbitrary origins with credentials enabled.
     if (!isProd) {
+        const LOCAL_DEV_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
         app.use("/api", (req, res, next) => {
-            res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-            res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-            res.header("Access-Control-Allow-Credentials", "true");
+            const origin = req.headers.origin;
+            if (origin && LOCAL_DEV_ORIGIN.test(origin)) {
+                res.header("Access-Control-Allow-Origin", origin);
+                res.header("Vary", "Origin");
+                res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                res.header("Access-Control-Allow-Credentials", "true");
+            }
             if (req.method === "OPTIONS") {
                 res.sendStatus(204);
                 return;
@@ -99,6 +116,28 @@ const createServer = async () => {
     app.use("/api/sign-up", authRateLimiter);
     app.use("/api/forgot-password", authRateLimiter);
     app.use("/api/reset-password", authRateLimiter);
+
+    // Throttle account-modification endpoints — these require an authenticated
+    // session, so the IP bucket is effectively per-user in normal use.
+    const changeActionRateLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 5,
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { error: "Too many attempts. Please try again later." }
+    });
+    app.use("/api/settings/change-password", changeActionRateLimiter);
+    app.use("/api/settings/change-email", changeActionRateLimiter);
+
+    // Tighter limit on phone OTP send to protect against SMS-cost abuse.
+    const phoneSendCodeRateLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 3,
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { error: "Too many verification code requests. Please try again later." }
+    });
+    app.use("/api/phone/send-code", phoneSendCodeRateLimiter);
 
     // Log all API requests to the database
     app.use("/api", loggingMiddleware);
@@ -299,9 +338,13 @@ if (!isTest) {
             // Auto-setup Strava webhook subscription in production
             // Must run AFTER server is listening so Strava's validation callback can reach us
             if (isProd) {
-                // Small delay to ensure server is fully ready
-                setTimeout(async () => {
-                    await ensureWebhookSubscription();
+                // Small delay to ensure server is fully ready. The inner promise
+                // is explicitly caught so a rejection doesn't bubble into an
+                // unhandled-promise-rejection and kill the process at boot.
+                setTimeout(() => {
+                    ensureWebhookSubscription().catch((err) => {
+                        console.error("[Strava Webhook] ensureWebhookSubscription failed:", err);
+                    });
                 }, 2000);
             }
         });

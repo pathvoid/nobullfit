@@ -30,10 +30,12 @@ import { Link, useLoaderData, useLocation, useNavigate, useNavigationType, useSe
 import { toast } from "sonner";
 import DashboardSidebar, { UserDropdown } from "../DashboardSidebar";
 
+type FiltersPanelUser = { id: number } | null | undefined;
+
 const FiltersPanel = memo<{
   hasActiveFilters: boolean;
   clearFilters: () => void;
-  user: any;
+  user: FiltersPanelUser;
   myRecipes: boolean;
   verified: boolean;
   tags: RecipeTagKey[];

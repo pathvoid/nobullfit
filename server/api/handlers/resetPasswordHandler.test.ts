@@ -31,13 +31,24 @@ describe("resetPasswordHandler", () => {
     let mockResponse: Partial<Response>;
     let mockPool: {
         query: ReturnType<typeof vi.fn>;
+        connect: ReturnType<typeof vi.fn>;
+    };
+    let mockClient: {
+        query: ReturnType<typeof vi.fn>;
+        release: ReturnType<typeof vi.fn>;
     };
 
     beforeEach(() => {
         vi.clearAllMocks();
 
+        mockClient = {
+            query: vi.fn().mockResolvedValue({ rows: [] }),
+            release: vi.fn()
+        };
+
         mockPool = {
-            query: vi.fn()
+            query: vi.fn(),
+            connect: vi.fn().mockResolvedValue(mockClient)
         };
 
         (getPool as ReturnType<typeof vi.fn>).mockResolvedValue(mockPool);
@@ -69,16 +80,12 @@ describe("resetPasswordHandler", () => {
         mockPool.query.mockResolvedValueOnce({
             rows: [{ id: 1, email: "test@example.com", full_name: "Test User" }]
         });
-        // Update password
-        mockPool.query.mockResolvedValueOnce({ rows: [] });
-        // Delete token
-        mockPool.query.mockResolvedValueOnce({ rows: [] });
 
         (bcrypt.hash as ReturnType<typeof vi.fn>).mockResolvedValue("new_hashed_password");
 
         await handleResetPassword(mockRequest as Request, mockResponse as Response);
 
-        expect(bcrypt.hash).toHaveBeenCalledWith("newpassword123", 10);
+        expect(bcrypt.hash).toHaveBeenCalledWith("newpassword123", 12);
         expect(mockResponse.status).toHaveBeenCalledWith(200);
         expect(mockResponse.json).toHaveBeenCalledWith({
             success: true,

@@ -45,42 +45,52 @@ describe("authHandler", () => {
 
     describe("handleGetMe", () => {
         it("should return user data for valid token in Authorization header", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1, email: "test@example.com" });
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1, email: "test@example.com", tokenVersion: 0 });
             mockRequest.headers = { authorization: "Bearer valid_token" };
 
-            const mockUser = {
+            const mockRow = {
                 id: 1,
                 email: "test@example.com",
-                full_name: "Test User"
+                full_name: "Test User",
+                token_version: 0
             };
 
-            mockPool.query.mockResolvedValue({ rows: [mockUser] });
+            mockPool.query.mockResolvedValue({ rows: [mockRow] });
 
             await handleGetMe(mockRequest as Request, mockResponse as Response);
 
             expect(mockResponse.status).toHaveBeenCalledWith(200);
             expect(mockResponse.json).toHaveBeenCalledWith({
-                user: mockUser
+                user: {
+                    id: 1,
+                    email: "test@example.com",
+                    full_name: "Test User"
+                }
             });
         });
 
         it("should return user data for valid token in cookie", async () => {
-            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1, email: "test@example.com" });
+            (verifyToken as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 1, email: "test@example.com", tokenVersion: 0 });
             mockRequest.cookies = { auth_token: "valid_token" };
 
-            const mockUser = {
+            const mockRow = {
                 id: 1,
                 email: "test@example.com",
-                full_name: "Test User"
+                full_name: "Test User",
+                token_version: 0
             };
 
-            mockPool.query.mockResolvedValue({ rows: [mockUser] });
+            mockPool.query.mockResolvedValue({ rows: [mockRow] });
 
             await handleGetMe(mockRequest as Request, mockResponse as Response);
 
             expect(mockResponse.status).toHaveBeenCalledWith(200);
             expect(mockResponse.json).toHaveBeenCalledWith({
-                user: mockUser
+                user: {
+                    id: 1,
+                    email: "test@example.com",
+                    full_name: "Test User"
+                }
             });
         });
 

@@ -148,9 +148,12 @@ export async function handleVerifyCode(req: Request, res: Response): Promise<voi
             [verification.id]
         );
 
-        // Check code by comparing hashes
+        // Check code by comparing sha256 hex hashes in constant time
         const inputHash = crypto.createHash("sha256").update(code).digest("hex");
-        if (verification.code !== inputHash) {
+        const storedBuf = Buffer.from(verification.code, "hex");
+        const inputBuf = Buffer.from(inputHash, "hex");
+        const codeMatches = storedBuf.length === inputBuf.length && crypto.timingSafeEqual(storedBuf, inputBuf);
+        if (!codeMatches) {
             const remaining = 4 - verification.attempts;
             res.status(400).json({
                 error: `Invalid verification code. ${remaining} attempt${remaining !== 1 ? "s" : ""} remaining.`

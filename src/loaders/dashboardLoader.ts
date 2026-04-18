@@ -68,21 +68,26 @@ const dashboardLoader = async ({ request }: LoaderFunctionArgs) => {
             throw redirect("/choose-plan");
         }
 
-        // Fetch dashboard stats
+        // Fetch dashboard stats. Skip on the server — the timezone read would
+        // resolve to the server's TZ and produce incorrect "today" calculations
+        // in the SSR HTML. The Dashboard screen refetches after mount with the
+        // real client timezone, so skipping here doesn't lose any data.
         let stats = null;
-        try {
-            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const statsResponse = await fetch(`${url.origin}/api/dashboard/stats?period=week&timezone=${encodeURIComponent(userTimezone)}`, {
-                headers,
-                credentials: "include"
-            });
-            
-            if (statsResponse.ok) {
-                stats = await statsResponse.json();
+        if (typeof window !== "undefined") {
+            try {
+                const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const statsResponse = await fetch(`${url.origin}/api/dashboard/stats?period=week&timezone=${encodeURIComponent(userTimezone)}`, {
+                    headers,
+                    credentials: "include"
+                });
+
+                if (statsResponse.ok) {
+                    stats = await statsResponse.json();
+                }
+            } catch (error) {
+                console.error("Error fetching dashboard stats:", error);
+                // Continue without stats - not critical
             }
-        } catch (error) {
-            console.error("Error fetching dashboard stats:", error);
-            // Continue without stats - not critical
         }
 
         // User is authenticated, return loader data

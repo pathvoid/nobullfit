@@ -13,7 +13,8 @@ vi.mock("../utils/jwt", () => ({
 
 vi.mock("bcryptjs", () => ({
     default: {
-        compare: vi.fn()
+        compare: vi.fn(),
+        hashSync: vi.fn(() => "$2a$12$dummyhashdummyhashdummyhashdummyhashdummyhashdummyhashdu")
     }
 }));
 

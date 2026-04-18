@@ -281,24 +281,34 @@ export async function handleOAuthCallback(req: Request, res: Response): Promise<
     const provider = req.params.provider as string;
     let tokenData: { accessToken: string; refreshToken?: string; expiresAt?: Date; scopes?: string[] } | null = null;
 
+    // Reject unknown providers up front so downstream redirects never reflect
+    // an attacker-controlled path segment back into a URL.
+    if (!provider || !isValidProvider(provider)) {
+        res.redirect(`${APP_URL}/dashboard/integrations?error=invalid_provider`);
+        return;
+    }
+
+    // Always URL-encode the provider when interpolating into redirect query strings.
+    const providerParam = encodeURIComponent(provider);
+
     try {
         const { code, state, error: oauthError } = req.query;
 
         if (oauthError) {
             // OAuth error from provider (user clicked Cancel on Strava)
-            res.redirect(`${APP_URL}/dashboard/integrations?error=oauth_denied&provider=${provider}`);
+            res.redirect(`${APP_URL}/dashboard/integrations?error=oauth_denied&provider=${providerParam}`);
             return;
         }
 
         if (!code || !state) {
-            res.redirect(`${APP_URL}/dashboard/integrations?error=invalid_callback&provider=${provider}`);
+            res.redirect(`${APP_URL}/dashboard/integrations?error=invalid_callback&provider=${providerParam}`);
             return;
         }
 
         // Verify state token
         const statePayload = verifyStateToken(state as string);
         if (!statePayload || typeof statePayload !== "object") {
-            res.redirect(`${APP_URL}/dashboard/integrations?error=invalid_state&provider=${provider}`);
+            res.redirect(`${APP_URL}/dashboard/integrations?error=invalid_state&provider=${providerParam}`);
             return;
         }
 
@@ -310,28 +320,28 @@ export async function handleOAuthCallback(req: Request, res: Response): Promise<
 
         // Validate state
         if (stateProvider !== provider) {
-            res.redirect(`${APP_URL}/dashboard/integrations?error=state_mismatch&provider=${provider}`);
+            res.redirect(`${APP_URL}/dashboard/integrations?error=state_mismatch&provider=${providerParam}`);
             return;
         }
 
         // Check if state is expired (15 minutes)
         if (Date.now() - timestamp > 15 * 60 * 1000) {
-            res.redirect(`${APP_URL}/dashboard/integrations?error=state_expired&provider=${provider}`);
+            res.redirect(`${APP_URL}/dashboard/integrations?error=state_expired&provider=${providerParam}`);
             return;
         }
 
         const config = getProviderConfig(provider);
         if (!config) {
-            res.redirect(`${APP_URL}/dashboard/integrations?error=invalid_provider&provider=${provider}`);
+            res.redirect(`${APP_URL}/dashboard/integrations?error=invalid_provider&provider=${providerParam}`);
             return;
         }
 
         // Exchange code for tokens
-        const redirectUri = `${APP_URL}/api/integrations/oauth/callback/${provider}`;
+        const redirectUri = `${APP_URL}/api/integrations/oauth/callback/${providerParam}`;
         tokenData = await exchangeCodeForTokens(provider, code as string, redirectUri);
 
         if (!tokenData) {
-            res.redirect(`${APP_URL}/dashboard/integrations?error=token_exchange_failed&provider=${provider}`);
+            res.redirect(`${APP_URL}/dashboard/integrations?error=token_exchange_failed&provider=${providerParam}`);
             return;
         }
 
@@ -341,7 +351,7 @@ export async function handleOAuthCallback(req: Request, res: Response): Promise<
             if (provider === "strava") {
                 await deauthorizeStrava(tokenData.accessToken);
             }
-            res.redirect(`${APP_URL}/dashboard/integrations?error=database_error&provider=${provider}`);
+            res.redirect(`${APP_URL}/dashboard/integrations?error=database_error&provider=${providerParam}`);
             return;
         }
 
@@ -395,7 +405,7 @@ export async function handleOAuthCallback(req: Request, res: Response): Promise<
                 console.error(`[Initial Sync] Error for user ${userId}:`, err);
             });
 
-        res.redirect(`${APP_URL}/dashboard/integrations?connected=${provider}`);
+        res.redirect(`${APP_URL}/dashboard/integrations?connected=${providerParam}`);
     } catch (error) {
         console.error("Error in OAuth callback:", error);
 
@@ -409,7 +419,7 @@ export async function handleOAuthCallback(req: Request, res: Response): Promise<
             }
         }
 
-        res.redirect(`${APP_URL}/dashboard/integrations?error=callback_error&provider=${provider}`);
+        res.redirect(`${APP_URL}/dashboard/integrations?error=callback_error&provider=${providerParam}`);
     }
 }
 

@@ -274,7 +274,7 @@ describe("paddleWebhookHandler", () => {
         expect(mockResponse.json).toHaveBeenCalledWith({ received: true });
     });
 
-    it("should still return 200 on processing errors to prevent retries", async () => {
+    it("should return 500 on processing errors so Paddle retries", async () => {
         const webhookEvent = {
             event_id: "evt_128",
             event_type: "subscription.activated",
@@ -294,7 +294,7 @@ describe("paddleWebhookHandler", () => {
 
         await handlePaddleWebhook(mockRequest as Request, mockResponse as Response);
 
-        expect(mockResponse.status).toHaveBeenCalledWith(200);
-        expect(mockResponse.json).toHaveBeenCalledWith({ received: true, error: "Processing error" });
+        expect(mockResponse.status).toHaveBeenCalledWith(500);
+        expect(mockResponse.json).toHaveBeenCalledWith({ received: false, error: "Processing error" });
     });
 });

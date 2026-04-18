@@ -35,6 +35,17 @@ async function initializeAdminPool(): Promise<Pool | null> {
 
         const { Pool } = pgModule.default;
 
+        // Mirror the main pool's SSL handling: honor ADMIN_DB_SSL_CA when provided.
+        let sslConfig: false | { rejectUnauthorized: boolean; ca?: string } = false;
+        if (process.env.ADMIN_DB_SSL === "true") {
+            if (process.env.ADMIN_DB_SSL_CA) {
+                sslConfig = { rejectUnauthorized: true, ca: process.env.ADMIN_DB_SSL_CA };
+            } else {
+                console.warn("[Admin DB] ADMIN_DB_SSL=true without ADMIN_DB_SSL_CA — rejectUnauthorized=false.");
+                sslConfig = { rejectUnauthorized: false };
+            }
+        }
+
         adminPool = new Pool({
             host: process.env.ADMIN_DB_HOST || "localhost",
             port: parseInt(process.env.ADMIN_DB_PORT || "5432", 10),
@@ -44,7 +55,7 @@ async function initializeAdminPool(): Promise<Pool | null> {
             max: 5,
             idleTimeoutMillis: 30000,
             connectionTimeoutMillis: 5000,
-            ssl: process.env.ADMIN_DB_SSL === "true" ? { rejectUnauthorized: false } : false
+            ssl: sslConfig
         });
 
         if (adminPool) {

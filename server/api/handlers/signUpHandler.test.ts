@@ -72,7 +72,7 @@ describe("signUpHandler", () => {
 
         await handleSignUp(mockRequest as Request, mockResponse as Response);
 
-        expect(bcrypt.hash).toHaveBeenCalledWith("password123", 10);
+        expect(bcrypt.hash).toHaveBeenCalledWith("password123", 12);
         expect(mockPool.query).toHaveBeenCalledTimes(3);
         // Verify user_settings was created with default 30 days and communication preferences
         expect(mockPool.query).toHaveBeenCalledWith(

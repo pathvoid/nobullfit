@@ -3,6 +3,17 @@ import getPool from "../../db/connection.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/jwt.js";
 
+// Dummy hash used to equalize bcrypt timing when the submitted email does not
+// match any user. Computed lazily so the module can be imported in environments
+// that mock bcrypt (e.g. unit tests).
+let cachedDummyPasswordHash: string | null = null;
+function getDummyPasswordHash(): string {
+    if (cachedDummyPasswordHash === null) {
+        cachedDummyPasswordHash = bcrypt.hashSync("invalid-placeholder-password", 12);
+    }
+    return cachedDummyPasswordHash;
+}
+
 // Sign in handler - authenticates user and creates session
 export async function handleSignIn(req: Request, res: Response): Promise<void> {
     try {
@@ -42,7 +53,9 @@ export async function handleSignIn(req: Request, res: Response): Promise<void> {
         );
 
         if (userResult.rows.length === 0) {
-            // Don't reveal if email exists or not for security
+            // Run a dummy bcrypt.compare so response timing matches the user-exists
+            // branch. Prevents enumerating accounts via sign-in latency.
+            await bcrypt.compare(password, getDummyPasswordHash());
             res.status(401).json({
                 error: "Invalid email or password."
             });
@@ -53,7 +66,7 @@ export async function handleSignIn(req: Request, res: Response): Promise<void> {
 
         // Verify password
         const passwordMatch = await bcrypt.compare(password, user.password_hash);
-        
+
         if (!passwordMatch) {
             res.status(401).json({
                 error: "Invalid email or password."

@@ -63,10 +63,13 @@ export async function handleSignUp(req: Request, res: Response): Promise<void> {
             return;
         }
 
-        // Check if user already exists
+        // Normalize email to lowercase for consistent lookups and storage
+        const normalizedEmail = email.toLowerCase();
+
+        // Check if user already exists (case-insensitive)
         const existingUser = await pool.query(
-            "SELECT id FROM users WHERE email = $1",
-            [email]
+            "SELECT id FROM users WHERE LOWER(email) = LOWER($1)",
+            [normalizedEmail]
         );
 
         // If user already exists, return the same response as success to prevent email enumeration
@@ -79,15 +82,15 @@ export async function handleSignUp(req: Request, res: Response): Promise<void> {
         }
 
         // Hash password using bcrypt
-        const saltRounds = 10;
+        const saltRounds = 12;
         const passwordHash = await bcrypt.hash(password, saltRounds);
 
-        // Insert new user
+        // Insert new user with lowercased email
         const result = await pool.query(
             `INSERT INTO users (email, full_name, password_hash, country, terms_accepted, terms_accepted_at)
              VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
              RETURNING id, email, full_name, created_at`,
-            [email, name, passwordHash, country || null, terms === true || terms === "on"]
+            [normalizedEmail, name, passwordHash, country || null, terms === true || terms === "on"]
         );
 
         const newUser = result.rows[0];
@@ -99,7 +102,7 @@ export async function handleSignUp(req: Request, res: Response): Promise<void> {
         );
 
         // Send welcome email (don't wait for it to complete)
-        sendWelcomeEmail(email, name).catch((error) => {
+        sendWelcomeEmail(normalizedEmail, name).catch((error) => {
             console.error("Failed to send welcome email:", error);
             // Don't fail the registration if email fails
         });

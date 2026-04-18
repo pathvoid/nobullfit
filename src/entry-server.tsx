@@ -70,10 +70,29 @@ const render = async (req: express.Request) => {
             <StaticRouterProvider
                 router={router}
                 context={context}
-                nonce='the-nonce'
             />
         </App>
     );
+
+    // HTML-escape text that will appear between tags. Ampersand first so that
+    // subsequent replacements don't double-encode their own output.
+    const escapeHtml = (input: string): string => {
+        return input
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    };
+
+    // Prevent inline <script> children from closing their enclosing tag or
+    // starting a comment/CDATA section that the browser would parse specially.
+    const escapeScriptChildren = (input: string): string => {
+        return input
+            .replace(/<\/script/gi, "<\\/script")
+            .replace(/<!--/g, "<\\!--")
+            .replace(/<!\[CDATA\[/g, "<\\![CDATA[");
+    };
 
     // Helper function to convert attributes object to HTML attribute string
     const createAttributes = (attrs: Record<string, unknown>): string => {
@@ -81,32 +100,33 @@ const render = async (req: express.Request) => {
             .filter(([, v]) => v != null && v !== "")
             .map(([k, v]) => {
                 const value = Array.isArray(v) ? v.join(" ") : String(v);
-                // Escape quotes in attribute values
-                return `${k}="${value.replace(/"/g, "&quot;")}"`;
+                return `${k}="${escapeHtml(value)}"`;
             })
             .join(" ");
     };
 
     // Create helmet object with toString methods for injecting into HTML template
     const helmet = {
-        title: { toString: () => `<title>${helmetValues.title}</title>` },
+        title: { toString: () => `<title>${escapeHtml(helmetValues.title)}</title>` },
         meta: { toString: () => helmetValues.meta.map((m: MetaTag) => `<meta ${createAttributes(m as Record<string, unknown>)} />`).join("") },
         link: { toString: () => helmetValues.link.map((l: LinkTag) => `<link ${createAttributes(l as Record<string, unknown>)} />`).join("") },
-        script: { 
+        script: {
             toString: () => helmetValues.script.map((s: ScriptTag) => {
                 const { children, ...attrs } = s;
                 const attrsStr = createAttributes(attrs);
-                // Handle inline scripts (with children) vs external scripts
-                return children 
-                    ? `<script${attrsStr ? " " + attrsStr : ""}>${children}</script>`
+                // Handle inline scripts (with children) vs external scripts.
+                // Inline children are sanitized so user-controlled strings cannot
+                // break out of the <script> element into arbitrary HTML/JS.
+                return children
+                    ? `<script${attrsStr ? " " + attrsStr : ""}>${escapeScriptChildren(String(children))}</script>`
                     : `<script ${attrsStr} />`;
-            }).join("") 
+            }).join("")
         },
-        style: { 
-            toString: () => typeof helmetValues.style === "string" 
-                ? `<style>${helmetValues.style}</style>` 
-                : Array.isArray(helmetValues.style) 
-                    ? helmetValues.style.map((s: string) => `<style>${s}</style>`).join("")
+        style: {
+            toString: () => typeof helmetValues.style === "string"
+                ? `<style>${escapeHtml(helmetValues.style)}</style>`
+                : Array.isArray(helmetValues.style)
+                    ? helmetValues.style.map((s: string) => `<style>${escapeHtml(s)}</style>`).join("")
                     : ""
         }
     };

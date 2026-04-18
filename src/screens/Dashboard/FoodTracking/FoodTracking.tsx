@@ -47,8 +47,12 @@ interface User {
 
 const CATEGORIES = ["Breakfast", "Lunch", "Dinner", "Snack", "Other"];
 
-// Get default category based on current time
+// Get default category based on current time. Returns a stable default on the
+// server so SSR hydration matches; the real clock-based pick runs only client-side.
 function getDefaultCategory(): string {
+    if (typeof window === "undefined") {
+        return "Breakfast";
+    }
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 11) return "Breakfast";
     if (hour >= 11 && hour < 15) return "Lunch";
@@ -88,8 +92,12 @@ const FoodTracking: React.FC = () => {
     const helmet = useHelmet();
     const navigate = useNavigate();
 
-    // Get user's timezone
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Get user's timezone. On SSR `Intl.DateTimeFormat` returns the server TZ,
+    // which causes hydration mismatches — fall back to UTC on the server and let
+    // the client refine it on mount.
+    const userTimezone = typeof window !== "undefined"
+        ? Intl.DateTimeFormat().resolvedOptions().timeZone
+        : "UTC";
     
     // Check if user is a Pro subscriber
     const isProUser = loaderData.user?.subscribed === true;

@@ -106,8 +106,11 @@ const ProgressTracking: React.FC = () => {
     };
     const helmet = useHelmet();
 
-    // Get user's timezone
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Get user's timezone. Guarded for SSR so server renders don't bake in the
+    // server's timezone and cause hydration mismatches.
+    const userTimezone = typeof window !== "undefined"
+        ? Intl.DateTimeFormat().resolvedOptions().timeZone
+        : "UTC";
     
     // Check if user is a Pro subscriber
     const isProUser = loaderData.user?.subscribed === true;

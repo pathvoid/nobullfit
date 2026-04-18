@@ -58,3 +58,5 @@ app/app-example/
 # Additional
 *.pem
 *.tsbuildinfo
+
+reports/

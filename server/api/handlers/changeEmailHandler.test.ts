@@ -21,7 +21,12 @@ vi.mock("../utils/paddleService", () => ({
 
 vi.mock("crypto", () => ({
     default: {
-        randomBytes: vi.fn()
+        randomBytes: vi.fn(),
+        createHash: vi.fn().mockReturnValue({
+            update: vi.fn().mockReturnValue({
+                digest: vi.fn().mockReturnValue("hashed_token")
+            })
+        })
     }
 }));
 

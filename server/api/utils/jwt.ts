@@ -37,9 +37,10 @@ export function verifyToken(token: string): { userId: number; email: string; tok
         const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] }) as { userId: number; email: string; tokenVersion?: number };
         return decoded;
     } catch (error) {
-        // Token invalid or expired
-        if (error instanceof Error) {
-            console.error("JWT verification error:", error.message);
+        // Token invalid or expired. Callers already get `null`; avoid noisy
+        // production logs when attackers spray forged tokens.
+        if (error instanceof Error && process.env.NODE_ENV !== "production") {
+            console.debug("JWT verification error:", error.message);
         }
         return null;
     }
@@ -51,8 +52,8 @@ export function verifyStateToken(token: string): Record<string, unknown> | null 
         const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] }) as Record<string, unknown>;
         return decoded;
     } catch (error) {
-        if (error instanceof Error) {
-            console.error("JWT state verification error:", error.message);
+        if (error instanceof Error && process.env.NODE_ENV !== "production") {
+            console.debug("JWT state verification error:", error.message);
         }
         return null;
     }

@@ -182,6 +182,13 @@ export async function handleDeleteData(req: Request, res: Response) {
             deletionResults.tdee = result.rowCount || 0;
         }
 
+        // Rotate token_version so any JWTs issued before this destructive action
+        // are invalidated the next time a token-version-aware endpoint checks them.
+        await pool.query(
+            "UPDATE users SET token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+            [userId]
+        );
+
         return res.status(200).json({
             success: true,
             message: "Selected data has been successfully deleted.",

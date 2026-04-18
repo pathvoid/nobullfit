@@ -50,8 +50,10 @@ export async function handleGetMe(req: Request, res: Response): Promise<void> {
 
         const user = userResult.rows[0];
 
-        // Check if token version matches (invalidates old tokens after password reset/change)
-        if (decoded.tokenVersion !== undefined && user.token_version !== decoded.tokenVersion) {
+        // Check if token version matches (invalidates old tokens after password reset/change).
+        // Unconditional: tokens missing the claim are treated as version 0 so legacy/forged
+        // tokens without tokenVersion cannot bypass the check.
+        if (user.token_version !== (decoded.tokenVersion ?? 0)) {
             res.status(401).json({ error: "Session expired. Please sign in again." });
             return;
         }

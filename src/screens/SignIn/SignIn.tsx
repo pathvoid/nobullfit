@@ -56,8 +56,18 @@ const SignIn: React.FC = () => {
             if (result.token && result.user) {
                 // Pass remember flag to login function
                 login(result.user, result.token, data.remember);
-                // Redirect after saving token - check URL query parameter first, then API response
-                const redirectTo = searchParams.get("redirect") || result.redirect || "/";
+                // Redirect after saving token - check URL query parameter first, then API response.
+                // Accept only same-origin paths: must start with "/" and cannot start with
+                // "//" (protocol-relative) or "/\" (Windows-style) to avoid open redirect.
+                const isSafePath = (value: unknown): value is string =>
+                    typeof value === "string" && /^\/(?![/\\])/.test(value);
+                const requested = searchParams.get("redirect");
+                const fromApi = result.redirect;
+                const redirectTo = isSafePath(requested)
+                    ? requested
+                    : isSafePath(fromApi)
+                        ? fromApi
+                        : "/";
                 // Use window.location for full page reload to ensure cookies are available
                 // This ensures the server-side loader can read the cookie
                 window.location.href = redirectTo;

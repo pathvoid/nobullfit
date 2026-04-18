@@ -271,6 +271,11 @@ export async function handleCreateRecipe(req: Request, res: Response): Promise<v
             res.status(400).json({ error: "Recipe name cannot contain emojis" });
             return;
         }
+        // Reject angle brackets — recipe names appear in SSR <title> and meta tags.
+        if (/[<>]/.test(trimmedName)) {
+            res.status(400).json({ error: "Recipe name cannot contain < or > characters" });
+            return;
+        }
 
         const trimmedDescription = description?.trim() || null;
         if (description && typeof description === "string" && trimmedDescription && trimmedDescription.length > 2000) {
@@ -279,6 +284,10 @@ export async function handleCreateRecipe(req: Request, res: Response): Promise<v
         }
         if (trimmedDescription && containsEmoji(trimmedDescription)) {
             res.status(400).json({ error: "Description cannot contain emojis" });
+            return;
+        }
+        if (trimmedDescription && /[<>]/.test(trimmedDescription)) {
+            res.status(400).json({ error: "Description cannot contain < or > characters" });
             return;
         }
 
@@ -489,9 +498,17 @@ export async function handleUpdateRecipe(req: Request, res: Response): Promise<v
             res.status(400).json({ error: "Recipe name cannot contain emojis" });
             return;
         }
+        if (/[<>]/.test(trimmedName)) {
+            res.status(400).json({ error: "Recipe name cannot contain < or > characters" });
+            return;
+        }
 
         if (description && typeof description === "string" && description.trim().length > 2000) {
             res.status(400).json({ error: "Description must be 2000 characters or less" });
+            return;
+        }
+        if (description && typeof description === "string" && /[<>]/.test(description)) {
+            res.status(400).json({ error: "Description cannot contain < or > characters" });
             return;
         }
 

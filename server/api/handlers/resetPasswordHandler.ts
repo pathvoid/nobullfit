@@ -85,20 +85,34 @@ export async function handleResetPassword(req: Request, res: Response): Promise<
         };
 
         // Hash new password
-        const saltRounds = 10;
+        const saltRounds = 12;
         const passwordHash = await bcrypt.hash(password, saltRounds);
 
-        // Update user password and increment token_version to invalidate all existing sessions
-        await pool.query(
-            "UPDATE users SET password_hash = $1, token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
-            [passwordHash, reset.user_id]
-        );
-
-        // Delete used reset token
-        await pool.query(
-            "DELETE FROM password_resets WHERE token = $1",
-            [tokenHash]
-        );
+        // Run the password update, reset-token cleanup, and email-change cleanup
+        // in a single transaction so a partial failure can't leave the user with
+        // a new password but still-valid reset/email-change tokens.
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+            await client.query(
+                "UPDATE users SET password_hash = $1, token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+                [passwordHash, reset.user_id]
+            );
+            await client.query(
+                "DELETE FROM password_resets WHERE user_id = $1",
+                [reset.user_id]
+            );
+            await client.query(
+                "DELETE FROM email_change_requests WHERE user_id = $1",
+                [reset.user_id]
+            );
+            await client.query("COMMIT");
+        } catch (txError) {
+            await client.query("ROLLBACK");
+            throw txError;
+        } finally {
+            client.release();
+        }
 
         res.status(200).json({
             success: true,

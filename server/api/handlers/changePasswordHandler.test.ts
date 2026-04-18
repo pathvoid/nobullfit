@@ -85,7 +85,7 @@ describe("changePasswordHandler", () => {
 
         expect(bcrypt.compare).toHaveBeenCalledWith("oldpassword123", "hashed_old_password");
         expect(bcrypt.compare).toHaveBeenCalledWith("newpassword123", "hashed_old_password");
-        expect(bcrypt.hash).toHaveBeenCalledWith("newpassword123", 10);
+        expect(bcrypt.hash).toHaveBeenCalledWith("newpassword123", 12);
         expect(mockPool.query).toHaveBeenCalledWith(
             expect.stringContaining("UPDATE users SET password_hash"),
             expect.arrayContaining(["hashed_new_password", 1])

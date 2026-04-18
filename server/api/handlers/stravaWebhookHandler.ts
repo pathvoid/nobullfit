@@ -2,7 +2,18 @@
 // Handles incoming webhook events from Strava
 
 import type { Request, Response } from "express";
+import crypto from "crypto";
 import getPool from "../../db/connection.js";
+
+// Constant-time string comparison for shared-secret verification
+function timingSafeStringEqual(a: string, b: string): boolean {
+    const aBuf = Buffer.from(a, "utf8");
+    const bBuf = Buffer.from(b, "utf8");
+    if (aBuf.length !== bBuf.length) {
+        return false;
+    }
+    return crypto.timingSafeEqual(aBuf, bBuf);
+}
 
 // Helper functions to get environment variables at runtime
 function getWebhookVerifyToken(): string {
@@ -53,7 +64,7 @@ export async function handleWebhookValidation(req: Request, res: Response): Prom
             return;
         }
 
-        if (verifyToken !== getWebhookVerifyToken()) {
+        if (!verifyToken || !timingSafeStringEqual(verifyToken, getWebhookVerifyToken())) {
             console.error("[Strava Webhook] Invalid verify token");
             res.status(403).json({ error: "Invalid verify token" });
             return;
